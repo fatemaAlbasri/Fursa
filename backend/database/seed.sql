@@ -31,13 +31,13 @@ INSERT INTO users (id, first_name, last_name, email, password_hash, role) VALUES
  (11, 'Hamad',  'Rashid',    'hamad@example.com',     crypt('Fursa@123', gen_salt('bf')), 'seeker');
 
 -- ---------- Seeker profiles ----------
-INSERT INTO seeker_profiles (user_id, phone, major, graduation_status, preferred_work_modes, preferred_job_types) VALUES
- (6,  '+97333000001', 'Computer Science',       'Graduated',  '{onsite,hybrid}', '{full_time,internship}'),
- (7,  '+97333000002', 'Computer Science',       'Graduated',  '{remote,hybrid}', '{full_time}'),
- (8,  '+97333000003', 'Information Technology', 'Final year', '{}',              '{internship,part_time}'),
- (9,  '+97333000004', 'Computer Engineering',   'Graduated',  '{onsite}',        '{}'),
- (10, '+97333000005', 'Information Systems',    'Graduated',  '{}',              '{}'),
- (11, '+97333000006', 'Business Administration','Final year', '{hybrid}',        '{part_time}');
+INSERT INTO seeker_profiles (user_id, phone, major, graduation_status, years_experience, job_types, work_modes) VALUES
+ (6, '+97333000001', 'Computer Science', 'Graduated', 0.5, '{full_time,internship}', '{onsite,hybrid}'),
+ (7, '+97333000002', 'Computer Science', 'Graduated', 1.0, '{full_time}', '{remote,hybrid}'),
+ (8, '+97333000003', 'Information Technology', 'Final year', 0, '{internship,part_time}', '{}'),
+ (9, '+97333000004', 'Computer Engineering', 'Graduated', 0.3, '{}', '{onsite}'),
+ (10, '+97333000005', 'Information Systems', 'Graduated', 0, '{}', '{}'),
+ (11, '+97333000006', 'Business Administration', 'Final year', 0, '{part_time}', '{hybrid}');
 
 INSERT INTO seeker_skills (seeker_id, skill_id) VALUES
  (6,1),(6,2),(6,3),(6,4),(6,12),
@@ -71,32 +71,61 @@ INSERT INTO subscriptions (id, company_id, plan_id, status, started_at, renews_a
  (4, 4, 2, 'active', '2026-09-20', '2026-10-20');
 
 -- ---------- Jobs ----------
-INSERT INTO jobs (id, company_id, type, work_mode, title, description, responsibilities, location, salary, deadline, required_major, major_must_have, experience_min, experience_max, language, status, created_at) VALUES
- (1, 1, 'full_time',  'onsite', 'Junior Frontend Developer',   'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 'Manama',   450.000, '2026-10-30', 'Computer Science', true,  0, 2, 'English', 'open',  '2026-10-05'),
- (2, 2, 'internship', 'hybrid', 'Software Engineering Intern', 'Three-month internship in our product team.',  'Write and test code; join daily stand-ups.',               'Seef',     NULL,    '2026-10-25', NULL,               false, 0, 1, 'English', 'open',  '2026-10-08'),
- (3, 3, 'full_time',  'onsite', 'IT Support Officer',          'First-line IT support for clients.',           'Answer tickets; set up devices; basic networking.',        'Muharraq', 380.000, '2026-11-02', NULL,               false, 0, 2, 'Arabic',  'open',  '2026-10-01'),
- (4, 4, 'internship', 'remote', 'Data Analyst Trainee',        'Learn to build reports for clients.',          'Clean data; build dashboards.',                            'Manama',   NULL,    '2026-11-05', NULL,               false, 0, 1, 'English', 'open',  '2026-09-20'),
- (5, 1, 'part_time',  'hybrid', 'Web Developer Trainee',       'Entry-level web role.',                        'Build pages with HTML, CSS and JavaScript.',               'Manama',   NULL,    '2026-10-30', NULL,               false, 0, 1, 'English', 'draft', '2026-10-10');
+INSERT INTO jobs (id, company_id, job_type, work_mode, governorate, location, title, description, responsibilities, salary, deadline, field, major_must_have, min_years, max_years, language, status, created_at) VALUES
+ (1, 1, 'full_time', 'onsite', 'capital', 'Manama', 'Junior Frontend Developer', 'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 450.000, '2026-10-30', 'Computer Science', true, 0, 2, 'English', 'open', '2026-10-05'),
+ (2, 2, 'internship', 'hybrid', 'capital', 'Seef', 'Software Engineering Intern', 'Three-month internship in our product team.', 'Write and test code; join daily stand-ups.', NULL, '2026-10-25', 'Computer Science', false, 0, 1, 'English', 'open', '2026-10-08'),
+ (3, 3, 'full_time', 'onsite', 'muharraq', 'Muharraq', 'IT Support Officer', 'First-line IT support for clients.', 'Answer tickets; set up devices; basic networking.', 380.000, '2026-11-02', 'Information Technology', false, 0, 2, 'Arabic', 'open', '2026-10-01'),
+ (4, 4, 'internship', 'remote', 'capital', 'Manama', 'Data Analyst Trainee', 'Learn to build reports for clients.', 'Clean data; build dashboards.', NULL, '2026-11-05', 'Information Systems', false, 0, 1, 'English', 'open', '2026-09-20'),
+ (5, 1, 'part_time', 'hybrid', 'capital', 'Manama', 'Web Developer Trainee', 'Entry-level web role.', 'Build pages with HTML, CSS and JavaScript.', NULL, '2026-10-30', 'Computer Science', false, 0, 1, 'English', 'draft', '2026-10-10');
 
-INSERT INTO job_skills (job_id, skill_id, is_must_have) VALUES
- (1,1,true),(1,2,true),(1,3,false),(1,6,false),(1,12,false),
- (2,1,true),(2,6,false),(2,15,false),(2,3,false),(2,12,false),
- (3,11,true),(3,14,false),(3,13,false),(3,12,false),
- (4,3,true),(4,9,false),(4,10,true),(4,12,false),(4,8,false),
- (5,4,true),(5,5,false),(5,1,false);
+INSERT INTO job_skills (job_id, skill_id, is_required) VALUES
+ (1,1,true),
+ (1,2,true),
+ (1,3,false),
+ (1,6,false),
+ (1,12,false),
+ (2,1,true),
+ (2,6,false),
+ (2,15,false),
+ (2,3,false),
+ (2,12,false),
+ (3,11,true),
+ (3,14,false),
+ (3,13,false),
+ (3,12,false),
+ (4,3,true),
+ (4,10,true),
+ (4,9,false),
+ (4,12,false),
+ (4,8,false),
+ (5,4,true),
+ (5,5,false),
+ (5,1,false);
 
--- ---------- Match scores (normally written by the AI) ----------
-INSERT INTO match_scores (job_id, seeker_id, score, is_qualified, matched_skills, total_skills, missing_skills, major_ok, experience_ok, language_ok, work_mode_ok, job_type_ok, explanation) VALUES
- -- work_mode_ok / job_type_ok: NULL = the seeker left that preference empty (neutral)
- (1, 6,  92, true,  4, 5, 'Git',                     true,  true, true, true,  true,  'Has both must-have skills and a CS major.'),
- (1, 7,  88, true,  5, 5, NULL,                      true,  true, true, false, true,  'Matches every skill; 1-year internship. Prefers remote/hybrid.'),
- (1, 8,  70, false, 3, 5, 'SQL, Git',                false, true, true, NULL,  false, 'Missing must-have: Computer Science major.'),
- (2, 6,  84, true,  4, 5, 'Java',                    true,  true, true, true,  true,  'Strong JavaScript; missing Java.'),
- (2, 7,  80, true,  4, 5, 'Java',                    true,  true, true, true,  false, 'Good skills, but prefers full-time over internships.'),
- (3, 9,  78, true,  4, 4, NULL,                      true,  true, true, true,  NULL,  'Has networking and customer service.'),
- (3, 6,  40, false, 1, 4, 'Networking, Customer Service, Arabic', true, true, true, true, true, 'Missing must-have: Networking.'),
- (4, 10, 71, false, 3, 5, 'Power BI',                true,  true, true, NULL,  NULL,  'Missing must-have: Power BI.'),
- (4, 6,  45, false, 2, 5, 'Excel, Power BI, Python', true,  true, true, false, true,  'Missing must-have: Power BI.');
+-- ---------- Related fields (Education score: related = 0.5) ----------
+INSERT INTO related_fields (field_a, field_b) VALUES
+ ('Computer Science', 'Information Technology'),
+ ('Computer Science', 'Computer Engineering'),
+ ('Computer Science', 'Information Systems'),
+ ('Computer Science', 'Cybersecurity'),
+ ('Information Technology', 'Information Systems'),
+ ('Information Technology', 'Computer Engineering'),
+ ('Information Technology', 'Cybersecurity'),
+ ('Information Systems', 'Business Administration');
+
+-- ---------- Match scores (normally written by the scoring algorithm) ----------
+-- Scores below were calculated with the Fursa scoring algorithm (CV component excluded:
+-- test data has no embeddings, so the remaining weights are rescaled).
+INSERT INTO match_scores (job_id, seeker_id, score, tier, is_qualified, breakdown) VALUES
+ (1, 6, 91, 'strong', true, '{"skills": 0.857, "education": 1, "preference": 1.0, "experience": 1, "matchedRequired": "2/2", "missing": ["Git"], "cvIncluded": false}'),
+ (1, 7, 97, 'strong', true, '{"skills": 1.0, "education": 1, "preference": 0.75, "experience": 1, "matchedRequired": "2/2", "missing": [], "cvIncluded": false}'),
+ (1, 8, 66, 'good', false, '{"skills": 0.714, "education": 0.5, "preference": 0.25, "experience": 1, "matchedRequired": "2/2", "missing": ["SQL", "Git"], "cvIncluded": false}'),
+ (2, 6, 80, 'strong', true, '{"skills": 0.667, "education": 1, "preference": 1.0, "experience": 1, "matchedRequired": "1/1", "missing": ["Git", "Java"], "cvIncluded": false}'),
+ (2, 7, 83, 'strong', true, '{"skills": 0.833, "education": 1, "preference": 0.5, "experience": 1, "matchedRequired": "1/1", "missing": ["Java"], "cvIncluded": false}'),
+ (3, 9, 90, 'strong', true, '{"skills": 1.0, "education": 0.5, "preference": 0.75, "experience": 1, "matchedRequired": "1/1", "missing": [], "cvIncluded": false}'),
+ (3, 6, 45, 'low', false, '{"skills": 0.2, "education": 0.5, "preference": 1.0, "experience": 1, "matchedRequired": "0/1", "missing": ["Networking", "Customer Service", "Arabic"], "cvIncluded": false}'),
+ (4, 10, 76, 'good', false, '{"skills": 0.714, "education": 1, "preference": 0.5, "experience": 1, "matchedRequired": "1/2", "missing": ["Power BI"], "cvIncluded": false}'),
+ (4, 6, 56, 'low', false, '{"skills": 0.429, "education": 0.5, "preference": 0.75, "experience": 1, "matchedRequired": "1/2", "missing": ["Power BI", "Excel", "Python"], "cvIncluded": false}');
 
 -- ---------- Applications (one in every status, like the wireframes) ----------
 INSERT INTO applications (id, job_id, seeker_id, resume_id, status, rejection_reason, applied_at) VALUES

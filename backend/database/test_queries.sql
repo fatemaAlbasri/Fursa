@@ -3,8 +3,8 @@
 -- =====================================================================
 
 -- 1) Employer: Top 10 applicants for "Junior Frontend Developer" (job 1)
-SELECT u.first_name || ' ' || u.last_name AS applicant, m.score, a.status,
-       m.matched_skills || '/' || m.total_skills AS skills, m.missing_skills
+SELECT u.first_name || ' ' || u.last_name AS applicant, m.score, m.tier, a.status,
+       m.breakdown->>'matchedRequired' AS required_skills, m.breakdown->'missing' AS missing
 FROM applications a
 JOIN users u        ON u.id = a.seeker_id
 JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
@@ -13,7 +13,7 @@ ORDER BY m.score DESC
 LIMIT 10;
 
 -- 2) Seeker: "Jobs for you" for Fatima (user 6), best match first
-SELECT j.title, c.name AS company, j.type, j.work_mode, m.score, m.missing_skills, j.deadline
+SELECT j.title, c.name AS company, j.job_type, j.work_mode, j.governorate, m.score, m.tier, j.deadline
 FROM match_scores m
 JOIN jobs j      ON j.id = m.job_id
 JOIN companies c ON c.id = j.company_id
@@ -56,15 +56,30 @@ SELECT COUNT(*) AS unread FROM notifications WHERE user_id = 6 AND NOT is_read;
 -- 9) Login check: does this email + password match? (returns 1 row if correct)
 SELECT id, role FROM users WHERE email = 'fatima@example.com' AND password_hash = crypt('Fursa@123', password_hash);
 
--- 10) Preferences: does each open job fit the seeker's work mode / job type?
---     Empty preference list = no preference = neutral (shown as 'any').
-SELECT u.first_name, j.title, j.work_mode, j.type,
-       CASE WHEN cardinality(s.preferred_work_modes) = 0 THEN 'any'
-            WHEN j.work_mode = ANY (s.preferred_work_modes) THEN 'yes' ELSE 'no' END AS work_mode_fits,
-       CASE WHEN cardinality(s.preferred_job_types) = 0 THEN 'any'
-            WHEN j.type = ANY (s.preferred_job_types) THEN 'yes' ELSE 'no' END AS job_type_fits
+-- 10) Preference fit half-scores, as the algorithm calculates them (Fatima = 6, Sara = 10)
+SELECT u.first_name, j.title, j.job_type, j.work_mode,
+       CASE WHEN cardinality(s.job_types) = 0 THEN 0.25
+            WHEN j.job_type = ANY (s.job_types) THEN 0.5 ELSE 0 END AS job_type_half,
+       CASE WHEN cardinality(s.work_modes) = 0 THEN 0.25
+            WHEN j.work_mode = ANY (s.work_modes) THEN 0.5
+            WHEN j.work_mode = 'hybrid' OR 'hybrid' = ANY (s.work_modes) THEN 0.25
+            ELSE 0 END AS work_mode_half
 FROM seeker_profiles s
 JOIN users u ON u.id = s.user_id
 CROSS JOIN jobs j
 WHERE j.status = 'open' AND s.user_id IN (6, 10)
 ORDER BY u.first_name, j.id;
+
+-- 11) Education: is the seeker's major equal / related / unrelated to the job's field?
+SELECT u.first_name, s.major, j.title, j.field,
+       CASE WHEN s.major = j.field THEN 1
+            WHEN EXISTS (SELECT 1 FROM related_fields r
+                         WHERE (r.field_a = s.major AND r.field_b = j.field)
+                            OR (r.field_b = s.major AND r.field_a = j.field)) THEN 0.5
+            ELSE 0 END AS education
+FROM seeker_profiles s JOIN users u ON u.id = s.user_id CROSS JOIN jobs j
+WHERE s.user_id IN (6, 8) AND j.status = 'open'
+ORDER BY u.first_name, j.id;
+
+-- 12) Jobs page search filter by governorate
+SELECT title, location, governorate FROM jobs WHERE governorate = 'capital' AND status = 'open';
