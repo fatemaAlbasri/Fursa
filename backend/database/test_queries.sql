@@ -13,7 +13,7 @@ ORDER BY m.score DESC
 LIMIT 10;
 
 -- 2) Seeker: "Jobs for you" for Fatima (user 6), best match first
-SELECT j.title, c.name AS company, j.type, m.score, m.missing_skills, j.deadline
+SELECT j.title, c.name AS company, j.type, j.work_mode, m.score, m.missing_skills, j.deadline
 FROM match_scores m
 JOIN jobs j      ON j.id = m.job_id
 JOIN companies c ON c.id = j.company_id
@@ -55,3 +55,16 @@ SELECT COUNT(*) AS unread FROM notifications WHERE user_id = 6 AND NOT is_read;
 
 -- 9) Login check: does this email + password match? (returns 1 row if correct)
 SELECT id, role FROM users WHERE email = 'fatima@example.com' AND password_hash = crypt('Fursa@123', password_hash);
+
+-- 10) Preferences: does each open job fit the seeker's work mode / job type?
+--     Empty preference list = no preference = neutral (shown as 'any').
+SELECT u.first_name, j.title, j.work_mode, j.type,
+       CASE WHEN cardinality(s.preferred_work_modes) = 0 THEN 'any'
+            WHEN j.work_mode = ANY (s.preferred_work_modes) THEN 'yes' ELSE 'no' END AS work_mode_fits,
+       CASE WHEN cardinality(s.preferred_job_types) = 0 THEN 'any'
+            WHEN j.type = ANY (s.preferred_job_types) THEN 'yes' ELSE 'no' END AS job_type_fits
+FROM seeker_profiles s
+JOIN users u ON u.id = s.user_id
+CROSS JOIN jobs j
+WHERE j.status = 'open' AND s.user_id IN (6, 10)
+ORDER BY u.first_name, j.id;
