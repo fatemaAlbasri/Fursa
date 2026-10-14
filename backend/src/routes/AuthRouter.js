@@ -24,6 +24,9 @@ router.post('/forgot-password', AuthController.forgotPassword);
 // POST /api/auth/reset-password  { token, password }  (token from the reset link)
 router.post('/reset-password', AuthController.resetPassword);
 
+// POST /api/auth/profile/logout  (logged in) → frontend then deletes its saved token
+router.post('/profile/logout', requireAuth, AuthController.logout);
+
 // PUT /api/auth/profile/change-password  { currentPassword, newPassword }  (logged in)
 router.put('/profile/change-password', requireAuth, AuthController.changePassword);
 

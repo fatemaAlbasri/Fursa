@@ -34,8 +34,9 @@ src/
 | GET | `/api/auth/me` | header `Authorization: Bearer <token>` | `{ user }` |
 | POST | `/api/auth/forgot-password` | `{ email }` | `{ message }` (same answer whether or not the email exists) |
 | POST | `/api/auth/reset-password` | `{ token, password }` (`token` from the reset link) | `{ message }` |
-| PUT | `/api/auth/change-password` | `{ currentPassword, newPassword }` + Bearer token | `{ message }` |
-| DELETE | `/api/auth/account` | `{ password }` + Bearer token | `{ message }` (wrong password: `400` with `fields.password`) |
+| POST | `/api/auth/profile/logout` | header `Authorization: Bearer <token>` | `{ message }`, then the frontend deletes its saved token |
+| PUT | `/api/auth/profile/change-password` | `{ currentPassword, newPassword }` + Bearer token | `{ message }` |
+| DELETE | `/api/auth/profile/account` | `{ password }` + Bearer token | `{ message }` (wrong password: `400` with `fields.password`) |
 
 Sign up fields:
 - **Job seeker:** `role=jobseeker`, `firstName`, `lastName`, `email`, `password`, `phone` (optional, 8 digits, `+973` is fine), `major`, `graduationStatus`, `skills` (repeat the field once per skill), `cv` (optional file, PDF/Word, max 5 MB)

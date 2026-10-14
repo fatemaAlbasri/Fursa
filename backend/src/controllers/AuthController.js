@@ -317,7 +317,7 @@ async function resetPassword(req, res, next) {
   }
 }
 
-// PUT /api/auth/change-password  { currentPassword, newPassword }  (logged in)
+// PUT /api/auth/profile/change-password  { currentPassword, newPassword }  (logged in)
 async function changePassword(req, res, next) {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -343,7 +343,7 @@ async function changePassword(req, res, next) {
   }
 }
 
-// DELETE /api/auth/account  { password }  (logged in)
+// DELETE /api/auth/profile/account  { password }  (logged in)
 // Everything linked to the user (profile, CVs, applications, company, jobs, ...) is removed by ON DELETE CASCADE
 async function deleteAccount(req, res, next) {
   let client;
@@ -375,4 +375,10 @@ async function deleteAccount(req, res, next) {
   }
 }
 
-module.exports = { signup, signin, me, forgotPassword, resetPassword, changePassword, deleteAccount };
+// POST /api/auth/profile/logout  (logged in)
+// The token is not stored on the server, so the frontend must also delete its saved token
+function logout(req, res) {
+  res.json({ message: 'You are logged out' });
+}
+
+module.exports = { signup, signin, me, logout, forgotPassword, resetPassword, changePassword, deleteAccount };
