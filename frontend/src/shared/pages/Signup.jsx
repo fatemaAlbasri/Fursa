@@ -54,7 +54,7 @@ function ChoiceChips({ label, options, value, onChange }) {
     onChange(value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]);
   return (
     <div className="choice-box">
-      <p className="choice-box__label">{label} <span>(optional · pick any)</span></p>
+      <p className="choice-box__label">{label} <span>(optional · leave empty to see all jobs)</span></p>
       <div className="choice-box__chips">
         {options.map((opt) => {
           const on = value.includes(opt);
@@ -66,7 +66,6 @@ function ChoiceChips({ label, options, value, onChange }) {
           );
         })}
       </div>
-      <p className="hint">Leave empty to see all jobs. You can change this later in your profile.</p>
     </div>
   );
 }
@@ -127,31 +126,30 @@ function JobSeekerSignup() {
   };
 
   return (
-    <div className="page">
+    <div className="page page--fit">
       <Header right={<>Already have an account? <Link className="link link--light" to="/signin?role=jobseeker">Sign in</Link></>} />
 
-      <main className="container">
-        <span className="pill">Job seeker account</span>
-        <h1 className="title">Create your account</h1>
-        <p className="muted">Add your skills and CV so Fursa can show you the jobs that match you.</p>
+      <main className="container container--wide">
+        <div className="page-head">
+          <span className="pill">Job seeker account</span>
+          <h1 className="title">Create your account</h1>
+          <p className="muted">Add your skills and CV so Fursa can show you the jobs that match you.</p>
+        </div>
 
         <form className="card" onSubmit={submit} noValidate>
-          <div className="row">
+          <div className="grid3">
             <Field label="First name" error={errors.firstName}>
               <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
             </Field>
             <Field label="Last name" error={errors.lastName}>
               <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
             </Field>
-          </div>
-
-          <Field label="Password" error={errors.password}>
-            <input name="password" type="password" placeholder="At least 8 characters" value={form.password} onChange={change} />
-          </Field>
-
-          <div className="row">
             <Field label="Email" error={errors.email}>
               <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} />
+            </Field>
+
+            <Field label="Password" error={errors.password}>
+              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
             </Field>
             <Field label="Phone number" error={errors.phone}>
               <div className="phone">
@@ -160,29 +158,30 @@ function JobSeekerSignup() {
                   value={form.phone} onChange={change} />
               </div>
             </Field>
-          </div>
-
-          <div className="row">
             <Field label="Major / field of study">
               <select name="major" value={form.major} onChange={change}>
                 {MAJORS.map((m) => <option key={m}>{m}</option>)}
               </select>
             </Field>
+
             <Field label="Graduation status">
               <select name="graduationStatus" value={form.graduationStatus} onChange={change}>
                 {STATUSES.map((s) => <option key={s}>{s}</option>)}
               </select>
             </Field>
+            <div className="span2">
+              <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
+                <SkillSelect value={skills} onChange={setSkills} />
+              </Field>
+            </div>
           </div>
 
-          <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
-            <SkillSelect value={skills} onChange={setSkills} />
-          </Field>
+          <div className="grid2">
+            <ChoiceChips label="Job type" options={JOB_TYPES} value={jobTypes} onChange={setJobTypes} />
+            <ChoiceChips label="Work mode" options={WORK_MODES} value={workModes} onChange={setWorkModes} />
+          </div>
 
-          <ChoiceChips label="Job type" options={JOB_TYPES} value={jobTypes} onChange={setJobTypes} />
-          <ChoiceChips label="Work mode" options={WORK_MODES} value={workModes} onChange={setWorkModes} />
-
-          <Field label="Upload CV" error={errors.cv} hint="Employers see your CV when you apply.">
+          <Field label="Upload CV" error={errors.cv}>
             <div
               className={`drop ${dragging ? 'drop--over' : ''}`}
               onClick={() => fileInput.current.click()}
@@ -198,7 +197,7 @@ function JobSeekerSignup() {
               ) : (
                 <p className="drop__text">Drag your CV here, or <span className="drop__browse">browse files</span></p>
               )}
-              <p className="drop__sub">PDF or Word</p>
+              <p className="drop__sub">PDF or Word · Employers see your CV when you apply.</p>
               <input ref={fileInput} type="file" accept=".pdf,.doc,.docx" hidden onChange={(e) => pickCv(e.target.files[0])} />
             </div>
           </Field>
@@ -247,78 +246,87 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
   };
 
   return (
-    <main className="container">
-      <Steps step={1} />
-      <h1 className="title">Create your company account</h1>
-      <p className="muted">Post jobs and internships, and get your applicants ranked by AI.</p>
+    <main className="container container--wide">
+      <div className="page-head">
+        <Steps step={1} />
+        <h1 className="title">Create your company account</h1>
+        <p className="muted">Post jobs and internships, and get your applicants ranked by AI.</p>
+      </div>
 
       <form className="card" onSubmit={submit} noValidate>
-        <h3 className="section-title">Company</h3>
+        <div className="cols">
+          {/* ----- Left: company ----- */}
+          <section className="col">
+            <h3 className="section-title">Company</h3>
 
-        <div className="logo-upload">
-          <div className="logo-upload__box">
-            {logo ? <img src={logo.url} alt="Company logo" /> : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
-              </svg>
-            )}
-          </div>
-          <div>
-            <p className="logo-upload__label">Company logo (optional)</p>
-            <button type="button" className="btn btn--outline" onClick={() => logoInput.current.click()}>
-              {logo ? 'Change logo' : 'Upload logo'}
-            </button>
-            <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files[0])} />
-          </div>
+            <div className="logo-upload">
+              <div className="logo-upload__box">
+                {logo ? <img src={logo.url} alt="Company logo" /> : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <p className="logo-upload__label">Company logo (optional)</p>
+                <button type="button" className="btn btn--outline" onClick={() => logoInput.current.click()}>
+                  {logo ? 'Change logo' : 'Upload logo'}
+                </button>
+                <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files[0])} />
+              </div>
+            </div>
+
+            <div className="grid2">
+              <Field label="Company name" error={errors.companyName}>
+                <input name="companyName" placeholder="Company name" value={form.companyName} onChange={change} />
+              </Field>
+              <Field label="Company website (optional)" error={errors.website}>
+                <input name="website" type="url" placeholder="https://www.company.bh" value={form.website} onChange={change} />
+              </Field>
+            </div>
+
+            <div className="grid2">
+              <Field label="Industry">
+                <select name="industry" value={form.industry} onChange={change}>
+                  {INDUSTRIES.map((x) => <option key={x}>{x}</option>)}
+                </select>
+              </Field>
+              <Field label="Location">
+                <select name="location" value={form.location} onChange={change}>
+                  {LOCATIONS.map((x) => <option key={x}>{x}</option>)}
+                </select>
+              </Field>
+            </div>
+
+            <Field label="About the company (optional)">
+              <textarea name="about" rows={2} placeholder="What does your company do?" value={form.about} onChange={change} />
+            </Field>
+          </section>
+
+          {/* ----- Right: HR login ----- */}
+          <section className="col col--side">
+            <h3 className="section-title">Your login (HR contact)</h3>
+
+            <div className="grid2">
+              <Field label="First name" error={errors.firstName}>
+                <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
+              </Field>
+              <Field label="Last name" error={errors.lastName}>
+                <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
+              </Field>
+            </div>
+
+            <Field label="Work email" error={errors.email}>
+              <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} />
+            </Field>
+
+            <Field label="Password" error={errors.password}>
+              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
+            </Field>
+
+            <button className="btn btn--primary btn--block col__submit" type="submit">Continue: choose a plan</button>
+          </section>
         </div>
-
-        <Field label="Company name" error={errors.companyName}>
-          <input name="companyName" placeholder="Company name" value={form.companyName} onChange={change} />
-        </Field>
-
-        <Field label="Company website (optional)" error={errors.website}
-          hint="Shown on every job you post, so applicants can learn about you.">
-          <input name="website" type="url" placeholder="https://www.company.bh" value={form.website} onChange={change} />
-        </Field>
-
-        <div className="row">
-          <Field label="Industry">
-            <select name="industry" value={form.industry} onChange={change}>
-              {INDUSTRIES.map((x) => <option key={x}>{x}</option>)}
-            </select>
-          </Field>
-          <Field label="Location">
-            <select name="location" value={form.location} onChange={change}>
-              {LOCATIONS.map((x) => <option key={x}>{x}</option>)}
-            </select>
-          </Field>
-        </div>
-
-        <Field label="About the company (optional)">
-          <textarea name="about" rows={3} placeholder="What does your company do?" value={form.about} onChange={change} />
-        </Field>
-
-        <hr className="divider" />
-        <h3 className="section-title">Your login (HR contact)</h3>
-
-        <div className="row">
-          <Field label="First name" error={errors.firstName}>
-            <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
-          </Field>
-          <Field label="Last name" error={errors.lastName}>
-            <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
-          </Field>
-        </div>
-
-        <Field label="Password" error={errors.password}>
-          <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
-        </Field>
-
-        <Field label="Work email" error={errors.email}>
-          <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} />
-        </Field>
-
-        <button className="btn btn--primary btn--block" type="submit">Continue: choose a plan</button>
       </form>
     </main>
   );
@@ -328,9 +336,11 @@ function ChoosePlan({ plan, setPlan, onFinish }) {
   const selected = PLANS.find((p) => p.id === plan);
   return (
     <main className="container container--wide">
-      <Steps step={2} />
-      <h1 className="title center">Choose your plan</h1>
-      <p className="muted center">Start free. Upgrade when you want AI ranking. Change or cancel any time.</p>
+      <div className="page-head center">
+        <Steps step={2} />
+        <h1 className="title">Choose your plan</h1>
+        <p className="muted">Start free. Upgrade when you want AI ranking. Change or cancel any time.</p>
+      </div>
 
       <div className="plans">
         {PLANS.map((p) => {
