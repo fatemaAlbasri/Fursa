@@ -1,5 +1,7 @@
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
+const { sendMail } = require('../config/mailer');
 const { signToken } = require('../middleware/auth');
 const { fileUrl, removeFiles } = require('../middleware/upload');
 
@@ -221,4 +223,124 @@ async function me(req, res, next) {
   }
 }
 
-module.exports = { signup, signin, me };
+const RESET_TTL_MINUTES = 60;
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+const isValidPassword = (v) => typeof v === 'string' && v.length >= 8;
+
+// POST /api/auth/forgot-password  { email }
+// Always answers the same way, so nobody can use this to find out which emails are registered
+async function forgotPassword(req, res, next) {
+  try {
+    const email = clean(req.body.email).toLowerCase();
+    if (!isEmail(email)) {
+      return res.status(400).json({ error: 'Enter a valid email', fields: { email: 'Enter a valid email' } });
+    }
+
+    const { rows } = await db.query('SELECT id, first_name FROM users WHERE email = $1', [email]);
+    const found = rows[0];
+    if (found) {
+      // Only the newest link works: cancel any older unused ones
+      await db.query(
+        'UPDATE password_resets SET used_at = now() WHERE user_id = $1 AND used_at IS NULL',
+        [found.id]
+      );
+
+      // The email gets the raw token, the database only keeps its hash
+      const token = crypto.randomBytes(32).toString('hex');
+      await db.query(
+        `INSERT INTO password_resets (user_id, token_hash, expires_at)
+         VALUES ($1, $2, now() + make_interval(mins => $3))`,
+        [found.id, hashToken(token), RESET_TTL_MINUTES]
+      );
+
+      const frontend = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+      const link = `${frontend}/reset-password?token=${token}`;
+      await sendMail({
+        to: email,
+        subject: 'Reset your Fursa password',
+        text:
+          `Hi ${found.first_name},\n\nUse this link to choose a new password:\n${link}\n\n` +
+          `The link works once and expires in ${RESET_TTL_MINUTES} minutes. ` +
+          `If you didn't ask for this, you can ignore this email.`,
+        html:
+          `<p>Hi ${found.first_name},</p><p><a href="${link}">Click here to choose a new password</a>.</p>` +
+          `<p>The link works once and expires in ${RESET_TTL_MINUTES} minutes. ` +
+          `If you didn't ask for this, you can ignore this email.</p>`,
+      });
+    }
+
+    res.json({ message: 'If an account exists for this email, we sent a link to reset the password.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/auth/reset-password  { token, password }  (token comes from the link in the email)
+async function resetPassword(req, res, next) {
+  const token = clean(req.body.token);
+  const password = req.body.password;
+  if (!token) return res.status(400).json({ error: 'This reset link is invalid or has expired' });
+  if (!isValidPassword(password)) {
+    return res.status(400).json({ error: 'Please fix the highlighted fields', fields: { password: 'At least 8 characters' } });
+  }
+
+  let client;
+  try {
+    client = await db.connect();
+  } catch (err) {
+    return next(err);
+  }
+  try {
+    await client.query('BEGIN');
+    // Mark the link used in the same step, so it can't be used twice at the same time
+    const { rows } = await client.query(
+      `UPDATE password_resets SET used_at = now()
+        WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+        RETURNING user_id`,
+      [hashToken(token)]
+    );
+    if (!rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'This reset link is invalid or has expired' });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, rows[0].user_id]);
+    await client.query('COMMIT');
+
+    res.json({ message: 'Your password was reset. You can sign in now.' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    next(err);
+  } finally {
+    client.release();
+  }
+}
+
+// PUT /api/auth/change-password  { currentPassword, newPassword }  (logged in)
+async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const errors = {};
+    if (typeof currentPassword !== 'string' || !currentPassword) errors.currentPassword = 'Required';
+    if (!isValidPassword(newPassword)) errors.newPassword = 'At least 8 characters';
+    else if (newPassword === currentPassword) errors.newPassword = 'Must be different from the current password';
+    if (Object.keys(errors).length) {
+      return res.status(400).json({ error: 'Please fix the highlighted fields', fields: errors });
+    }
+
+    const { rows } = await db.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    if (!rows[0]) return res.status(401).json({ error: 'Please sign in' });
+    if (!(await bcrypt.compare(currentPassword, rows[0].password_hash))) {
+      return res.status(400).json({ error: 'Current password is wrong', fields: { currentPassword: 'Wrong password' } });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.user.id]);
+    res.json({ message: 'Password changed' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { signup, signin, me, forgotPassword, resetPassword, changePassword };
