@@ -6,8 +6,7 @@ export default function Navbar({ tag, links = [], right }) {
   return (
     <header className="topbar">
       <Link to="/" className="logo logo--light">
-        <img src="/logo.svg" alt="" className="logo__img" />
-        <span className="logo__text">Fursa</span>
+        <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
         {tag && <span className="logo__tag">{tag}</span>}
       </Link>
 

@@ -243,6 +243,7 @@ a { text-decoration: none; }
   background: var(--brand-navy);
 }
 .topbar .logo__tag { color: var(--brand-accent); }
+.logo__full { height: 40px; width: auto; display: block; }
 .topbar__nav { display: flex; gap: 6px; flex: 1; }
 .topbar__link {
   color: var(--brand-gray); font-weight: 600; font-size: 15px;
@@ -255,5 +256,6 @@ a { text-decoration: none; }
 
 @media (max-width: 800px) {
   .topbar { gap: 8px; }
+  .logo__full { height: 34px; }
   .topbar__nav { order: 3; flex-basis: 100%; overflow-x: auto; }
 }
