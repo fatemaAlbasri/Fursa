@@ -343,4 +343,36 @@ async function changePassword(req, res, next) {
   }
 }
 
-module.exports = { signup, signin, me, forgotPassword, resetPassword, changePassword };
+// DELETE /api/auth/account  { password }  (logged in)
+// Everything linked to the user (profile, CVs, applications, company, jobs, ...) is removed by ON DELETE CASCADE
+async function deleteAccount(req, res, next) {
+  let client;
+  try {
+    client = await db.connect();
+  } catch (err) {
+    return next(err);
+  }
+  try {
+    const { rows } = await client.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    if (!rows[0]) return res.status(401).json({ error: 'Please sign in' });
+    const password = req.body.password;
+    if (typeof password !== 'string' || !(await bcrypt.compare(password, rows[0].password_hash))) {
+      return res.status(400).json({ error: 'Wrong password', fields: { password: 'Wrong password' } });
+    }
+
+    await client.query('BEGIN');
+    // payments.user_id has no ON DELETE CASCADE, so remove them first
+    await client.query('DELETE FROM payments WHERE user_id = $1', [req.user.id]);
+    await client.query('DELETE FROM users WHERE id = $1', [req.user.id]);
+    await client.query('COMMIT');
+
+    res.json({ message: 'Your account has been deleted' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    next(err);
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { signup, signin, me, forgotPassword, resetPassword, changePassword, deleteAccount };
