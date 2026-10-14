@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import SkillSelect from '../components/SkillSelect.jsx';
+import Navbar from '../components/Navbar.jsx';
 
 const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting', 'Other'];
 const STATUSES = ['Graduated', 'Final year student', 'Student'];
@@ -42,19 +43,6 @@ function Field({ label, error, hint, children }) {
       {hint && <p className="hint">{hint}</p>}
       {error && <p className="field__error">{error}</p>}
     </div>
-  );
-}
-
-function Header({ employer, right }) {
-  return (
-    <header className="topbar">
-      <Link to="/" className="logo logo--light">
-        <img src="/logo.svg" alt="" className="logo__img" />
-        <span className="logo__text">Fursa</span>
-        {employer && <span className="logo__tag">Employer</span>}
-      </Link>
-      <span className="topbar__right">{right}</span>
-    </header>
   );
 }
 
@@ -100,7 +88,7 @@ function JobSeekerSignup() {
 
   return (
     <div className="page">
-      <Header right={<>Already have an account? <Link className="link link--light" to="/signin?role=jobseeker">Sign in</Link></>} />
+      <Navbar right={<>Already have an account? <Link className="link link--light" to="/signin?role=jobseeker">Sign in</Link></>} />
 
       <main className="container">
         <span className="pill">Job seeker account</span>
@@ -360,7 +348,7 @@ function CompanySignup() {
 
   return (
     <div className="page">
-      <Header employer right={right} />
+      <Navbar tag="Employer" right={right} />
       {step === 1
         ? <CompanyDetails form={form} setForm={setForm} logo={logo} setLogo={setLogo} onNext={() => goToStep(2)} />
         : <ChoosePlan plan={plan} setPlan={setPlan} onFinish={finish} />}
