@@ -1,23 +1,46 @@
-const express = require('express');
-const cors = require('cors');
-const healthRoutes = require('./routes/health');
+// imports
+const express = require('express')
+const cors = require('cors')
+const { UPLOADS_DIR } = require('./middleware/upload')
 
-const app = express();
+// initialize express app
+const app = express()
 
-app.use(cors());
-app.use(express.json());
+// require middlewares
+app.use(cors())
+app.use(express.json())
 
-app.use('/api/health', healthRoutes);
+// Root route
+app.get('/', (req, res) => {
+  res.send('Your app is connected ...')
+})
+
+// Require routes
+const authRoutes = require('./routes/AuthRouter')
+
+// Uploaded CVs and logos
+app.use('/uploads', express.static(UPLOADS_DIR))
+
+// use routes
+app.use('/api/auth', authRoutes)
 
 // 404 for unknown routes
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
-});
+  res.status(404).json({ error: 'Not found' })
+})
 
 // Central error handler
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Server error' });
-});
+  // Upload problems (file too big, wrong type) are the user's mistake, not a server error
+  if (err.name === 'MulterError') {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'File is too big (max 5 MB)'
+        : err.message
+    return res.status(400).json({ error: message })
+  }
+  console.error(err)
+  res.status(err.status || 500).json({ error: err.message || 'Server error' })
+})
 
-module.exports = app;
+module.exports = app
