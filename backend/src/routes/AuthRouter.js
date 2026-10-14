@@ -1,21 +1,43 @@
-const express = require('express');
-const { requireAuth } = require('../middleware/auth');
-const { upload } = require('../middleware/upload');
-const AuthController = require('../controllers/AuthController');
+const express = require('express')
+const { requireAuth } = require('../middleware/auth')
+const { upload } = require('../middleware/upload')
+const AuthController = require('../controllers/AuthController')
 
-const router = express.Router();
+const router = express.Router()
 
-// POST /api/auth/signup  (multipart/form-data or JSON)
+// POST /api/auth/signup
 router.post(
   '/signup',
-  upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'logo', maxCount: 1 }]),
+  upload.fields([
+    { name: 'cv', maxCount: 1 },
+    { name: 'logo', maxCount: 1 }
+  ]),
   AuthController.signup
-);
+)
 
-// POST /api/auth/signin  { email, password, role? }
-router.post('/signin', AuthController.signin);
+// POST /api/auth/signin
+router.post('/signin', AuthController.signin)
 
-// GET /api/auth/me  → the logged-in user (frontend calls this on page load)
-router.get('/me', requireAuth, AuthController.me);
+// GET /api/auth/me
+router.get('/me', requireAuth, AuthController.me)
 
-module.exports = router;
+// POST /api/auth/forgot-password  { email }  → emails a reset link
+router.post('/forgot-password', AuthController.forgotPassword)
+
+// POST /api/auth/reset-password  { token, password }  (token from the reset link)
+router.post('/reset-password', AuthController.resetPassword)
+
+// POST /api/auth/profile/logout  (logged in) → frontend then deletes its saved token
+router.post('/profile/logout', requireAuth, AuthController.logout)
+
+// PUT /api/auth/profile/change-password  { currentPassword, newPassword }  (logged in)
+router.put(
+  '/profile/change-password',
+  requireAuth,
+  AuthController.changePassword
+)
+
+// DELETE /api/auth/profile/account  { password }  (logged in)
+router.delete('/profile/account', requireAuth, AuthController.deleteAccount)
+
+module.exports = router
