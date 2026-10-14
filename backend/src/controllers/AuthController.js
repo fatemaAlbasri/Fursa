@@ -21,6 +21,10 @@ function toList(value) {
   return [value];
 }
 
+const JOB_TYPES = ['internship', 'full_time', 'part_time'];
+const WORK_MODES = ['onsite', 'remote', 'hybrid'];
+const pickList = (value, allowed) => [...new Set(toList(value).map(clean).filter((v) => allowed.includes(v)))];
+
 // Phone is optional. "+973 3XXX XXXX" → "+9733XXXXXXX"; just "+973" means empty
 function toPhone(value) {
   const digits = clean(value).replace(/\s/g, '').replace(/^\+973/, '');
@@ -62,8 +66,12 @@ async function createUser(client, body, role) {
 
 async function createSeeker(client, userId, body, phone, skills, cv) {
   await client.query(
-    `INSERT INTO seeker_profiles (user_id, phone, major, graduation_status) VALUES ($1, $2, $3, $4)`,
-    [userId, phone, clean(body.major), clean(body.graduationStatus)]
+    `INSERT INTO seeker_profiles (user_id, phone, major, graduation_status, job_types, work_modes)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      userId, phone, clean(body.major), clean(body.graduationStatus),
+      pickList(body.jobTypes, JOB_TYPES), pickList(body.workModes, WORK_MODES),
+    ]
   );
 
   // Add any skill that isn't in the skills table yet, then link all of them
