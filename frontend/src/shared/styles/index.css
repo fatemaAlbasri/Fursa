@@ -228,3 +228,7 @@ a { text-decoration: none; }
   .plan-bar { flex-direction: column; align-items: stretch; text-align: center; }
   .logo__tag { display: none; }
 }
+
+/* ===== New Fursa logo ===== */
+.logo__key { height: 44px; width: auto; display: block; }
+.logo__wordmark { height: 40px; width: auto; display: block; }

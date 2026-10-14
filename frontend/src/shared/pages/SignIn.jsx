@@ -36,9 +36,9 @@ export default function SignIn() {
   return (
     <div className="split">
       <aside className="split__brand">
-        <Link to="/" className="logo logo--light">
-          <img src="/logo.svg" alt="" className="logo__img" />
-          <span className="logo__text">Fursa</span>
+                <Link to="/" className="logo">
+          <img src="/fursa-key.png" alt="" className="logo__key" />
+          <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
         </Link>
         <div className="split__copy">
           <h1>Match. Apply.<br /><span className="accent">Get hired.</span></h1>

@@ -48,9 +48,9 @@ function Field({ label, error, hint, children }) {
 function Header({ employer, right }) {
   return (
     <header className="topbar">
-      <Link to="/" className="logo logo--light">
-        <img src="/logo.svg" alt="" className="logo__img" />
-        <span className="logo__text">Fursa</span>
+            <Link to="/" className="logo">
+        <img src="/fursa-key.png" alt="" className="logo__key" />
+        <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
         {employer && <span className="logo__tag">Employer</span>}
       </Link>
       <span className="topbar__right">{right}</span>
