@@ -24,10 +24,10 @@ router.post('/forgot-password', AuthController.forgotPassword);
 // POST /api/auth/reset-password  { token, password }  (token from the reset link)
 router.post('/reset-password', AuthController.resetPassword);
 
-// PUT /api/auth/change-password  { currentPassword, newPassword }  (logged in)
-router.put('/change-password', requireAuth, AuthController.changePassword);
+// PUT /api/auth/profile/change-password  { currentPassword, newPassword }  (logged in)
+router.put('/profile/change-password', requireAuth, AuthController.changePassword);
 
-// DELETE /api/auth/account  { password }  (logged in)
-router.delete('/account', requireAuth, AuthController.deleteAccount);
+// DELETE /api/auth/profile/account  { password }  (logged in)
+router.delete('/profile/account', requireAuth, AuthController.deleteAccount);
 
 module.exports = router;
