@@ -101,9 +101,6 @@ async function createCompany(client, userId, body, logo) {
   );
 }
 
-// POST /api/auth/signup  (multipart/form-data or JSON)
-// Job seeker: { role:'jobseeker', firstName, lastName, email, password, phone, major, graduationStatus, skills[], cv? }
-// Company:    { role:'company', companyName, website?, industry, location, about?, firstName, lastName, email, password, plan, logo? }
 async function signup(req, res, next) {
   const body = req.body;
   const files = Object.values(req.files || {}).flat();
@@ -167,7 +164,7 @@ async function signup(req, res, next) {
 
     const user = await loadUser(userId);
     const result = { token: signToken(user), user };
-    // Frontend: if needsPayment, go to the payment page with this plan
+
     if (plan) result.needsPayment = Number(plan.price_bhd_month) > 0 ? { planId: plan.id, plan: plan.name } : false;
     res.status(201).json(result);
   } catch (err) {
@@ -182,8 +179,7 @@ async function signup(req, res, next) {
   }
 }
 
-// POST /api/auth/signin  { email, password, role? }
-// role (jobseeker/company) is the tab the user picked; we tell them if it's the wrong one
+
 async function signin(req, res, next) {
   try {
     const email = clean(req.body.email).toLowerCase();
@@ -194,7 +190,6 @@ async function signin(req, res, next) {
 
     const { rows } = await db.query('SELECT id, password_hash, role FROM users WHERE email = $1', [email]);
     const found = rows[0];
-    // Same message for wrong email and wrong password, so emails can't be guessed
     if (!found || !(await bcrypt.compare(password, found.password_hash))) {
       return res.status(401).json({ error: 'Wrong email or password' });
     }
@@ -212,7 +207,7 @@ async function signin(req, res, next) {
   }
 }
 
-// GET /api/auth/me  → the logged-in user (frontend calls this on page load)
+// The logged-in user (frontend calls this on page load)
 async function me(req, res, next) {
   try {
     const user = await loadUser(req.user.id);
@@ -227,8 +222,6 @@ const RESET_TTL_MINUTES = 60;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 const isValidPassword = (v) => typeof v === 'string' && v.length >= 8;
 
-// POST /api/auth/forgot-password  { email }
-// Always answers the same way, so nobody can use this to find out which emails are registered
 async function forgotPassword(req, res, next) {
   try {
     const email = clean(req.body.email).toLowerCase();
@@ -275,7 +268,7 @@ async function forgotPassword(req, res, next) {
   }
 }
 
-// POST /api/auth/reset-password  { token, password }  (token comes from the link in the email)
+// After taking the token from the link in the email
 async function resetPassword(req, res, next) {
   const token = clean(req.body.token);
   const password = req.body.password;
@@ -292,7 +285,6 @@ async function resetPassword(req, res, next) {
   }
   try {
     await client.query('BEGIN');
-    // Mark the link used in the same step, so it can't be used twice at the same time
     const { rows } = await client.query(
       `UPDATE password_resets SET used_at = now()
         WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
@@ -317,7 +309,6 @@ async function resetPassword(req, res, next) {
   }
 }
 
-// PUT /api/auth/profile/change-password  { currentPassword, newPassword }  (logged in)
 async function changePassword(req, res, next) {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -343,8 +334,6 @@ async function changePassword(req, res, next) {
   }
 }
 
-// DELETE /api/auth/profile/account  { password }  (logged in)
-// Everything linked to the user (profile, CVs, applications, company, jobs, ...) is removed by ON DELETE CASCADE
 async function deleteAccount(req, res, next) {
   let client;
   try {
@@ -361,7 +350,6 @@ async function deleteAccount(req, res, next) {
     }
 
     await client.query('BEGIN');
-    // payments.user_id has no ON DELETE CASCADE, so remove them first
     await client.query('DELETE FROM payments WHERE user_id = $1', [req.user.id]);
     await client.query('DELETE FROM users WHERE id = $1', [req.user.id]);
     await client.query('COMMIT');
@@ -375,8 +363,6 @@ async function deleteAccount(req, res, next) {
   }
 }
 
-// POST /api/auth/profile/logout  (logged in)
-// The token is not stored on the server, so the frontend must also delete its saved token
 function logout(req, res) {
   res.json({ message: 'You are logged out' });
 }
