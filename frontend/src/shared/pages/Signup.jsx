@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import SkillSelect from '../components/SkillSelect.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting', 'Other'];
 const STATUSES = ['Graduated', 'Final year student', 'Student'];
 const INDUSTRIES = ['Technology', 'Banking & Finance', 'Telecom', 'Consulting', 'Healthcare', 'Retail', 'Government', 'Other'];
 const LOCATIONS = ['Manama', 'Seef', 'Muharraq', 'Riffa', 'Isa Town', 'Hamad Town', 'Other'];
+const JOB_TYPES = ['Full-time', 'Part-time', 'Internship'];
+const WORK_MODES = ['On-site', 'Remote', 'Hybrid'];
 
 const PLANS = [
   {
@@ -45,10 +48,33 @@ function Field({ label, error, hint, children }) {
   );
 }
 
+// A row of on/off buttons. Pick any (or none).
+function ChoiceChips({ label, options, value, onChange }) {
+  const toggle = (opt) =>
+    onChange(value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]);
+  return (
+    <div className="choice-box">
+      <p className="choice-box__label">{label} <span>(optional · pick any)</span></p>
+      <div className="choice-box__chips">
+        {options.map((opt) => {
+          const on = value.includes(opt);
+          return (
+            <button key={opt} type="button" className={on ? 'choice choice--on' : 'choice'}
+              aria-pressed={on} onClick={() => toggle(opt)}>
+              {on && '✓ '}{opt}
+            </button>
+          );
+        })}
+      </div>
+      <p className="hint">Leave empty to see all jobs. You can change this later in your profile.</p>
+    </div>
+  );
+}
+
 function Header({ employer, right }) {
   return (
     <header className="topbar">
-            <Link to="/" className="logo">
+      <Link to="/" className="logo">
         <img src="/fursa-key.png" alt="" className="logo__key" />
         <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
         {employer && <span className="logo__tag">Employer</span>}
@@ -66,6 +92,8 @@ function JobSeekerSignup() {
     major: MAJORS[0], graduationStatus: STATUSES[0],
   });
   const [skills, setSkills] = useState([]);
+  const [jobTypes, setJobTypes] = useState([]);
+  const [workModes, setWorkModes] = useState([]);
   const [cv, setCv] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [errors, setErrors] = useState({});
@@ -93,8 +121,8 @@ function JobSeekerSignup() {
     if (hasErrors(errs)) return;
 
     // TODO (backend): POST /api/auth/signup as FormData
-    // { role: 'jobseeker', ...form, phone: '+973' + form.phone, skills, cv }
-    console.log('Sign up job seeker', { ...form, phone: '+973' + form.phone, skills, cv: cv?.name });
+    // { role: 'jobseeker', ...form, phone: '+973' + form.phone, skills, jobTypes, workModes, cv }
+    console.log('Sign up job seeker', { ...form, phone: '+973' + form.phone, skills, jobTypes, workModes, cv: cv?.name });
     alert('Account created (demo)');
   };
 
@@ -150,6 +178,9 @@ function JobSeekerSignup() {
           <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
             <SkillSelect value={skills} onChange={setSkills} />
           </Field>
+
+          <ChoiceChips label="Job type" options={JOB_TYPES} value={jobTypes} onChange={setJobTypes} />
+          <ChoiceChips label="Work mode" options={WORK_MODES} value={workModes} onChange={setWorkModes} />
 
           <Field label="Upload CV" error={errors.cv} hint="Employers see your CV when you apply.">
             <div
@@ -280,7 +311,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
         </div>
 
         <Field label="Password" error={errors.password}>
-          <input name="password" type="password" placeholder="At least 8 characters" value={form.password} onChange={change} />
+          <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
         </Field>
 
         <Field label="Work email" error={errors.email}>
