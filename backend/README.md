@@ -6,11 +6,10 @@ Node.js + Express + PostgreSQL (Supabase or local).
 
 ```bash
 npm install
-cp .env.example .env    # then put the real DATABASE_URL in .env
 npm run dev
 ```
 
-Check it works: open http://localhost:5000/api/health — you should see `"database": "connected"`.
+Check it works: open http://localhost:5000/ — you should see `Your app is connected ...`.
 
 ## Structure
 
