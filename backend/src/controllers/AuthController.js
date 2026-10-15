@@ -4,6 +4,7 @@ const db = require('../config/db')
 const { sendMail } = require('../config/mailer')
 const { signToken } = require('../middleware/auth')
 const { fileUrl, removeFiles } = require('../middleware/upload')
+const { saveParsedCv } = require('../services/cvParser')
 
 // The frontend says 'jobseeker' / 'company', the database says 'seeker' / 'employer'
 const ROLES = {
@@ -116,11 +117,13 @@ async function createSeeker(client, userId, body, phone, skills, cv) {
   )
 
   if (cv) {
-    await client.query(
-      `INSERT INTO resumes (seeker_id, file_name, file_url) VALUES ($1, $2, $3)`,
+    const { rows } = await client.query(
+      `INSERT INTO resumes (seeker_id, file_name, file_url) VALUES ($1, $2, $3) RETURNING id`,
       [userId, cv.originalname, fileUrl(cv)]
     )
+    return rows[0].id
   }
+  return null
 }
 
 // Every company starts on Free. A paid plan becomes active only after payment.
@@ -212,8 +215,9 @@ async function signup(req, res, next) {
   try {
     await client.query('BEGIN')
     const userId = await createUser(client, body, role)
+    let resumeId = null
     if (role === 'seeker') {
-      await createSeeker(
+      resumeId = await createSeeker(
         client,
         userId,
         body,
@@ -235,6 +239,13 @@ async function signup(req, res, next) {
           ? { planId: plan.id, plan: plan.name }
           : false
     res.status(201).json(result)
+
+    // Read the CV after answering, so sign up doesn't wait for it
+    if (resumeId) {
+      saveParsedCv(resumeId, userId, req.files.cv[0].path).catch((err) =>
+        console.error('CV parsing after sign up failed:', err.message)
+      )
+    }
   } catch (err) {
     await client.query('ROLLBACK')
     removeFiles(files)
