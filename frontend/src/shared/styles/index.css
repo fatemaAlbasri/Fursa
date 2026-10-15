@@ -1,14 +1,14 @@
 
 :root {
-  --navy: #183B56;   
-  --teal: #159A9C;     
-  --light: #EAF7F7;     
-  --accent: #8ED1D1;   
-  --gray: #E5EAF0;      
-  --slate: #657D93;     
+  --navy: #183B56;      /* Primary – Navy  : top bar, left panel, text      */
+  --teal: #159A9C;      /* Teal            : buttons, chips, links, tabs    */
+  --light: #EAF7F7;     /* Light Background: page background, light boxes   */
+  --accent: #8ED1D1;    /* Soft Accent     : "Chance.", dashed borders      */
+  --gray: #E5EAF0;      /* Soft Gray       : borders, tab background        */
+  --slate: #657D93;     /* Slate           : secondary text                 */
   --white: #FFFFFF;
 
-  --error: #D92D20;    
+  --error: #D92D20;     /* only for error messages */
   --focus: rgba(21, 154, 156, .2);
   --radius: 10px;
 }
@@ -43,10 +43,14 @@ button { font-family: inherit; }
 .dots span { height: 6px; width: 16px; border-radius: 4px; background: var(--slate); }
 .dots span:first-child { width: 56px; background: var(--teal); }
 .dots span:nth-child(2) { width: 24px; background: var(--accent); }
-.split__form { display: grid; place-items: center; padding: 32px 24px; }
+.split__form { display: grid; place-items: center; padding: 28px 24px; }
 
-.auth { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
-.auth h2 { font-size: 28px; font-weight: 700; }
+.auth { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; }
+.auth h2 { font-size: 24px; font-weight: 700; }
+.auth > .muted { margin-top: -6px; font-size: 13px; }
+.auth .tab { padding: 7px; font-size: 13px; }
+.auth .btn { padding: 10px 16px; font-size: 14px; }
+.auth .center { font-size: 13px; }
 
 .tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--gray); padding: 4px; border-radius: var(--radius); }
 .tab {
@@ -76,7 +80,7 @@ button { font-family: inherit; }
 .page-head .muted { margin-top: 2px; }
 .card {
   background: var(--white); border: 1px solid var(--gray); border-radius: 14px;
-  padding: 18px 22px; display: flex; flex-direction: column; gap: 12px;
+  padding: 18px 22px; display: flex; flex-direction: column; gap: 10px;
 }
 
 /* grids */
@@ -149,19 +153,29 @@ button { font-family: inherit; }
 
 /* ---------- Job type / Work mode choices ---------- */
 .choice-box {
-  background: var(--light); border: 1px solid var(--gray); border-radius: 10px;
+  background: var(--white); border: 1px solid var(--gray); border-radius: 10px;
   padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
 }
+.choice-box__head { display: flex; align-items: center; justify-content: space-between; }
 .choice-box__label { font-size: 13px; font-weight: 600; }
-.choice-box__label span { font-weight: 400; color: var(--slate); }
+.choice-box__opt {
+  font-size: 11px; font-weight: 600; color: var(--slate);
+  background: var(--light); padding: 2px 8px; border-radius: 999px;
+}
 .choice-box__chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .choice {
-  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--gray);
-  background: var(--white); color: var(--navy);
+  display: inline-flex; align-items: center; gap: 7px;
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  padding: 6px 12px 6px 8px; border-radius: 8px; border: 1px solid var(--gray);
+  background: var(--white); color: var(--navy); transition: border-color .15s, background .15s;
 }
-.choice:hover { border-color: var(--teal); }
-.choice--on { background: var(--teal); border-color: var(--teal); color: var(--white); }
+.choice:hover { border-color: var(--accent); }
+.choice__box {
+  width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--gray);
+  display: grid; place-items: center; font-size: 11px; font-weight: 700; line-height: 1; color: var(--white);
+}
+.choice--on { background: var(--light); border-color: var(--teal); color: var(--navy); font-weight: 600; }
+.choice--on .choice__box { background: var(--teal); border-color: var(--teal); }
 
 /* ---------- CV drop box (one line) ---------- */
 .drop {
@@ -236,6 +250,7 @@ button { font-family: inherit; }
 .btn--outline:hover { background: var(--light); }
 .btn--white { background: var(--white); color: var(--teal); }
 .link { color: var(--teal); text-decoration: underline; font-weight: 600; }
+.switch { text-align: center; font-size: 13px; color: var(--slate); margin-top: 12px; }
 .link--light { color: var(--accent); }
 .small { font-size: 12px; font-weight: 500; }
 .muted { color: var(--slate); }

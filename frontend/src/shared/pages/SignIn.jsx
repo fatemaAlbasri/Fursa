@@ -50,7 +50,7 @@ export default function SignIn() {
       </aside>
 
       <main className="split__form">
-        <form className="auth" onSubmit={submit} noValidate>
+        <form className="auth" onSubmit={submit} noValidate autoComplete="off">
           <h2>Welcome back</h2>
           <p className="muted">Sign in as a job seeker or a company.</p>
 
@@ -66,7 +66,7 @@ export default function SignIn() {
           </div>
 
           <Field label={isCompany ? 'Company email' : 'Email'} error={errors.email}>
-            <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} />
+            <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} autoComplete="off" />
           </Field>
 
           <Field label="Password" error={errors.password}

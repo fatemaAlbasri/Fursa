@@ -54,19 +54,54 @@ function ChoiceChips({ label, options, value, onChange }) {
     onChange(value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]);
   return (
     <div className="choice-box">
-      <p className="choice-box__label">{label} <span>(optional · leave empty to see all jobs)</span></p>
-      <div className="choice-box__chips">
+      <div className="choice-box__head">
+        <span className="choice-box__label">{label}</span>
+        <span className="choice-box__opt">Optional</span>
+      </div>
+      <div className="choice-box__chips" role="group" aria-label={label}>
         {options.map((opt) => {
           const on = value.includes(opt);
           return (
             <button key={opt} type="button" className={on ? 'choice choice--on' : 'choice'}
               aria-pressed={on} onClick={() => toggle(opt)}>
-              {on && '✓ '}{opt}
+              <span className="choice__box">{on ? '✓' : ''}</span>{opt}
             </button>
           );
         })}
       </div>
     </div>
+  );
+}
+
+// +973 phone box
+function PhoneInput({ value, onChange, placeholder = '3XXX XXXX' }) {
+  return (
+    <div className="phone">
+      <span className="phone__code">+973</span>
+      <input name="phone" type="tel" inputMode="numeric" maxLength={9} placeholder={placeholder}
+        value={value} onChange={onChange} autoComplete="off" />
+    </div>
+  );
+}
+
+// Text box with suggestions: the user can pick from the list OR type their own.
+function TypeOrPick({ name, value, onChange, options, placeholder }) {
+  const listId = `${name}-options`;
+  return (
+    <>
+      <input name={name} list={listId} value={value} onChange={onChange} placeholder={placeholder} autoComplete="off" />
+      <datalist id={listId}>
+        {options.map((x) => <option key={x} value={x} />)}
+      </datalist>
+    </>
+  );
+}
+
+function SignInLink({ role }) {
+  return (
+    <p className="switch">
+      Already have an account? <Link className="link" to={`/signin?role=${role}`}>Sign in</Link>
+    </p>
   );
 }
 
@@ -127,7 +162,7 @@ function JobSeekerSignup() {
 
   return (
     <div className="page page--fit">
-      <Header right={<>Already have an account? <Link className="link link--light" to="/signin?role=jobseeker">Sign in</Link></>} />
+      <Header />
 
       <main className="container container--wide">
         <div className="page-head">
@@ -136,7 +171,7 @@ function JobSeekerSignup() {
           <p className="muted">Add your skills and CV so Fursa can show you the jobs that match you.</p>
         </div>
 
-        <form className="card" onSubmit={submit} noValidate>
+        <form className="card" onSubmit={submit} noValidate autoComplete="off">
           <div className="grid3">
             <Field label="First name" error={errors.firstName}>
               <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
@@ -145,18 +180,14 @@ function JobSeekerSignup() {
               <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
             </Field>
             <Field label="Email" error={errors.email}>
-              <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} />
+              <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} autoComplete="off" />
             </Field>
 
             <Field label="Password" error={errors.password}>
               <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
             </Field>
             <Field label="Phone number" error={errors.phone}>
-              <div className="phone">
-                <span className="phone__code">+973</span>
-                <input name="phone" type="tel" inputMode="numeric" maxLength={9} placeholder="3XXX XXXX"
-                  value={form.phone} onChange={change} />
-              </div>
+              <PhoneInput value={form.phone} onChange={change} />
             </Field>
             <Field label="Major / field of study">
               <select name="major" value={form.major} onChange={change}>
@@ -204,6 +235,7 @@ function JobSeekerSignup() {
 
           <button className="btn btn--primary btn--block" type="submit">Create account & see my jobs</button>
         </form>
+        <SignInLink role="jobseeker" />
       </main>
     </div>
   );
@@ -241,6 +273,9 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
     if (!form.lastName.trim()) errs.lastName = 'Required';
     if (form.password.length < 8) errs.password = 'At least 8 characters';
     if (!isEmail(form.email)) errs.email = 'Enter a valid email';
+    if (!/^\d{8}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Enter 8 digits';
+    if (!form.industry.trim()) errs.industry = 'Required';
+    if (!form.location.trim()) errs.location = 'Required';
     setErrors(errs);
     if (!hasErrors(errs)) onNext();
   };
@@ -253,7 +288,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
         <p className="muted">Post jobs and internships, and get your applicants ranked by AI.</p>
       </div>
 
-      <form className="card" onSubmit={submit} noValidate>
+      <form className="card" onSubmit={submit} noValidate autoComplete="off">
         <div className="cols">
           {/* ----- Left: company ----- */}
           <section className="col">
@@ -285,16 +320,19 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
               </Field>
             </div>
 
+            <Field label="Company phone number" error={errors.phone}
+              hint="The company's main number. Shared with applicants you accept, so they can contact you.">
+              <PhoneInput value={form.phone} onChange={change} placeholder="17XX XXXX" />
+            </Field>
+
             <div className="grid2">
-              <Field label="Industry">
-                <select name="industry" value={form.industry} onChange={change}>
-                  {INDUSTRIES.map((x) => <option key={x}>{x}</option>)}
-                </select>
+              <Field label="Industry" error={errors.industry}>
+                <TypeOrPick name="industry" value={form.industry} onChange={change} options={INDUSTRIES}
+                  placeholder="Pick or type your industry" />
               </Field>
-              <Field label="Location">
-                <select name="location" value={form.location} onChange={change}>
-                  {LOCATIONS.map((x) => <option key={x}>{x}</option>)}
-                </select>
+              <Field label="Location" error={errors.location}>
+                <TypeOrPick name="location" value={form.location} onChange={change} options={LOCATIONS}
+                  placeholder="Pick or type a city" />
               </Field>
             </div>
 
@@ -317,7 +355,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
             </div>
 
             <Field label="Work email" error={errors.email}>
-              <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} />
+              <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} autoComplete="off" />
             </Field>
 
             <Field label="Password" error={errors.password}>
@@ -328,6 +366,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
           </section>
         </div>
       </form>
+      <SignInLink role="company" />
     </main>
   );
 }
@@ -380,8 +419,8 @@ function ChoosePlan({ plan, setPlan, onFinish }) {
 function CompanySignup() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    companyName: '', website: '', industry: INDUSTRIES[0], location: LOCATIONS[0], about: '',
-    firstName: '', lastName: '', password: '', email: '',
+    companyName: '', website: '', industry: '', location: '', about: '',
+    firstName: '', lastName: '', password: '', email: '', phone: '',
   });
   const [logo, setLogo] = useState(null);
   const [plan, setPlan] = useState('starter');
@@ -395,9 +434,9 @@ function CompanySignup() {
     alert(plan === 'free' ? 'Company account created (demo)' : 'Going to payment (demo)');
   };
 
-  const right = step === 1
-    ? <>Already have an account? <Link className="link link--light" to="/signin?role=company">Sign in</Link></>
-    : <button type="button" className="back-link" onClick={() => goToStep(1)}>← Back</button>;
+  const right = step === 2
+    ? <button type="button" className="back-link" onClick={() => goToStep(1)}>← Back</button>
+    : null;
 
   return (
     <div className="page">
