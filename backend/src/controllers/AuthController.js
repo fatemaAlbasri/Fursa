@@ -94,13 +94,13 @@ async function createSeeker(client, userId, body, phone, skills, cv) {
 }
 
 // Every company starts on Free. A paid plan becomes active only after payment.
-async function createCompany(client, userId, body, logo) {
+async function createCompany(client, userId, body, phone, logo) {
   const { rows } = await client.query(
-    `INSERT INTO companies (user_id, name, logo_url, website, industry, location, about)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    `INSERT INTO companies (user_id, name, logo_url, website, phone, industry, location, about)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
     [
       userId, clean(body.companyName), logo ? fileUrl(logo) : null, clean(body.website) || null,
-      clean(body.industry), clean(body.location), clean(body.about) || null,
+      phone, clean(body.industry), clean(body.location), clean(body.about) || null,
     ]
   );
   await client.query(
@@ -121,9 +121,10 @@ async function signup(req, res, next) {
   if (!role) errors.role = 'Role must be jobseeker or company';
   validateAccount(body, errors);
 
+  const p = toPhone(body.phone);
+  if (p.error) errors.phone = p.error; else phone = p.phone;
+
   if (role === 'seeker') {
-    const p = toPhone(body.phone);
-    if (p.error) errors.phone = p.error; else phone = p.phone;
     if (!clean(body.major)) errors.major = 'Required';
     if (!clean(body.graduationStatus)) errors.graduationStatus = 'Required';
     skills = [...new Set(toList(body.skills).map(clean).filter(Boolean))];
@@ -166,7 +167,7 @@ async function signup(req, res, next) {
     if (role === 'seeker') {
       await createSeeker(client, userId, body, phone, skills, req.files?.cv?.[0]);
     } else {
-      await createCompany(client, userId, body, req.files?.logo?.[0]);
+      await createCompany(client, userId, body, phone, req.files?.logo?.[0]);
     }
     await client.query('COMMIT');
 
