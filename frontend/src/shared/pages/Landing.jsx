@@ -29,7 +29,7 @@ const PLANS = [
     ],
   },
   {
-    id: 'starter', name: 'Starter', tagline: 'For small teams hiring 1–2 roles', price: 'BHD [price]',
+    id: 'starter', name: 'Starter', tagline: 'For small teams hiring 1–2 roles', price: 'BHD 15',
     cta: 'Choose Starter', popular: true,
     features: [
       ['Up to 2 active jobs', true], ['AI ranking & Top 10', true],
@@ -37,7 +37,7 @@ const PLANS = [
     ],
   },
   {
-    id: 'growth', name: 'Growth', tagline: 'For companies hiring often', price: 'BHD [price]', cta: 'Choose Growth',
+    id: 'growth', name: 'Growth', tagline: 'For companies hiring often', price: 'BHD 25', cta: 'Choose Growth',
     features: [
       ['Unlimited active jobs', true], ['AI ranking & Top 10', true],
       ['Bulk shortlist / reject', true], ['Hiring summary per job', true],

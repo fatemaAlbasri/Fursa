@@ -314,7 +314,7 @@ a { text-decoration: none; }
     linear-gradient(0deg, rgba(16, 42, 62, .45) 0%, rgba(16, 42, 62, 0) 28%);
 }
 .hero__inner {
-  position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 32px;
+  position: relative; z-index: 1; padding: 0 clamp(32px, 6vw, 112px); /* full width: copy sits left, not in a centred 1200px box */
   min-height: clamp(520px, 78vh, 680px); display: flex; align-items: center;
 }
 .hero__copy { max-width: 540px; padding: 72px 0; }

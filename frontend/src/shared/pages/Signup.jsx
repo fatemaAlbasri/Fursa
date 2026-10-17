@@ -17,14 +17,14 @@ const PLANS = [
     ],
   },
   {
-    id: 'starter', name: 'Starter', tagline: 'For small teams hiring 1–2 roles', price: 'BHD [price]', popular: true,
+    id: 'starter', name: 'Starter', tagline: 'For small teams hiring 1–2 roles', price: 'BHD 15', popular: true,
     features: [
       ['Up to 2 active jobs', true], ['AI ranking & Top 10', true], ['Match reasons for every applicant', true],
       ['Bulk shortlist / reject', true], ['Unlimited jobs', false],
     ],
   },
   {
-    id: 'growth', name: 'Growth', tagline: 'For companies hiring often', price: 'BHD [price]',
+    id: 'growth', name: 'Growth', tagline: 'For companies hiring often', price: 'BHD 25',
     features: [
       ['Unlimited active jobs', true], ['AI ranking & Top 10', true], ['Match reasons for every applicant', true],
       ['Bulk shortlist / reject', true], ['Hiring summary per job', true],
