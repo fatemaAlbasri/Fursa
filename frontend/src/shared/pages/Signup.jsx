@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import SkillSelect from '../components/SkillSelect.jsx';
-import Navbar from '../components/Navbar.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting', 'Other'];
 const STATUSES = ['Graduated', 'Final year student', 'Student'];
@@ -48,6 +48,76 @@ function Field({ label, error, hint, children }) {
   );
 }
 
+// A row of on/off buttons. Pick any (or none).
+function ChoiceChips({ label, options, value, onChange }) {
+  const toggle = (opt) =>
+    onChange(value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]);
+  return (
+    <div className="choice-box">
+      <div className="choice-box__head">
+        <span className="choice-box__label">{label}</span>
+        <span className="choice-box__opt">Optional</span>
+      </div>
+      <div className="choice-box__chips" role="group" aria-label={label}>
+        {options.map((opt) => {
+          const on = value.includes(opt);
+          return (
+            <button key={opt} type="button" className={on ? 'choice choice--on' : 'choice'}
+              aria-pressed={on} onClick={() => toggle(opt)}>
+              <span className="choice__box">{on ? '✓' : ''}</span>{opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// +973 phone box
+function PhoneInput({ value, onChange, placeholder = '3XXX XXXX' }) {
+  return (
+    <div className="phone">
+      <span className="phone__code">+973</span>
+      <input name="phone" type="tel" inputMode="numeric" maxLength={9} placeholder={placeholder}
+        value={value} onChange={onChange} autoComplete="off" />
+    </div>
+  );
+}
+
+// Text box with suggestions: the user can pick from the list OR type their own.
+function TypeOrPick({ name, value, onChange, options, placeholder }) {
+  const listId = `${name}-options`;
+  return (
+    <>
+      <input name={name} list={listId} value={value} onChange={onChange} placeholder={placeholder} autoComplete="off" />
+      <datalist id={listId}>
+        {options.map((x) => <option key={x} value={x} />)}
+      </datalist>
+    </>
+  );
+}
+
+function SignInLink({ role }) {
+  return (
+    <p className="switch">
+      Already have an account? <Link className="link" to={`/signin?role=${role}`}>Sign in</Link>
+    </p>
+  );
+}
+
+function Header({ employer, right }) {
+  return (
+    <header className="topbar">
+      <Link to="/" className="logo">
+        <img src="/fursa-key.png" alt="" className="logo__key" />
+        <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
+        {employer && <span className="logo__tag">Employer</span>}
+      </Link>
+      <span className="topbar__right">{right}</span>
+    </header>
+  );
+}
+
 /* ================= JOB SEEKER ================= */
 
 function JobSeekerSignup() {
@@ -91,13 +161,15 @@ function JobSeekerSignup() {
   };
 
   return (
-    <div className="page">
-      <Navbar right={<>Already have an account? <Link className="link link--light" to="/signin?role=jobseeker">Sign in</Link></>} />
+    <div className="page page--fit">
+      <Header />
 
-      <main className="container">
-        <span className="pill">Job seeker account</span>
-        <h1 className="title">Create your account</h1>
-        <p className="muted">Add your skills and CV so Fursa can show you the jobs that match you.</p>
+      <main className="container container--wide">
+        <div className="page-head">
+          <span className="pill">Job seeker account</span>
+          <h1 className="title">Create your account</h1>
+          <p className="muted">Add your skills and CV so Fursa can show you the jobs that match you.</p>
+        </div>
 
         <form className="card" onSubmit={submit} noValidate autoComplete="off">
           <div className="grid3">
@@ -368,7 +440,7 @@ function CompanySignup() {
 
   return (
     <div className="page">
-      <Navbar tag="Employer" right={right} />
+      <Header employer right={right} />
       {step === 1
         ? <CompanyDetails form={form} setForm={setForm} logo={logo} setLogo={setLogo} onNext={() => goToStep(2)} />
         : <ChoosePlan plan={plan} setPlan={setPlan} onFinish={finish} />}
