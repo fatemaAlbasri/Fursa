@@ -24,7 +24,7 @@ body {
 a { text-decoration: none; }
 button { font-family: inherit; }
 
-/* ---------- Logo ---------- */
+/* ------------ Logo ------------ */
 .logo { display: inline-flex; align-items: center; gap: 8px; }
 .logo__key { height: 36px; width: auto; display: block; }
 .logo__wordmark { height: 32px; width: auto; display: block; }
