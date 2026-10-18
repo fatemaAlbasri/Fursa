@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 
@@ -57,13 +58,37 @@ const BriefcaseIcon = () => (
   </svg>
 );
 
-function StepsCard({ id, title, icon, steps, dark }) {
+// Fade sections in as they scroll into view: anything with class "reveal" gets "is-visible".
+// `--d` (a CSS delay) staggers items that sit side by side.
+function useReveal() {
+  useEffect(() => {
+    const items = document.querySelectorAll('.landing .reveal');
+    if (!('IntersectionObserver' in window)) {
+      items.forEach((el) => el.classList.add('is-visible'));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    items.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+}
+
+const delay = (i, step = 0.12) => ({ '--d': `${i * step}s` });
+
+function StepsCard({ id, title, icon, steps, dark, index }) {
   return (
-    <article id={id} className={dark ? 'how__card how__card--dark' : 'how__card'}>
+    <article id={id} className={`${dark ? 'how__card how__card--dark' : 'how__card'} reveal`} style={delay(index)}>
       <h3 className="how__title"><span className="how__icon">{icon}</span>{title}</h3>
       <ol className="how__steps">
         {steps.map(([name, text], i) => (
-          <li key={name}>
+          <li key={name} className="reveal" style={delay(index + i + 1, 0.1)}>
             <span className="how__num">{i + 1}</span>
             <div><strong>{name}</strong><p>{text}</p></div>
           </li>
@@ -74,6 +99,7 @@ function StepsCard({ id, title, icon, steps, dark }) {
 }
 
 export default function Landing() {
+  useReveal();
   return (
     <div className="landing">
       <Navbar
@@ -108,21 +134,21 @@ export default function Landing() {
       </section>
 
       <section id="how-it-works" className="section">
-        <p className="section__eyebrow">How it works</p>
-        <h2 className="section__title">One platform, two sides</h2>
+        <p className="section__eyebrow reveal">How it works</p>
+        <h2 className="section__title reveal" style={delay(1, 0.08)}>One platform, two sides</h2>
         <div className="how">
-          <StepsCard id="for-job-seekers" title="For job seekers" icon={<PersonIcon />} steps={SEEKER_STEPS} />
-          <StepsCard id="for-employers" title="For employers & HR" icon={<BriefcaseIcon />} steps={EMPLOYER_STEPS} dark />
+          <StepsCard id="for-job-seekers" title="For job seekers" icon={<PersonIcon />} steps={SEEKER_STEPS} index={0} />
+          <StepsCard id="for-employers" title="For employers & HR" icon={<BriefcaseIcon />} steps={EMPLOYER_STEPS} dark index={1} />
         </div>
       </section>
 
       <section id="pricing" className="section">
-        <p className="section__eyebrow">Pricing for employers</p>
-        <h2 className="section__title">Simple plans for hiring</h2>
-        <p className="section__sub">Always free for job seekers. Companies start free and upgrade for AI ranking.</p>
+        <p className="section__eyebrow reveal">Pricing for employers</p>
+        <h2 className="section__title reveal" style={delay(1, 0.08)}>Simple plans for hiring</h2>
+        <p className="section__sub reveal" style={delay(2, 0.08)}>Always free for job seekers. Companies start free and upgrade for AI ranking.</p>
         <div className="pricing">
-          {PLANS.map((p) => (
-            <article key={p.id} className={p.popular ? 'price price--popular' : 'price'}>
+          {PLANS.map((p, i) => (
+            <article key={p.id} className={`${p.popular ? 'price price--popular' : 'price'} reveal`} style={delay(i)}>
               <div className="price__head">
                 <h3>{p.name}</h3>
                 {p.popular && <span className="price__badge">Most popular</span>}
@@ -141,7 +167,7 @@ export default function Landing() {
       </section>
 
       <section className="section">
-        <div className="cta">
+        <div className="cta reveal">
           <div>
             <h2>Ready to find your fursa?</h2>
             <p>Free for job seekers. Simple plans for employers.</p>
