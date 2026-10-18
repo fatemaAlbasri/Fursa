@@ -54,21 +54,21 @@ function ChoiceChips({ label, options, value, onChange }) {
     onChange(value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]);
   return (
     <div className="choice-box">
-      <div className="choice-box__head">
-        <span className="choice-box__label">{label}</span>
-        <span className="choice-box__opt">Optional</span>
-      </div>
+      <p className="choice-box__label">
+        {label} <span className="choice-box__opt">(optional · pick any)</span>
+      </p>
       <div className="choice-box__chips" role="group" aria-label={label}>
         {options.map((opt) => {
           const on = value.includes(opt);
           return (
             <button key={opt} type="button" className={on ? 'choice choice--on' : 'choice'}
               aria-pressed={on} onClick={() => toggle(opt)}>
-              <span className="choice__box">{on ? '✓' : ''}</span>{opt}
+              {on && <span className="choice__tick">✓</span>}{opt}
             </button>
           );
         })}
       </div>
+      <p className="hint">Leave empty to see all jobs. You can change this later in your profile.</p>
     </div>
   );
 }
@@ -164,7 +164,7 @@ function JobSeekerSignup() {
     <div className="page page--fit">
       <Header />
 
-      <main className="container container--wide">
+      <main className="container">
         <div className="page-head">
           <span className="pill">Job seeker account</span>
           <h1 className="title">Create your account</h1>
@@ -172,47 +172,47 @@ function JobSeekerSignup() {
         </div>
 
         <form className="card" onSubmit={submit} noValidate autoComplete="off">
-          <div className="grid3">
+          <div className="grid2">
             <Field label="First name" error={errors.firstName}>
               <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
             </Field>
             <Field label="Last name" error={errors.lastName}>
               <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
             </Field>
+          </div>
+
+          <Field label="Password" error={errors.password}>
+            <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
+          </Field>
+
+          <div className="grid2">
             <Field label="Email" error={errors.email}>
               <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} autoComplete="off" />
-            </Field>
-
-            <Field label="Password" error={errors.password}>
-              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
             </Field>
             <Field label="Phone number" error={errors.phone}>
               <PhoneInput value={form.phone} onChange={change} />
             </Field>
+
             <Field label="Major / field of study">
               <select name="major" value={form.major} onChange={change}>
                 {MAJORS.map((m) => <option key={m}>{m}</option>)}
               </select>
             </Field>
-
             <Field label="Graduation status">
               <select name="graduationStatus" value={form.graduationStatus} onChange={change}>
                 {STATUSES.map((s) => <option key={s}>{s}</option>)}
               </select>
             </Field>
-            <div className="span2">
-              <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
-                <SkillSelect value={skills} onChange={setSkills} />
-              </Field>
-            </div>
           </div>
 
-          <div className="grid2">
-            <ChoiceChips label="Job type" options={JOB_TYPES} value={jobTypes} onChange={setJobTypes} />
-            <ChoiceChips label="Work mode" options={WORK_MODES} value={workModes} onChange={setWorkModes} />
-          </div>
+          <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
+            <SkillSelect value={skills} onChange={setSkills} />
+          </Field>
 
-          <Field label="Upload CV" error={errors.cv}>
+          <ChoiceChips label="Job type" options={JOB_TYPES} value={jobTypes} onChange={setJobTypes} />
+          <ChoiceChips label="Work mode" options={WORK_MODES} value={workModes} onChange={setWorkModes} />
+
+          <Field label="Upload CV" error={errors.cv} hint="Employers see your CV when you apply.">
             <div
               className={`drop ${dragging ? 'drop--over' : ''}`}
               onClick={() => fileInput.current.click()}
@@ -228,7 +228,7 @@ function JobSeekerSignup() {
               ) : (
                 <p className="drop__text">Drag your CV here, or <span className="drop__browse">browse files</span></p>
               )}
-              <p className="drop__sub">PDF or Word · Employers see your CV when you apply.</p>
+              <p className="drop__sub">PDF or Word</p>
               <input ref={fileInput} type="file" accept=".pdf,.doc,.docx" hidden onChange={(e) => pickCv(e.target.files[0])} />
             </div>
           </Field>
@@ -281,7 +281,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
   };
 
   return (
-    <main className="container container--wide">
+    <main className="container">
       <div className="page-head">
         <Steps step={1} />
         <h1 className="title">Create your company account</h1>
@@ -289,82 +289,75 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
       </div>
 
       <form className="card" onSubmit={submit} noValidate autoComplete="off">
-        <div className="cols">
-          {/* ----- Left: company ----- */}
-          <section className="col">
-            <h3 className="section-title">Company</h3>
+        <h3 className="section-title">Company</h3>
 
-            <div className="logo-upload">
-              <div className="logo-upload__box">
-                {logo ? <img src={logo.url} alt="Company logo" /> : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <p className="logo-upload__label">Company logo (optional)</p>
-                <button type="button" className="btn btn--outline" onClick={() => logoInput.current.click()}>
-                  {logo ? 'Change logo' : 'Upload logo'}
-                </button>
-                <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files[0])} />
-              </div>
-            </div>
-
-            <div className="grid2">
-              <Field label="Company name" error={errors.companyName}>
-                <input name="companyName" placeholder="Company name" value={form.companyName} onChange={change} />
-              </Field>
-              <Field label="Company website (optional)" error={errors.website}>
-                <input name="website" type="url" placeholder="https://www.company.bh" value={form.website} onChange={change} />
-              </Field>
-            </div>
-
-            <Field label="Company phone number" error={errors.phone}
-              hint="The company's main number. Shared with applicants you accept, so they can contact you.">
-              <PhoneInput value={form.phone} onChange={change} placeholder="17XX XXXX" />
-            </Field>
-
-            <div className="grid2">
-              <Field label="Industry" error={errors.industry}>
-                <TypeOrPick name="industry" value={form.industry} onChange={change} options={INDUSTRIES}
-                  placeholder="Pick or type your industry" />
-              </Field>
-              <Field label="Location" error={errors.location}>
-                <TypeOrPick name="location" value={form.location} onChange={change} options={LOCATIONS}
-                  placeholder="Pick or type a city" />
-              </Field>
-            </div>
-
-            <Field label="About the company (optional)">
-              <textarea name="about" rows={2} placeholder="What does your company do?" value={form.about} onChange={change} />
-            </Field>
-          </section>
-
-          {/* ----- Right: HR login ----- */}
-          <section className="col col--side">
-            <h3 className="section-title">Your login (HR contact)</h3>
-
-            <div className="grid2">
-              <Field label="First name" error={errors.firstName}>
-                <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
-              </Field>
-              <Field label="Last name" error={errors.lastName}>
-                <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
-              </Field>
-            </div>
-
-            <Field label="Work email" error={errors.email}>
-              <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} autoComplete="off" />
-            </Field>
-
-            <Field label="Password" error={errors.password}>
-              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
-            </Field>
-
-            <button className="btn btn--primary btn--block col__submit" type="submit">Continue: choose a plan</button>
-          </section>
+        <div className="logo-upload">
+          <div className="logo-upload__box">
+            {logo ? <img src={logo.url} alt="Company logo" /> : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
+              </svg>
+            )}
+          </div>
+          <div>
+            <p className="logo-upload__label">Company logo (optional)</p>
+            <button type="button" className="btn btn--outline" onClick={() => logoInput.current.click()}>
+              {logo ? 'Change logo' : 'Upload logo'}
+            </button>
+            <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files[0])} />
+          </div>
         </div>
+
+        <Field label="Company name" error={errors.companyName}>
+          <input name="companyName" placeholder="Company name" value={form.companyName} onChange={change} />
+        </Field>
+
+        <Field label="Company website (optional)" error={errors.website}
+          hint="Shown on every job you post, so applicants can learn about you.">
+          <input name="website" type="url" placeholder="https://www.company.bh" value={form.website} onChange={change} />
+        </Field>
+
+        <Field label="Company phone number" error={errors.phone}
+          hint="The company's main number. Shared with applicants you accept, so they can contact you.">
+          <PhoneInput value={form.phone} onChange={change} placeholder="17XX XXXX" />
+        </Field>
+
+        <div className="grid2">
+          <Field label="Industry" error={errors.industry}>
+            <TypeOrPick name="industry" value={form.industry} onChange={change} options={INDUSTRIES}
+              placeholder="Pick or type your industry" />
+          </Field>
+          <Field label="Location" error={errors.location}>
+            <TypeOrPick name="location" value={form.location} onChange={change} options={LOCATIONS}
+              placeholder="Pick or type a city" />
+          </Field>
+        </div>
+
+        <Field label="About the company (optional)">
+          <textarea name="about" rows={3} placeholder="What does your company do?" value={form.about} onChange={change} />
+        </Field>
+
+        <hr className="divider" />
+        <h3 className="section-title">Your login (HR contact)</h3>
+
+        <div className="grid2">
+          <Field label="First name" error={errors.firstName}>
+            <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
+          </Field>
+          <Field label="Last name" error={errors.lastName}>
+            <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
+          </Field>
+        </div>
+
+        <Field label="Password" error={errors.password}>
+          <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
+        </Field>
+
+        <Field label="Work email" error={errors.email}>
+          <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} autoComplete="off" />
+        </Field>
+
+        <button className="btn btn--primary btn--block" type="submit">Continue: choose a plan</button>
       </form>
       <SignInLink role="company" />
     </main>
