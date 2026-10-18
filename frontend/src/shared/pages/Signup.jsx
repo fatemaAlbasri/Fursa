@@ -118,6 +118,46 @@ function Header({ employer, right }) {
   );
 }
 
+const ASIDE = {
+  jobseeker: {
+    title: <>Unlock your <span className="accent">Chance.</span></>,
+    text: 'Create your free account and see the jobs and internships that match you.',
+    points: ['Jobs ranked by your match score', 'Free AI feedback on your CV', 'Track every application in one place'],
+  },
+  company: {
+    title: <>Hire the right <span className="accent">graduates, faster.</span></>,
+    text: 'Post jobs and internships, and let Fursa rank every applicant for you.',
+    points: ['AI reads every CV and explains each score', 'Your Top 10 applicants, ready to review', 'Shortlist or reject in bulk'],
+  },
+};
+
+// Sign up page frame: navy panel on the left (stays put), form scrolls on the right.
+function SignupSplit({ role, children }) {
+  const { title, text, points } = ASIDE[role];
+  return (
+    <div className="split split--signup">
+      <aside className="split__brand">
+        <Link to="/" className="logo">
+          <img src="/fursa-key.png" alt="" className="logo__key" />
+          <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
+          {role === 'company' && <span className="logo__tag">Employer</span>}
+        </Link>
+        <div className="split__copy">
+          <h1>{title}</h1>
+          <p>{text}</p>
+          <ul className="split__points">
+            {points.map((p) => (
+              <li key={p}><span className="split__check">✓</span>{p}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="dots"><span /><span /><span /></div>
+      </aside>
+      <div className="split__main">{children}</div>
+    </div>
+  );
+}
+
 /* ================= JOB SEEKER ================= */
 
 function JobSeekerSignup() {
@@ -161,9 +201,7 @@ function JobSeekerSignup() {
   };
 
   return (
-    <div className="page page--fit">
-      <Header />
-
+    <SignupSplit role="jobseeker">
       <main className="container">
         <div className="page-head">
           <span className="pill">Job seeker account</span>
@@ -237,7 +275,7 @@ function JobSeekerSignup() {
         </form>
         <SignInLink role="jobseeker" />
       </main>
-    </div>
+    </SignupSplit>
   );
 }
 
@@ -432,12 +470,19 @@ function CompanySignup() {
     ? <button type="button" className="back-link" onClick={() => goToStep(1)}>← Back</button>
     : null;
 
+  if (step === 1) {
+    return (
+      <SignupSplit role="company">
+        <CompanyDetails form={form} setForm={setForm} logo={logo} setLogo={setLogo} onNext={() => goToStep(2)} />
+      </SignupSplit>
+    );
+  }
+
+  // Step 2 keeps the full width so the three plan cards fit side by side.
   return (
     <div className="page">
       <Header employer right={right} />
-      {step === 1
-        ? <CompanyDetails form={form} setForm={setForm} logo={logo} setLogo={setLogo} onNext={() => goToStep(2)} />
-        : <ChoosePlan plan={plan} setPlan={setPlan} onFinish={finish} />}
+      <ChoosePlan plan={plan} setPlan={setPlan} onFinish={finish} />
     </div>
   );
 }

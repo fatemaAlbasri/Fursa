@@ -1924,3 +1924,94 @@ html:has(.landing) {
     color: var(--brand-accent);
   }
 }
+
+/* ===== Sign up split layout (navy panel left, form right) ===== */
+.split--signup {
+  grid-template-columns: minmax(320px, 36%) 1fr;
+  height: auto;
+  min-height: 100vh;
+}
+/* panel stays in view while the form scrolls; photo shows faintly through the navy */
+.split--signup .split__brand {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(24, 59, 86, 0.9) 0%, rgba(16, 42, 62, 0.96) 100%),
+    url('/hero-image.png') 60% center / cover no-repeat;
+}
+.split--signup .split__copy h1 {
+  font-size: clamp(28px, 2.6vw, 36px);
+}
+.split--signup .split__copy p {
+  font-size: 15px;
+}
+.split__points {
+  list-style: none;
+  padding: 0;
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.split__points li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 500;
+  animation: fade-up 0.5s ease backwards;
+}
+.split__points li:nth-child(1) {
+  animation-delay: 0.25s;
+}
+.split__points li:nth-child(2) {
+  animation-delay: 0.35s;
+}
+.split__points li:nth-child(3) {
+  animation-delay: 0.45s;
+}
+.split__check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--teal);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+}
+.split__main {
+  background: var(--bg);
+  min-width: 0;
+}
+.split__main .container {
+  max-width: 620px;
+  padding: 40px 32px 48px;
+}
+
+@media (max-width: 900px) {
+  .split--signup {
+    grid-template-columns: 1fr;
+  }
+  .split--signup .split__brand {
+    position: static;
+    height: auto;
+    padding: 24px;
+    gap: 20px;
+  }
+  .split--signup .dots {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .split--signup .split__points {
+    display: none;
+  }
+  .split__main .container {
+    padding: 24px 16px 32px;
+  }
+}
