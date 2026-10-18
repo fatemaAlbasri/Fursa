@@ -54,7 +54,7 @@ export default function SignIn() {
           <h2>Welcome back</h2>
           <p className="muted">Sign in as a job seeker or a company.</p>
 
-          <div className="tabs" role="tablist">
+          <div className={isCompany ? 'tabs tabs--right' : 'tabs'} role="tablist">
             <button type="button" role="tab" aria-selected={!isCompany}
               className={!isCompany ? 'tab tab--active' : 'tab'} onClick={() => setRole('jobseeker')}>
               Job seeker
@@ -75,12 +75,13 @@ export default function SignIn() {
           </Field>
 
           <button className="btn btn--primary btn--block" type="submit">
-            {isCompany ? 'Sign in as company' : 'Sign in as job seeker'}
+            {/* key={role} restarts the fade-in each time the role changes */}
+            <span key={role} className="swap">{isCompany ? 'Sign in as company' : 'Sign in as job seeker'}</span>
           </button>
 
           <p className="center muted">
             New to Fursa?{' '}
-            <Link className="link" to={`/signup?role=${role}`}>
+            <Link key={role} className="link swap" to={`/signup?role=${role}`}>
               {isCompany ? 'Create a company account' : 'Create a job seeker account'}
             </Link>
           </p>

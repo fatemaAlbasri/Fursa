@@ -378,7 +378,7 @@ function ChoosePlan({ plan, setPlan, onFinish }) {
         {PLANS.map((p) => {
           const active = p.id === plan;
           return (
-            <div key={p.id} className={`plan ${active ? 'plan--active' : ''}`}>
+            <div key={p.id} className={`plan ${active ? 'plan--active' : ''}`} onClick={() => setPlan(p.id)}>
               {p.popular && <span className="plan__badge">Most popular</span>}
               <h3 className="plan__name">{p.name}</h3>
               <p className="plan__tagline">{p.tagline}</p>
@@ -400,9 +400,10 @@ function ChoosePlan({ plan, setPlan, onFinish }) {
       </div>
 
       <div className="plan-bar">
-        <p><b>Selected: {selected.name} · {selected.price} / month</b></p>
+        {/* key={plan} restarts the fade-in each time the plan changes */}
+        <p key={plan} className="swap"><b>Selected: {selected.name} · {selected.price} / month</b></p>
         <button type="button" className="btn btn--primary" onClick={onFinish}>
-          {plan === 'free' ? 'Start free' : 'Pay & Start'}
+          <span key={plan} className="swap">{plan === 'free' ? 'Start free' : 'Pay & Start'}</span>
         </button>
       </div>
     </main>

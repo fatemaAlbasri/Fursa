@@ -161,13 +161,32 @@ button {
 }
 
 .tabs {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   background: #dcefef;
   padding: 4px;
   border-radius: var(--radius);
 }
+/* white pill that slides under the active tab */
+.tabs::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(24, 59, 86, 0.12);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tabs--right::before {
+  transform: translateX(100%);
+}
 .tab {
+  position: relative;
+  z-index: 1;
   border: 0;
   background: transparent;
   padding: 9px;
@@ -186,9 +205,7 @@ button {
 }
 .tab--active,
 .tab--active:hover {
-  background: var(--white);
   color: var(--teal);
-  box-shadow: 0 1px 3px rgba(24, 59, 86, 0.12);
 }
 
 /* ---------- Sign up pages ---------- */
@@ -676,12 +693,19 @@ button {
   display: flex;
   flex-direction: column;
   min-height: 360px;
+  cursor: pointer;
   transition:
-    box-shadow 0.15s,
-    transform 0.15s;
+    background 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    min-height 0.35s ease,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .plan:not(.plan--active):hover {
-  box-shadow: 0 8px 22px rgba(24, 59, 86, 0.08);
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 10px 24px rgba(24, 59, 86, 0.1);
 }
 .plan--active {
   background: var(--teal);
@@ -689,6 +713,16 @@ button {
   border-color: var(--teal);
   box-shadow: 0 14px 32px rgba(21, 154, 156, 0.3);
   min-height: 390px;
+  transform: scale(1.02);
+}
+.plan__tagline,
+.plan__price span,
+.plan__tick,
+.plan .btn {
+  transition:
+    background 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease;
 }
 .plan__badge {
   align-self: flex-start;
@@ -1500,4 +1534,219 @@ button {
 }
 .topbar .link--light {
   color: var(--brand-accent);
+}
+
+
+/* ===== Sign in / sign up animations ===== */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* page load: header, card and side copy rise in */
+.split__copy,
+.auth,
+.page-head,
+.card,
+.switch {
+  animation: fade-up 0.5s ease backwards;
+}
+.split__copy {
+  animation-delay: 0.1s;
+}
+.card {
+  animation-delay: 0.08s;
+}
+.switch {
+  animation-delay: 0.16s;
+}
+
+/* plans come in one after another */
+.plan {
+  animation: fade-up 0.5s ease backwards;
+}
+.plan:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.plan:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.plan-bar {
+  animation: fade-up 0.5s 0.24s ease backwards;
+}
+
+/* text that changes (role, selected plan) fades in again; key={...} restarts it */
+.swap {
+  display: inline-block;
+  animation: swap-in 0.3s ease both;
+}
+
+/* steps: active pill pops in, connecting line fills on step 2 */
+.step--active {
+  animation: pop 0.4s ease both;
+}
+.steps__line {
+  position: relative;
+  overflow: hidden;
+  background: var(--gray);
+}
+.steps--center .steps__line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--teal);
+  transform-origin: left;
+  animation: line-fill 0.5s 0.15s ease both;
+}
+@keyframes line-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* chips, ticks and badges pop when they appear */
+.chip,
+.choice__tick,
+.plan--active .plan__tick {
+  animation: pop 0.3s ease both;
+}
+.choice:active,
+.plan:active {
+  transform: scale(0.97);
+}
+.skills__menu {
+  animation: menu-in 0.18s ease both;
+}
+
+/* errors slide in with a small shake */
+.field__error {
+  animation:
+    fade-in 0.2s ease both,
+    shake 0.3s ease;
+}
+
+/* buttons lift a little on hover and press down on click */
+.split__form .btn,
+.page .btn {
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.split__form .btn--primary:hover,
+.page .btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(21, 154, 156, 0.25);
+}
+.split__form .btn:active,
+.page .btn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+
+/* uploads: icon bobs on hover, chosen logo fades in */
+.drop:hover .drop__icon,
+.drop--over .drop__icon {
+  animation: bob 0.9s ease infinite;
+}
+.logo-upload__box img {
+  animation: fade-in 0.3s ease both;
+}
+
+/* sign-in side dots: the long one breathes slowly */
+.dots span:first-child {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* respect "reduce motion" in the OS */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
