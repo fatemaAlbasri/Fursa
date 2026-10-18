@@ -7,6 +7,8 @@ const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering
 const STATUSES = ['Graduated', 'Final year student', 'Student'];
 const INDUSTRIES = ['Technology', 'Banking & Finance', 'Telecom', 'Consulting', 'Healthcare', 'Retail', 'Government', 'Other'];
 const LOCATIONS = ['Manama', 'Seef', 'Muharraq', 'Riffa', 'Isa Town', 'Hamad Town', 'Other'];
+const JOB_TYPES = ['Full-time', 'Part-time', 'Internship'];
+const WORK_MODES = ['On-site', 'Remote', 'Hybrid'];
 
 const PLANS = [
   {
@@ -54,6 +56,8 @@ function JobSeekerSignup() {
     major: MAJORS[0], graduationStatus: STATUSES[0],
   });
   const [skills, setSkills] = useState([]);
+  const [jobTypes, setJobTypes] = useState([]);
+  const [workModes, setWorkModes] = useState([]);
   const [cv, setCv] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [errors, setErrors] = useState({});
@@ -81,8 +85,8 @@ function JobSeekerSignup() {
     if (hasErrors(errs)) return;
 
     // TODO (backend): POST /api/auth/signup as FormData
-    // { role: 'jobseeker', ...form, phone: '+973' + form.phone, skills, cv }
-    console.log('Sign up job seeker', { ...form, phone: '+973' + form.phone, skills, cv: cv?.name });
+    // { role: 'jobseeker', ...form, phone: '+973' + form.phone, skills, jobTypes, workModes, cv }
+    console.log('Sign up job seeker', { ...form, phone: '+973' + form.phone, skills, jobTypes, workModes, cv: cv?.name });
     alert('Account created (demo)');
   };
 
@@ -95,51 +99,48 @@ function JobSeekerSignup() {
         <h1 className="title">Create your account</h1>
         <p className="muted">Add your skills and CV so Fursa can show you the jobs that match you.</p>
 
-        <form className="card" onSubmit={submit} noValidate>
-          <div className="row">
+        <form className="card" onSubmit={submit} noValidate autoComplete="off">
+          <div className="grid3">
             <Field label="First name" error={errors.firstName}>
               <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
             </Field>
             <Field label="Last name" error={errors.lastName}>
               <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
             </Field>
-          </div>
-
-          <Field label="Password" error={errors.password}>
-            <input name="password" type="password" placeholder="At least 8 characters" value={form.password} onChange={change} />
-          </Field>
-
-          <div className="row">
             <Field label="Email" error={errors.email}>
-              <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} />
+              <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} autoComplete="off" />
+            </Field>
+
+            <Field label="Password" error={errors.password}>
+              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
             </Field>
             <Field label="Phone number" error={errors.phone}>
-              <div className="phone">
-                <span className="phone__code">+973</span>
-                <input name="phone" type="tel" inputMode="numeric" maxLength={9} placeholder="3XXX XXXX"
-                  value={form.phone} onChange={change} />
-              </div>
+              <PhoneInput value={form.phone} onChange={change} />
             </Field>
-          </div>
-
-          <div className="row">
             <Field label="Major / field of study">
               <select name="major" value={form.major} onChange={change}>
                 {MAJORS.map((m) => <option key={m}>{m}</option>)}
               </select>
             </Field>
+
             <Field label="Graduation status">
               <select name="graduationStatus" value={form.graduationStatus} onChange={change}>
                 {STATUSES.map((s) => <option key={s}>{s}</option>)}
               </select>
             </Field>
+            <div className="span2">
+              <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
+                <SkillSelect value={skills} onChange={setSkills} />
+              </Field>
+            </div>
           </div>
 
-          <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
-            <SkillSelect value={skills} onChange={setSkills} />
-          </Field>
+          <div className="grid2">
+            <ChoiceChips label="Job type" options={JOB_TYPES} value={jobTypes} onChange={setJobTypes} />
+            <ChoiceChips label="Work mode" options={WORK_MODES} value={workModes} onChange={setWorkModes} />
+          </div>
 
-          <Field label="Upload CV" error={errors.cv} hint="Employers see your CV when you apply.">
+          <Field label="Upload CV" error={errors.cv}>
             <div
               className={`drop ${dragging ? 'drop--over' : ''}`}
               onClick={() => fileInput.current.click()}
@@ -155,13 +156,14 @@ function JobSeekerSignup() {
               ) : (
                 <p className="drop__text">Drag your CV here, or <span className="drop__browse">browse files</span></p>
               )}
-              <p className="drop__sub">PDF or Word</p>
+              <p className="drop__sub">PDF or Word · Employers see your CV when you apply.</p>
               <input ref={fileInput} type="file" accept=".pdf,.doc,.docx" hidden onChange={(e) => pickCv(e.target.files[0])} />
             </div>
           </Field>
 
           <button className="btn btn--primary btn--block" type="submit">Create account & see my jobs</button>
         </form>
+        <SignInLink role="jobseeker" />
       </main>
     </div>
   );
@@ -199,84 +201,100 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
     if (!form.lastName.trim()) errs.lastName = 'Required';
     if (form.password.length < 8) errs.password = 'At least 8 characters';
     if (!isEmail(form.email)) errs.email = 'Enter a valid email';
+    if (!/^\d{8}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Enter 8 digits';
+    if (!form.industry.trim()) errs.industry = 'Required';
+    if (!form.location.trim()) errs.location = 'Required';
     setErrors(errs);
     if (!hasErrors(errs)) onNext();
   };
 
   return (
-    <main className="container">
-      <Steps step={1} />
-      <h1 className="title">Create your company account</h1>
-      <p className="muted">Post jobs and internships, and get your applicants ranked by AI.</p>
+    <main className="container container--wide">
+      <div className="page-head">
+        <Steps step={1} />
+        <h1 className="title">Create your company account</h1>
+        <p className="muted">Post jobs and internships, and get your applicants ranked by AI.</p>
+      </div>
 
-      <form className="card" onSubmit={submit} noValidate>
-        <h3 className="section-title">Company</h3>
+      <form className="card" onSubmit={submit} noValidate autoComplete="off">
+        <div className="cols">
+          {/* ----- Left: company ----- */}
+          <section className="col">
+            <h3 className="section-title">Company</h3>
 
-        <div className="logo-upload">
-          <div className="logo-upload__box">
-            {logo ? <img src={logo.url} alt="Company logo" /> : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
-              </svg>
-            )}
-          </div>
-          <div>
-            <p className="logo-upload__label">Company logo (optional)</p>
-            <button type="button" className="btn btn--outline" onClick={() => logoInput.current.click()}>
-              {logo ? 'Change logo' : 'Upload logo'}
-            </button>
-            <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files[0])} />
-          </div>
+            <div className="logo-upload">
+              <div className="logo-upload__box">
+                {logo ? <img src={logo.url} alt="Company logo" /> : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <p className="logo-upload__label">Company logo (optional)</p>
+                <button type="button" className="btn btn--outline" onClick={() => logoInput.current.click()}>
+                  {logo ? 'Change logo' : 'Upload logo'}
+                </button>
+                <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files[0])} />
+              </div>
+            </div>
+
+            <div className="grid2">
+              <Field label="Company name" error={errors.companyName}>
+                <input name="companyName" placeholder="Company name" value={form.companyName} onChange={change} />
+              </Field>
+              <Field label="Company website (optional)" error={errors.website}>
+                <input name="website" type="url" placeholder="https://www.company.bh" value={form.website} onChange={change} />
+              </Field>
+            </div>
+
+            <Field label="Company phone number" error={errors.phone}
+              hint="The company's main number. Shared with applicants you accept, so they can contact you.">
+              <PhoneInput value={form.phone} onChange={change} placeholder="17XX XXXX" />
+            </Field>
+
+            <div className="grid2">
+              <Field label="Industry" error={errors.industry}>
+                <TypeOrPick name="industry" value={form.industry} onChange={change} options={INDUSTRIES}
+                  placeholder="Pick or type your industry" />
+              </Field>
+              <Field label="Location" error={errors.location}>
+                <TypeOrPick name="location" value={form.location} onChange={change} options={LOCATIONS}
+                  placeholder="Pick or type a city" />
+              </Field>
+            </div>
+
+            <Field label="About the company (optional)">
+              <textarea name="about" rows={2} placeholder="What does your company do?" value={form.about} onChange={change} />
+            </Field>
+          </section>
+
+          {/* ----- Right: HR login ----- */}
+          <section className="col col--side">
+            <h3 className="section-title">Your login (HR contact)</h3>
+
+            <div className="grid2">
+              <Field label="First name" error={errors.firstName}>
+                <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
+              </Field>
+              <Field label="Last name" error={errors.lastName}>
+                <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
+              </Field>
+            </div>
+
+            <Field label="Work email" error={errors.email}>
+              <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} autoComplete="off" />
+            </Field>
+
+            <Field label="Password" error={errors.password}>
+              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
+            </Field>
+
+            <button className="btn btn--primary btn--block col__submit" type="submit">Continue: choose a plan</button>
+          </section>
         </div>
-
-        <Field label="Company name" error={errors.companyName}>
-          <input name="companyName" placeholder="Company name" value={form.companyName} onChange={change} />
-        </Field>
-
-        <Field label="Company website (optional)" error={errors.website}
-          hint="Shown on every job you post, so applicants can learn about you.">
-          <input name="website" type="url" placeholder="https://www.company.bh" value={form.website} onChange={change} />
-        </Field>
-
-        <div className="row">
-          <Field label="Industry">
-            <select name="industry" value={form.industry} onChange={change}>
-              {INDUSTRIES.map((x) => <option key={x}>{x}</option>)}
-            </select>
-          </Field>
-          <Field label="Location">
-            <select name="location" value={form.location} onChange={change}>
-              {LOCATIONS.map((x) => <option key={x}>{x}</option>)}
-            </select>
-          </Field>
-        </div>
-
-        <Field label="About the company (optional)">
-          <textarea name="about" rows={3} placeholder="What does your company do?" value={form.about} onChange={change} />
-        </Field>
-
-        <hr className="divider" />
-        <h3 className="section-title">Your login (HR contact)</h3>
-
-        <div className="row">
-          <Field label="First name" error={errors.firstName}>
-            <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
-          </Field>
-          <Field label="Last name" error={errors.lastName}>
-            <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
-          </Field>
-        </div>
-
-        <Field label="Password" error={errors.password}>
-          <input name="password" type="password" placeholder="At least 8 characters" value={form.password} onChange={change} />
-        </Field>
-
-        <Field label="Work email" error={errors.email}>
-          <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} />
-        </Field>
-
-        <button className="btn btn--primary btn--block" type="submit">Continue: choose a plan</button>
       </form>
+      <SignInLink role="company" />
     </main>
   );
 }
@@ -285,9 +303,11 @@ function ChoosePlan({ plan, setPlan, onFinish }) {
   const selected = PLANS.find((p) => p.id === plan);
   return (
     <main className="container container--wide">
-      <Steps step={2} />
-      <h1 className="title center">Choose your plan</h1>
-      <p className="muted center">Start free. Upgrade when you want AI ranking. Change or cancel any time.</p>
+      <div className="page-head center">
+        <Steps step={2} />
+        <h1 className="title">Choose your plan</h1>
+        <p className="muted">Start free. Upgrade when you want AI ranking. Change or cancel any time.</p>
+      </div>
 
       <div className="plans">
         {PLANS.map((p) => {
@@ -327,8 +347,8 @@ function ChoosePlan({ plan, setPlan, onFinish }) {
 function CompanySignup() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    companyName: '', website: '', industry: INDUSTRIES[0], location: LOCATIONS[0], about: '',
-    firstName: '', lastName: '', password: '', email: '',
+    companyName: '', website: '', industry: '', location: '', about: '',
+    firstName: '', lastName: '', password: '', email: '', phone: '',
   });
   const [logo, setLogo] = useState(null);
   const [plan, setPlan] = useState('starter');
@@ -342,9 +362,9 @@ function CompanySignup() {
     alert(plan === 'free' ? 'Company account created (demo)' : 'Going to payment (demo)');
   };
 
-  const right = step === 1
-    ? <>Already have an account? <Link className="link link--light" to="/signin?role=company">Sign in</Link></>
-    : <button type="button" className="back-link" onClick={() => goToStep(1)}>← Back</button>;
+  const right = step === 2
+    ? <button type="button" className="back-link" onClick={() => goToStep(1)}>← Back</button>
+    : null;
 
   return (
     <div className="page">

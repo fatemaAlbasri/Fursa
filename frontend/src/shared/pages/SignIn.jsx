@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 function Field({ label, error, extra, children }) {
   return (
@@ -28,7 +29,8 @@ export default function SignIn() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
 
-   
+    // TODO (backend): POST /api/auth/signin { email, password, role }
+    // then go to /jobseeker or /company depending on role
     console.log('Sign in', { ...form, role });
     alert(`Signed in as ${isCompany ? 'company' : 'job seeker'} (demo)`);
   };
@@ -36,19 +38,19 @@ export default function SignIn() {
   return (
     <div className="split">
       <aside className="split__brand">
-        <Link to="/" className="logo logo--light">
-          <img src="/logo.svg" alt="" className="logo__img" />
-          <span className="logo__text">Fursa</span>
+        <Link to="/" className="logo">
+          <img src="/fursa-key.png" alt="" className="logo__key" />
+          <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
         </Link>
         <div className="split__copy">
-          <h1>Match. Apply.<br /><span className="accent">Get hired.</span></h1>
-                    <p>See the jobs and internships that match your skills, and improve your CV with AI.</p>
+          <h1>Unlock Your <span className="accent">Chance.</span></h1>
+          <p>See the jobs and internships that match your skills, and improve your CV with AI.</p>
         </div>
         <div className="dots"><span /><span /><span /></div>
       </aside>
 
       <main className="split__form">
-        <form className="auth" onSubmit={submit} noValidate>
+        <form className="auth" onSubmit={submit} noValidate autoComplete="off">
           <h2>Welcome back</h2>
           <p className="muted">Sign in as a job seeker or a company.</p>
 
@@ -64,12 +66,12 @@ export default function SignIn() {
           </div>
 
           <Field label={isCompany ? 'Company email' : 'Email'} error={errors.email}>
-            <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} />
+            <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} autoComplete="off" />
           </Field>
 
           <Field label="Password" error={errors.password}
             extra={<a href="#" className="link small">Forgot password?</a>}>
-            <input name="password" type="password" value={form.password} onChange={change} />
+            <PasswordInput value={form.password} onChange={change} />
           </Field>
 
           <button className="btn btn--primary btn--block" type="submit">
