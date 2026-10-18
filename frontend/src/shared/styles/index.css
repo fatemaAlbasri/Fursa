@@ -1,25 +1,16 @@
 
 :root {
-  --navy: #0b1a3c;
-  --blue: #1f5bff;
-  --blue-hover: #1748d6;
-  --sky: #4fb3ff;
-  --bg: #f3f6fc;
-  --card: #ffffff;
-  --text: #0f1b33;
-  --muted: #5a6478;
-  --border: #d5ddeb;
-  --tab-bg: #e3ebfb;
-  --error: #d92d20;
-  --radius: 12px;
+  --navy: #183B56;      /* Primary – Navy  : top bar, left panel, text      */
+  --teal: #159A9C;      /* Teal            : buttons, chips, links, tabs    */
+  --light: #EAF7F7;     /* Light Background: page background, light boxes   */
+  --accent: #8ED1D1;    /* Soft Accent     : "Chance.", dashed borders      */
+  --gray: #E5EAF0;      /* Soft Gray       : borders, tab background        */
+  --slate: #657D93;     /* Slate           : secondary text                 */
+  --white: #FFFFFF;
 
-  /* Fursa palette */
-  --brand-navy: #183B56;
-  --brand-teal: #159A9C;
-  --brand-light: #EAF7F7;
-  --brand-accent: #8ED1D1;
-  --brand-gray: #E5EAF0;
-  --brand-slate: #657D93;
+  --error: #D92D20;     /* only for error messages */
+  --focus: rgba(21, 154, 156, .2);
+  --radius: 10px;
 }
 
 * { box-sizing: border-box; margin: 0; }
@@ -284,25 +275,4 @@ button { font-family: inherit; }
   .logo__tag { display: none; }
 }
 
-/* ===== Shared Navbar ===== */
-.topbar {
-  position: sticky; top: 0; z-index: 100; gap: 24px;
-  background: var(--brand-navy);
-}
-.topbar .logo__tag { color: var(--brand-accent); }
-.logo__full { height: 40px; width: auto; display: block; }
-.topbar__nav { display: flex; gap: 6px; flex: 1; }
-.topbar__link {
-  color: var(--brand-gray); font-weight: 600; font-size: 15px;
-  padding: 8px 14px; border-radius: 9px;
-}
-.topbar__link:hover { background: rgba(142, 209, 209, .15); color: #fff; }
-.topbar__link--active { background: var(--brand-teal); color: #fff; }
-.topbar__right { color: var(--brand-gray); }
-.topbar .link--light { color: var(--brand-accent); }
 
-@media (max-width: 800px) {
-  .topbar { gap: 8px; }
-  .logo__full { height: 34px; }
-  .topbar__nav { order: 3; flex-basis: 100%; overflow-x: auto; }
-}
