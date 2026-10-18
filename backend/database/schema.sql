@@ -109,6 +109,9 @@ CREATE TABLE subscriptions (
   started_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   renews_at   TIMESTAMPTZ
 );
+-- Two companies can't share a name ("PearlSoft" = " pearlsoft ")
+CREATE UNIQUE INDEX companies_name_key ON companies (lower(trim(name)));
+
 -- A company can have only ONE active subscription at a time
 CREATE UNIQUE INDEX one_active_subscription ON subscriptions(company_id) WHERE status = 'active';
 
