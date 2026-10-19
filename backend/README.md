@@ -6,11 +6,10 @@ Node.js + Express + PostgreSQL (Supabase or local).
 
 ```bash
 npm install
-cp .env.example .env    # then put the real DATABASE_URL in .env
 npm run dev
 ```
 
-Check it works: open http://localhost:5000/api/health — you should see `"database": "connected"`.
+Check it works: open http://localhost:5000/ — you should see `Your app is connected ...`.
 
 ## Structure
 
@@ -73,6 +72,39 @@ Protect a route:
 const { requireAuth, requireRole } = require('../middleware/auth');
 router.post('/', requireAuth, requireRole('employer'), handler); // req.user = { id, role }
 ```
+
+## CV parsing API
+
+| Method | URL | Body | Returns |
+|---|---|---|---|
+| POST | `/api/cv/parse` | FormData `cv` (no login, max 10 tries/hour per IP) | `{ cv, source }`; the file is **not** kept |
+| POST | `/api/cv` | FormData `cv` + Bearer token (seeker) | `201 { resume, parsed, warning? }`; becomes the current CV |
+| GET | `/api/cv` | Bearer token (seeker) | `{ resume }` (`404` if none) |
+
+`cv` looks like this (any field can be `null` / `[]` if the CV doesn't say):
+
+```jsonc
+{
+  "firstName": "Sara", "lastName": "Ahmed Ali", "email": "sara.ali@example.com",
+  "phone": "33445566",                     // 8 digits, without +973
+  "major": "Computer Science",             // one of the sign up dropdown values
+  "graduationStatus": "Final year student", // Graduated / Final year student / Student
+  "yearsExperience": 0.8,
+  "skills": ["React", "Node.js", "SQL"],
+  "languages": ["Arabic", "English"],
+  "experience": [{ "title": "Software Intern", "company": "Batelco", "start": "2025-06", "end": "2025-08" }]
+}
+```
+
+`source` is `"ai"` (Gemini) or `"rules"` (backup parser). A CV with no readable text (scanned image) returns `422`.
+
+**Sign up flow:** the page sends the CV to `/api/cv/parse` as soon as it's picked and fills in the empty fields
+with the answer. Sign up then sends the CV as usual; the backend reads it again in the background and saves
+`parsed_text`, `parsed_experience`, `parsed_languages` on `resumes` and `years_experience` on `seeker_profiles`.
+
+**AI:** add `GEMINI_API_KEY=...` to `.env` to use Gemini (more accurate). `GEMINI_MODEL` is optional
+(default `gemini-flash-latest`). Without a key (or if the AI call fails) a rule-based parser is used,
+so it still works locally.
 
 ## Notes
 

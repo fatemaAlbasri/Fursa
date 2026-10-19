@@ -17,12 +17,14 @@ app.get('/', (req, res) => {
 
 // Require routes
 const authRoutes = require('./routes/AuthRouter')
+const cvRoutes = require('./routes/CvRouter')
 
 // Uploaded CVs and logos
 app.use('/uploads', express.static(UPLOADS_DIR))
 
 // use routes
 app.use('/api/auth', authRoutes)
+app.use('/api/cv', cvRoutes)
 
 // 404 for unknown routes
 app.use((req, res) => {
