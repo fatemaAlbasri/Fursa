@@ -113,7 +113,6 @@ export default function Landing() {
       />
 
       <section className="hero">
-        {/* photo is a CSS background faded into the navy (see .hero__bg) */}
         <div className="hero__bg" role="img" aria-label="Two graduates reviewing a job match on the Fursa platform in an office" />
         <div className="hero__inner">
           <div className="hero__copy">
@@ -172,7 +171,7 @@ export default function Landing() {
             <h2>Ready to find your fursa?</h2>
             <p>Free for job seekers. Simple plans for employers.</p>
           </div>
-          <Link to="/signup" className="btn btn--accent">Get started</Link>
+          <Link to="/signin" className="btn btn--accent">Get started</Link>
         </div>
       </section>
 

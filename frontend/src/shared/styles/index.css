@@ -680,12 +680,18 @@ button {
 
 /* ---------- Plans ---------- */
 .plans {
+  --plan-ease: cubic-bezier(0.22, 1, 0.36, 1); /* fast start, long soft landing, no bounce */
+  --plan-time: 0.5s;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
-  align-items: center;
+  align-items: stretch;
+  padding: 14px 0; /* room for the selected card to grow without touching the header */
 }
+/* Selection only animates transform, colours and shadow, never size, so the row never
+   re-lays out and the other cards stay still. */
 .plan {
+  position: relative;
   background: var(--white);
   border: 1px solid var(--gray);
   border-radius: 16px;
@@ -694,35 +700,43 @@ button {
   flex-direction: column;
   min-height: 360px;
   cursor: pointer;
+  will-change: transform;
   transition:
-    background 0.35s ease,
-    color 0.35s ease,
-    border-color 0.35s ease,
-    box-shadow 0.35s ease,
-    min-height 0.35s ease,
-    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background-color var(--plan-time) var(--plan-ease),
+    color var(--plan-time) var(--plan-ease),
+    border-color var(--plan-time) var(--plan-ease),
+    box-shadow var(--plan-time) var(--plan-ease),
+    transform var(--plan-time) var(--plan-ease);
 }
 .plan:not(.plan--active):hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 10px 24px rgba(24, 59, 86, 0.1);
+  box-shadow: 0 12px 26px rgba(24, 59, 86, 0.08);
 }
 .plan--active {
+  z-index: 1;
   background: var(--teal);
   color: var(--white);
   border-color: var(--teal);
-  box-shadow: 0 14px 32px rgba(21, 154, 156, 0.3);
-  min-height: 390px;
-  transform: scale(1.02);
+  box-shadow: 0 18px 40px rgba(21, 154, 156, 0.32);
+  transform: translateY(-6px) scale(1.04);
 }
 .plan__tagline,
 .plan__price span,
 .plan__tick,
+.plan__badge,
 .plan .btn {
   transition:
-    background 0.35s ease,
-    color 0.35s ease,
-    border-color 0.35s ease;
+    background-color var(--plan-time) var(--plan-ease),
+    color var(--plan-time) var(--plan-ease),
+    border-color var(--plan-time) var(--plan-ease),
+    transform var(--plan-time) var(--plan-ease);
+}
+.plan .btn {
+  border: 1px solid var(--teal); /* same box in both states, so the button never shifts */
+}
+.plan .btn--white {
+  border-color: var(--white);
 }
 .plan__badge {
   align-self: flex-start;
@@ -1677,13 +1691,38 @@ button {
 
 /* chips, ticks and badges pop when they appear */
 .chip,
-.choice__tick,
-.plan--active .plan__tick {
+.choice__tick {
   animation: pop 0.3s ease both;
 }
-.choice:active,
-.plan:active {
+.choice:active {
   transform: scale(0.97);
+}
+
+/* selected plan: its ticks fade/grow in gently, one row after another */
+@keyframes tick-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.plan--active .plan__tick {
+  animation: tick-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.plan--active li:nth-child(2) .plan__tick {
+  animation-delay: 0.05s;
+}
+.plan--active li:nth-child(3) .plan__tick {
+  animation-delay: 0.1s;
+}
+.plan--active li:nth-child(4) .plan__tick {
+  animation-delay: 0.15s;
+}
+.plan--active li:nth-child(5) .plan__tick {
+  animation-delay: 0.2s;
 }
 .skills__menu {
   animation: menu-in 0.18s ease both;
@@ -2014,4 +2053,13 @@ html:has(.landing) {
   .split__main .container {
     padding: 24px 16px 32px;
   }
+}
+
+/* skill picker: "+ Add <typed skill>" row */
+.skills__menu .skills__add {
+  color: var(--teal);
+  font-weight: 600;
+  border-bottom: 1px solid var(--gray);
+  border-radius: 6px 6px 0 0;
+  margin-bottom: 4px;
 }
