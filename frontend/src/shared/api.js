@@ -12,6 +12,6 @@ export async function api(path, { method = 'GET', body } = {}) {
     body: isForm ? body : body && JSON.stringify(body)
   })
   const data = await res.json()
-  if (!res.ok) throw data // { error, fields? }
+  if (!res.ok) throw data 
   return data
 }

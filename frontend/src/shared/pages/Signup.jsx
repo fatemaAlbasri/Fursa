@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate,useSearchParams } from 'react-router-dom'
 import SkillSelect from '../components/SkillSelect.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
+import { api } from '../api.js'
 
 // Suggestions only: the job seeker can also type a major that isn't listed.
 const MAJORS = [
@@ -77,6 +78,7 @@ const PLANS = [
 
 const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v)
 const hasErrors = (errs) => Object.keys(errs).length > 0
+
 
 function Field({ label, error, hint, children }) {
   return (
@@ -272,7 +274,7 @@ function JobSeekerSignup() {
     email: '',
     phone: '',
     major: '',
-    graduationStatus: ''
+    graduationStatus: 'Graduated'
   })
   const [skills, setSkills] = useState([])
   const [jobTypes, setJobTypes] = useState([])
@@ -281,6 +283,8 @@ function JobSeekerSignup() {
   const [dragging, setDragging] = useState(false)
   const [errors, setErrors] = useState({})
   const fileInput = useRef(null)
+  const navigate = useNavigate()
+
 
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -294,7 +298,7 @@ function JobSeekerSignup() {
     if (ok) setCv(file)
   }
 
-  const submit = (e) => {
+  const submit = async(e) => {
     e.preventDefault()
     const errs = {}
     if (!form.firstName.trim()) errs.firstName = 'Required'
@@ -308,17 +312,28 @@ function JobSeekerSignup() {
     setErrors(errs)
     if (hasErrors(errs)) return
 
-    // TODO (backend): POST /api/auth/signup as FormData
-    // { role: 'jobseeker', ...form, phone: '+973' + form.phone, skills, jobTypes, workModes, cv }
-    console.log('Sign up job seeker', {
-      ...form,
-      phone: '+973' + form.phone,
-      skills,
-      jobTypes,
-      workModes,
-      cv: cv?.name
-    })
-    alert('Account created (demo)')
+    const data = new FormData()
+    data.append('role', 'jobseeker')
+    Object.entries(form).forEach(([key, value]) => data.append(key, value))
+    data.append('skills', JSON.stringify(skills))
+    data.append('jobTypes', JSON.stringify(jobTypes))
+    data.append('workModes', JSON.stringify(workModes))
+    if (cv) data.append('cv', cv)
+
+
+    try {
+          const { token } = await api('/auth/signup', {
+            method: 'POST',
+            body: data
+          })
+          localStorage.setItem('token', token)
+          navigate('/jobseeker')
+        } catch (err) {
+          setErrors(
+            err.fields || { email: err.error || 'Could not reach the server' }
+          )
+        }
+
   }
 
   return (
@@ -385,7 +400,7 @@ function JobSeekerSignup() {
                 placeholder="Pick or type your major"
               />
             </Field>
-            <Field label="Graduation status">
+            <Field label="Graduation status" error={errors.graduationStatus}>
               <select
                 name="graduationStatus"
                 value={form.graduationStatus}

@@ -15,7 +15,7 @@ export default function App() {
             <Route path="jobs" element={<Jobs />} />
           </Route> */}
       <Route element={<Layout />}></Route>
-      <Route path="*" element={<Navigate to="/signin" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
