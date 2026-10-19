@@ -6,7 +6,7 @@ const db = require('../config/db')
 const { extractWithAi, aiEnabled } = require('./cvAi')
 
 // Same options as the dropdowns on the sign up page, so the form can be pre-filled
-const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting', 'Other']
+const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting']
 const STATUSES = ['Graduated', 'Final year student', 'Student']
 
 // Matched on top of the names already in the skills table

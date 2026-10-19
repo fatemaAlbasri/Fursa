@@ -1,7 +1,7 @@
-// Simple in-memory limit per IP, e.g. rateLimit(10, 60) = 10 requests per hour.
+// Simple in-memory limit per IP, 10 requests per hour.
 // Resets when the server restarts; good enough to stop someone spamming a route.
 function rateLimit(max, minutes) {
-  const hits = new Map() // ip -> { count, resetAt }
+  const hits = new Map() 
 
   return (req, res, next) => {
     const now = Date.now()

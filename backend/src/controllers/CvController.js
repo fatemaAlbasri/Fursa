@@ -2,8 +2,6 @@ const db = require('../config/db')
 const { fileUrl, removeFiles } = require('../middleware/upload')
 const { parseCv, saveParsedCv } = require('../services/cvParser')
 
-// Sign up page: read a CV and return the info to pre-fill the form.
-// The file is NOT kept; it is uploaded again with the sign up form.
 async function parse(req, res, next) {
   const file = req.file
   if (!file) return res.status(400).json({ error: 'Please upload your CV', fields: { cv: 'Required' } })
