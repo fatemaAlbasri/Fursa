@@ -788,20 +788,35 @@ function CompanySignup() {
   const [logo, setLogo] = useState(null)
   const [plan, setPlan] = useState('starter')
 
+  const navigate = useNavigate()
+
   const goToStep = (n) => {
     setStep(n)
     window.scrollTo(0, 0)
   }
 
-  const finish = () => {
-    // TODO (backend): POST /api/auth/signup as FormData { role: 'company', ...form, logo, plan }
-    // Free plan → go to /company. Paid plan → go to the payment page.
-    console.log('Sign up company', { ...form, logo: logo?.file.name, plan })
-    alert(
-      plan === 'free'
-        ? 'Company account created (demo)'
-        : 'Going to payment (demo)'
-    )
+  const finish = async () => {
+
+    const data = new FormData()
+    data.append('role', 'company')
+    Object.entries(form).forEach(([key, value]) => data.append(key, value))
+    data.append('plan', plan) 
+    if (logo?.file) data.append('logo', logo.file) 
+
+    try {
+          const { token } = await api('/auth/signup', {
+            method: 'POST',
+            body: data
+          })
+          localStorage.setItem('token', token)
+          navigate('/company')
+        } catch (err) {
+          const details = err.fields
+            ? Object.entries(err.fields).map(([field, msg]) => `${field}: ${msg}`).join('\n')
+            : ''
+          alert(details || err.error || 'Could not reach the server')
+          goToStep(1)
+        }
   }
 
   const right =

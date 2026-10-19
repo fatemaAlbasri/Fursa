@@ -16,6 +16,11 @@ export default function App() {
           </Route> */}
       <Route element={<Layout />}></Route>
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* edit routes after adding pages*/}
+      <Route path="/jobseeker" element={<h1>Job seeker home</h1>} />
+      <Route path="/company" element={<h1>Company home</h1>} />
+
     </Routes>
   );
 }
