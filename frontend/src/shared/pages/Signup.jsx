@@ -1,76 +1,129 @@
-import { useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import SkillSelect from '../components/SkillSelect.jsx';
-import PasswordInput from '../components/PasswordInput.jsx';
+import { useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import SkillSelect from '../components/SkillSelect.jsx'
+import PasswordInput from '../components/PasswordInput.jsx'
 
-const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting', 'Other'];
-const STATUSES = ['Graduated', 'Final year student', 'Student'];
-const INDUSTRIES = ['Technology', 'Banking & Finance', 'Telecom', 'Consulting', 'Healthcare', 'Retail', 'Government', 'Other'];
-const LOCATIONS = ['Manama', 'Seef', 'Muharraq', 'Riffa', 'Isa Town', 'Hamad Town', 'Other'];
-const JOB_TYPES = ['Full-time', 'Part-time', 'Internship'];
-const WORK_MODES = ['On-site', 'Remote', 'Hybrid'];
+// Suggestions only: the job seeker can also type a major that isn't listed.
+const MAJORS = [
+  'Computer Science',
+  'Information Systems',
+  'Computer Engineering',
+  'Business',
+  'Accounting'
+]
+const STATUSES = ['Graduated', 'Final year student', 'Student']
+const INDUSTRIES = [
+  'Technology',
+  'Banking & Finance',
+  'Telecom',
+  'Consulting',
+  'Healthcare',
+  'Retail',
+  'Government',
+]
+const LOCATIONS = [
+  'Manama',
+  'Seef',
+  'Muharraq',
+  'Riffa',
+  'Isa Town',
+  'Hamad Town',
+]
+const JOB_TYPES = ['Full-time', 'Part-time', 'Internship']
+const WORK_MODES = ['On-site', 'Remote', 'Hybrid']
 
 const PLANS = [
   {
-    id: 'free', name: 'Free', tagline: 'Try Fursa with one job', price: 'BHD 0',
+    id: 'free',
+    name: 'Free',
+    tagline: 'Try Fursa with one job',
+    price: 'BHD 0',
     features: [
-      ['1 active job', true], ['Basic job listing', true], ['Applicants sorted by date', true],
-      ['AI ranking & Top 10', false], ['Bulk shortlist / reject', false],
-    ],
+      ['1 active job', true],
+      ['Basic job listing', true],
+      ['Applicants sorted by date', true],
+      ['AI ranking & Top 10', false],
+      ['Bulk shortlist / reject', false]
+    ]
   },
   {
-    id: 'starter', name: 'Starter', tagline: 'For small teams hiring 1–2 roles', price: 'BHD 15', popular: true,
+    id: 'starter',
+    name: 'Starter',
+    tagline: 'For small teams hiring 1–2 roles',
+    price: 'BHD 15',
+    popular: true,
     features: [
-      ['Up to 2 active jobs', true], ['AI ranking & Top 10', true], ['Match reasons for every applicant', true],
-      ['Bulk shortlist / reject', true], ['Unlimited jobs', false],
-    ],
+      ['Up to 2 active jobs', true],
+      ['AI ranking & Top 10', true],
+      ['Match reasons for every applicant', true],
+      ['Bulk shortlist / reject', true],
+      ['Unlimited jobs', false]
+    ]
   },
   {
-    id: 'growth', name: 'Growth', tagline: 'For companies hiring often', price: 'BHD 25',
+    id: 'growth',
+    name: 'Growth',
+    tagline: 'For companies hiring often',
+    price: 'BHD 25',
     features: [
-      ['Unlimited active jobs', true], ['AI ranking & Top 10', true], ['Match reasons for every applicant', true],
-      ['Bulk shortlist / reject', true], ['Hiring summary per job', true],
-    ],
-  },
-];
+      ['Unlimited active jobs', true],
+      ['AI ranking & Top 10', true],
+      ['Match reasons for every applicant', true],
+      ['Bulk shortlist / reject', true],
+      ['Hiring summary per job', true]
+    ]
+  }
+]
 
-const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v);
-const hasErrors = (errs) => Object.keys(errs).length > 0;
+const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v)
+const hasErrors = (errs) => Object.keys(errs).length > 0
 
 function Field({ label, error, hint, children }) {
   return (
     <div className="field">
-      <div className="field__top"><label>{label}</label></div>
+      <div className="field__top">
+        <label>{label}</label>
+      </div>
       {children}
       {hint && <p className="hint">{hint}</p>}
       {error && <p className="field__error">{error}</p>}
     </div>
-  );
+  )
 }
 
 // A row of on/off buttons. Pick any (or none).
 function ChoiceChips({ label, options, value, onChange }) {
   const toggle = (opt) =>
-    onChange(value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]);
+    onChange(
+      value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]
+    )
   return (
     <div className="choice-box">
-      <div className="choice-box__head">
-        <span className="choice-box__label">{label}</span>
-        <span className="choice-box__opt">Optional</span>
-      </div>
+      <p className="choice-box__label">
+        {label} <span className="choice-box__opt">(optional · pick any)</span>
+      </p>
       <div className="choice-box__chips" role="group" aria-label={label}>
         {options.map((opt) => {
-          const on = value.includes(opt);
+          const on = value.includes(opt)
           return (
-            <button key={opt} type="button" className={on ? 'choice choice--on' : 'choice'}
-              aria-pressed={on} onClick={() => toggle(opt)}>
-              <span className="choice__box">{on ? '✓' : ''}</span>{opt}
+            <button
+              key={opt}
+              type="button"
+              className={on ? 'choice choice--on' : 'choice'}
+              aria-pressed={on}
+              onClick={() => toggle(opt)}
+            >
+              {on && <span className="choice__tick">✓</span>}
+              {opt}
             </button>
-          );
+          )
         })}
       </div>
+      <p className="hint">
+        Leave empty to see all jobs. You can change this later in your profile.
+      </p>
     </div>
-  );
+  )
 }
 
 // +973 phone box
@@ -78,31 +131,51 @@ function PhoneInput({ value, onChange, placeholder = '3XXX XXXX' }) {
   return (
     <div className="phone">
       <span className="phone__code">+973</span>
-      <input name="phone" type="tel" inputMode="numeric" maxLength={9} placeholder={placeholder}
-        value={value} onChange={onChange} autoComplete="off" />
+      <input
+        name="phone"
+        type="tel"
+        inputMode="numeric"
+        maxLength={9}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        autoComplete="off"
+      />
     </div>
-  );
+  )
 }
 
 // Text box with suggestions: the user can pick from the list OR type their own.
 function TypeOrPick({ name, value, onChange, options, placeholder }) {
-  const listId = `${name}-options`;
+  const listId = `${name}-options`
   return (
     <>
-      <input name={name} list={listId} value={value} onChange={onChange} placeholder={placeholder} autoComplete="off" />
+      <input
+        name={name}
+        list={listId}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        autoComplete="off"
+      />
       <datalist id={listId}>
-        {options.map((x) => <option key={x} value={x} />)}
+        {options.map((x) => (
+          <option key={x} value={x} />
+        ))}
       </datalist>
     </>
-  );
+  )
 }
 
 function SignInLink({ role }) {
   return (
     <p className="switch">
-      Already have an account? <Link className="link" to={`/signin?role=${role}`}>Sign in</Link>
+      Already have an account?{' '}
+      <Link className="link" to={`/signin?role=${role}`}>
+        Sign in
+      </Link>
     </p>
-  );
+  )
 }
 
 function Header({ employer, right }) {
@@ -110,135 +183,301 @@ function Header({ employer, right }) {
     <header className="topbar">
       <Link to="/" className="logo">
         <img src="/fursa-key.png" alt="" className="logo__key" />
-        <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
+        <img
+          src="/fursa-wordmark-white.png"
+          alt="Fursa"
+          className="logo__wordmark"
+        />
         {employer && <span className="logo__tag">Employer</span>}
       </Link>
       <span className="topbar__right">{right}</span>
     </header>
-  );
+  )
+}
+
+const ASIDE = {
+  jobseeker: {
+    title: (
+      <>
+        Unlock your <span className="accent">Chance.</span>
+      </>
+    ),
+    text: 'Create your free account and see the jobs and internships that match you.',
+    points: [
+      'Jobs ranked by your match score',
+      'Free AI feedback on your CV',
+      'Track every application in one place'
+    ]
+  },
+  company: {
+    title: (
+      <>
+        Hire the right <span className="accent">graduates, faster.</span>
+      </>
+    ),
+    text: 'Post jobs and internships, and let Fursa rank every applicant for you.',
+    points: [
+      'AI reads every CV and explains each score',
+      'Your Top 10 applicants, ready to review',
+      'Shortlist or reject in bulk'
+    ]
+  }
+}
+
+// Sign up page frame: navy panel on the left (stays put), form scrolls on the right.
+function SignupSplit({ role, children }) {
+  const { title, text, points } = ASIDE[role]
+  return (
+    <div className="split split--signup">
+      <aside className="split__brand">
+        <Link to="/" className="logo">
+          <img src="/fursa-key.png" alt="" className="logo__key" />
+          <img
+            src="/fursa-wordmark-white.png"
+            alt="Fursa"
+            className="logo__wordmark"
+          />
+          {role === 'company' && <span className="logo__tag">Employer</span>}
+        </Link>
+        <div className="split__copy">
+          <h1>{title}</h1>
+          <p>{text}</p>
+          <ul className="split__points">
+            {points.map((p) => (
+              <li key={p}>
+                <span className="split__check">✓</span>
+                {p}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="dots">
+          <span />
+          <span />
+          <span />
+        </div>
+      </aside>
+      <div className="split__main">{children}</div>
+    </div>
+  )
 }
 
 /* ================= JOB SEEKER ================= */
 
 function JobSeekerSignup() {
   const [form, setForm] = useState({
-    firstName: '', lastName: '', password: '', email: '', phone: '',
-    major: MAJORS[0], graduationStatus: STATUSES[0],
-  });
-  const [skills, setSkills] = useState([]);
-  const [jobTypes, setJobTypes] = useState([]);
-  const [workModes, setWorkModes] = useState([]);
-  const [cv, setCv] = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [errors, setErrors] = useState({});
-  const fileInput = useRef(null);
+    firstName: '',
+    lastName: '',
+    password: '',
+    email: '',
+    phone: '',
+    major: '',
+    graduationStatus: ''
+  })
+  const [skills, setSkills] = useState([])
+  const [jobTypes, setJobTypes] = useState([])
+  const [workModes, setWorkModes] = useState([])
+  const [cv, setCv] = useState(null)
+  const [dragging, setDragging] = useState(false)
+  const [errors, setErrors] = useState({})
+  const fileInput = useRef(null)
 
-  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const pickCv = (file) => {
-    if (!file) return;
-    const ok = /\.(pdf|docx?)$/i.test(file.name);
-    setErrors({ ...errors, cv: ok ? undefined : 'Please upload a PDF or Word file' });
-    if (ok) setCv(file);
-  };
+    if (!file) return
+    const ok = /\.(pdf|docx?)$/i.test(file.name)
+    setErrors({
+      ...errors,
+      cv: ok ? undefined : 'Please upload a PDF or Word file'
+    })
+    if (ok) setCv(file)
+  }
 
   const submit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!form.firstName.trim()) errs.firstName = 'Required';
-    if (!form.lastName.trim()) errs.lastName = 'Required';
-    if (form.password.length < 8) errs.password = 'At least 8 characters';
-    if (!isEmail(form.email)) errs.email = 'Enter a valid email';
-    if (form.phone && !/^\d{8}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Enter 8 digits';
-    if (skills.length === 0) errs.skills = 'Pick at least one skill';
-    setErrors(errs);
-    if (hasErrors(errs)) return;
+    e.preventDefault()
+    const errs = {}
+    if (!form.firstName.trim()) errs.firstName = 'Required'
+    if (!form.lastName.trim()) errs.lastName = 'Required'
+    if (form.password.length < 8) errs.password = 'At least 8 characters'
+    if (!isEmail(form.email)) errs.email = 'Enter a valid email'
+    if (form.phone && !/^\d{8}$/.test(form.phone.replace(/\s/g, '')))
+      errs.phone = 'Enter 8 digits'
+    if (!form.major.trim()) errs.major = 'Pick or type your major'
+    if (skills.length === 0) errs.skills = 'Pick at least one skill'
+    setErrors(errs)
+    if (hasErrors(errs)) return
 
     // TODO (backend): POST /api/auth/signup as FormData
     // { role: 'jobseeker', ...form, phone: '+973' + form.phone, skills, jobTypes, workModes, cv }
-    console.log('Sign up job seeker', { ...form, phone: '+973' + form.phone, skills, jobTypes, workModes, cv: cv?.name });
-    alert('Account created (demo)');
-  };
+    console.log('Sign up job seeker', {
+      ...form,
+      phone: '+973' + form.phone,
+      skills,
+      jobTypes,
+      workModes,
+      cv: cv?.name
+    })
+    alert('Account created (demo)')
+  }
 
   return (
-    <div className="page page--fit">
-      <Header />
-
-      <main className="container container--wide">
+    <SignupSplit role="jobseeker">
+      <main className="container">
         <div className="page-head">
           <span className="pill">Job seeker account</span>
           <h1 className="title">Create your account</h1>
-          <p className="muted">Add your skills and CV so Fursa can show you the jobs that match you.</p>
+          <p className="muted">
+            Add your skills and CV so Fursa can show you the jobs that match
+            you.
+          </p>
         </div>
 
         <form className="card" onSubmit={submit} noValidate autoComplete="off">
-          <div className="grid3">
+          <div className="grid2">
             <Field label="First name" error={errors.firstName}>
-              <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
+              <input
+                name="firstName"
+                placeholder="First name"
+                value={form.firstName}
+                onChange={change}
+              />
             </Field>
             <Field label="Last name" error={errors.lastName}>
-              <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
+              <input
+                name="lastName"
+                placeholder="Last name"
+                value={form.lastName}
+                onChange={change}
+              />
             </Field>
-            <Field label="Email" error={errors.email}>
-              <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} autoComplete="off" />
-            </Field>
+          </div>
 
-            <Field label="Password" error={errors.password}>
-              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
+          <Field label="Password" error={errors.password}>
+            <PasswordInput
+              placeholder="At least 8 characters"
+              value={form.password}
+              onChange={change}
+            />
+          </Field>
+
+          <div className="grid2">
+            <Field label="Email" error={errors.email}>
+              <input
+                name="email"
+                type="email"
+                placeholder="name@email.com"
+                value={form.email}
+                onChange={change}
+                autoComplete="off"
+              />
             </Field>
             <Field label="Phone number" error={errors.phone}>
               <PhoneInput value={form.phone} onChange={change} />
             </Field>
-            <Field label="Major / field of study">
-              <select name="major" value={form.major} onChange={change}>
-                {MAJORS.map((m) => <option key={m}>{m}</option>)}
-              </select>
-            </Field>
 
+            <Field label="Major / field of study" error={errors.major}>
+              <TypeOrPick
+                name="major"
+                value={form.major}
+                onChange={change}
+                options={MAJORS}
+                placeholder="Pick or type your major"
+              />
+            </Field>
             <Field label="Graduation status">
-              <select name="graduationStatus" value={form.graduationStatus} onChange={change}>
-                {STATUSES.map((s) => <option key={s}>{s}</option>)}
+              <select
+                name="graduationStatus"
+                value={form.graduationStatus}
+                onChange={change}
+              >
+                {STATUSES.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
               </select>
             </Field>
-            <div className="span2">
-              <Field label="Skills" error={errors.skills} hint="Pick from the list. We use these to show you jobs that match.">
-                <SkillSelect value={skills} onChange={setSkills} />
-              </Field>
-            </div>
           </div>
 
-          <div className="grid2">
-            <ChoiceChips label="Job type" options={JOB_TYPES} value={jobTypes} onChange={setJobTypes} />
-            <ChoiceChips label="Work mode" options={WORK_MODES} value={workModes} onChange={setWorkModes} />
-          </div>
+          <Field
+            label="Skills"
+            error={errors.skills}
+            hint="Pick from the list or type your own and press Enter. We use these to show you jobs that match."
+          >
+            <SkillSelect value={skills} onChange={setSkills} />
+          </Field>
 
-          <Field label="Upload CV" error={errors.cv}>
+          <ChoiceChips
+            label="Job type"
+            options={JOB_TYPES}
+            value={jobTypes}
+            onChange={setJobTypes}
+          />
+          <ChoiceChips
+            label="Work mode"
+            options={WORK_MODES}
+            value={workModes}
+            onChange={setWorkModes}
+          />
+
+          <Field
+            label="Upload CV"
+            error={errors.cv}
+            hint="Employers see your CV when you apply."
+          >
             <div
               className={`drop ${dragging ? 'drop--over' : ''}`}
               onClick={() => fileInput.current.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragging(true)
+              }}
               onDragLeave={() => setDragging(false)}
-              onDrop={(e) => { e.preventDefault(); setDragging(false); pickCv(e.dataTransfer.files[0]); }}
+              onDrop={(e) => {
+                e.preventDefault()
+                setDragging(false)
+                pickCv(e.dataTransfer.files[0])
+              }}
             >
-              <svg className="drop__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                className="drop__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M12 15V3M7 8l5-5 5 5M4 17v3h16v-3" />
               </svg>
               {cv ? (
-                <p className="drop__text"><b>{cv.name}</b> · <span className="link">change file</span></p>
+                <p className="drop__text">
+                  <b>{cv.name}</b> · <span className="link">change file</span>
+                </p>
               ) : (
-                <p className="drop__text">Drag your CV here, or <span className="drop__browse">browse files</span></p>
+                <p className="drop__text">
+                  Drag your CV here, or{' '}
+                  <span className="drop__browse">browse files</span>
+                </p>
               )}
-              <p className="drop__sub">PDF or Word · Employers see your CV when you apply.</p>
-              <input ref={fileInput} type="file" accept=".pdf,.doc,.docx" hidden onChange={(e) => pickCv(e.target.files[0])} />
+              <p className="drop__sub">PDF or Word</p>
+              <input
+                ref={fileInput}
+                type="file"
+                accept=".pdf,.doc,.docx"
+                hidden
+                onChange={(e) => pickCv(e.target.files[0])}
+              />
             </div>
           </Field>
 
-          <button className="btn btn--primary btn--block" type="submit">Create account & see my jobs</button>
+          <button className="btn btn--primary btn--block" type="submit">
+            Create account & see my jobs
+          </button>
         </form>
         <SignInLink role="jobseeker" />
       </main>
-    </div>
-  );
+    </SignupSplit>
+  )
 }
 
 /* ================= COMPANY (2 steps) ================= */
@@ -250,207 +489,343 @@ function Steps({ step }) {
         1 · Company details{step === 2 && ' ✓'}
       </span>
       <span className="steps__line" />
-      <span className={step === 2 ? 'step step--active' : 'step'}>2 · Choose a plan</span>
+      <span className={step === 2 ? 'step step--active' : 'step'}>
+        2 · Choose a plan
+      </span>
     </div>
-  );
+  )
 }
 
 function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
-  const [errors, setErrors] = useState({});
-  const logoInput = useRef(null);
-  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const [errors, setErrors] = useState({})
+  const logoInput = useRef(null)
+  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const pickLogo = (file) => {
-    if (file && file.type.startsWith('image/')) setLogo({ file, url: URL.createObjectURL(file) });
-  };
+    if (file && file.type.startsWith('image/'))
+      setLogo({ file, url: URL.createObjectURL(file) })
+  }
 
   const submit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!form.companyName.trim()) errs.companyName = 'Required';
-    if (form.website && !/^https?:\/\/\S+\.\S+/.test(form.website)) errs.website = 'Start with https://';
-    if (!form.firstName.trim()) errs.firstName = 'Required';
-    if (!form.lastName.trim()) errs.lastName = 'Required';
-    if (form.password.length < 8) errs.password = 'At least 8 characters';
-    if (!isEmail(form.email)) errs.email = 'Enter a valid email';
-    if (!/^\d{8}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Enter 8 digits';
-    if (!form.industry.trim()) errs.industry = 'Required';
-    if (!form.location.trim()) errs.location = 'Required';
-    setErrors(errs);
-    if (!hasErrors(errs)) onNext();
-  };
+    e.preventDefault()
+    const errs = {}
+    if (!form.companyName.trim()) errs.companyName = 'Required'
+    if (form.website && !/^https?:\/\/\S+\.\S+/.test(form.website))
+      errs.website = 'Start with https://'
+    if (!form.firstName.trim()) errs.firstName = 'Required'
+    if (!form.lastName.trim()) errs.lastName = 'Required'
+    if (form.password.length < 8) errs.password = 'At least 8 characters'
+    if (!isEmail(form.email)) errs.email = 'Enter a valid email'
+    if (!/^\d{8}$/.test(form.phone.replace(/\s/g, '')))
+      errs.phone = 'Enter 8 digits'
+    if (!form.industry.trim()) errs.industry = 'Required'
+    if (!form.location.trim()) errs.location = 'Required'
+    setErrors(errs)
+    if (!hasErrors(errs)) onNext()
+  }
 
   return (
-    <main className="container container--wide">
+    <main className="container">
       <div className="page-head">
         <Steps step={1} />
         <h1 className="title">Create your company account</h1>
-        <p className="muted">Post jobs and internships, and get your applicants ranked by AI.</p>
+        <p className="muted">
+          Post jobs and internships, and get your applicants ranked by AI.
+        </p>
       </div>
 
       <form className="card" onSubmit={submit} noValidate autoComplete="off">
-        <div className="cols">
-          {/* ----- Left: company ----- */}
-          <section className="col">
-            <h3 className="section-title">Company</h3>
+        <h3 className="section-title">Company</h3>
 
-            <div className="logo-upload">
-              <div className="logo-upload__box">
-                {logo ? <img src={logo.url} alt="Company logo" /> : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <p className="logo-upload__label">Company logo (optional)</p>
-                <button type="button" className="btn btn--outline" onClick={() => logoInput.current.click()}>
-                  {logo ? 'Change logo' : 'Upload logo'}
-                </button>
-                <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files[0])} />
-              </div>
-            </div>
-
-            <div className="grid2">
-              <Field label="Company name" error={errors.companyName}>
-                <input name="companyName" placeholder="Company name" value={form.companyName} onChange={change} />
-              </Field>
-              <Field label="Company website (optional)" error={errors.website}>
-                <input name="website" type="url" placeholder="https://www.company.bh" value={form.website} onChange={change} />
-              </Field>
-            </div>
-
-            <Field label="Company phone number" error={errors.phone}
-              hint="The company's main number. Shared with applicants you accept, so they can contact you.">
-              <PhoneInput value={form.phone} onChange={change} placeholder="17XX XXXX" />
-            </Field>
-
-            <div className="grid2">
-              <Field label="Industry" error={errors.industry}>
-                <TypeOrPick name="industry" value={form.industry} onChange={change} options={INDUSTRIES}
-                  placeholder="Pick or type your industry" />
-              </Field>
-              <Field label="Location" error={errors.location}>
-                <TypeOrPick name="location" value={form.location} onChange={change} options={LOCATIONS}
-                  placeholder="Pick or type a city" />
-              </Field>
-            </div>
-
-            <Field label="About the company (optional)">
-              <textarea name="about" rows={2} placeholder="What does your company do?" value={form.about} onChange={change} />
-            </Field>
-          </section>
-
-          {/* ----- Right: HR login ----- */}
-          <section className="col col--side">
-            <h3 className="section-title">Your login (HR contact)</h3>
-
-            <div className="grid2">
-              <Field label="First name" error={errors.firstName}>
-                <input name="firstName" placeholder="First name" value={form.firstName} onChange={change} />
-              </Field>
-              <Field label="Last name" error={errors.lastName}>
-                <input name="lastName" placeholder="Last name" value={form.lastName} onChange={change} />
-              </Field>
-            </div>
-
-            <Field label="Work email" error={errors.email}>
-              <input name="email" type="email" placeholder="hr@company.bh" value={form.email} onChange={change} autoComplete="off" />
-            </Field>
-
-            <Field label="Password" error={errors.password}>
-              <PasswordInput placeholder="At least 8 characters" value={form.password} onChange={change} />
-            </Field>
-
-            <button className="btn btn--primary btn--block col__submit" type="submit">Continue: choose a plan</button>
-          </section>
+        <div className="logo-upload">
+          <div className="logo-upload__box">
+            {logo ? (
+              <img src={logo.url} alt="Company logo" />
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+            )}
+          </div>
+          <div>
+            <p className="logo-upload__label">Company logo (optional)</p>
+            <button
+              type="button"
+              className="btn btn--outline"
+              onClick={() => logoInput.current.click()}
+            >
+              {logo ? 'Change logo' : 'Upload logo'}
+            </button>
+            <input
+              ref={logoInput}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => pickLogo(e.target.files[0])}
+            />
+          </div>
         </div>
+
+        <Field label="Company name" error={errors.companyName}>
+          <input
+            name="companyName"
+            placeholder="Company name"
+            value={form.companyName}
+            onChange={change}
+          />
+        </Field>
+
+        <Field
+          label="Company website (optional)"
+          error={errors.website}
+          hint="Shown on every job you post, so applicants can learn about you."
+        >
+          <input
+            name="website"
+            type="url"
+            placeholder="https://www.company.bh"
+            value={form.website}
+            onChange={change}
+          />
+        </Field>
+
+        <Field
+          label="Company phone number"
+          error={errors.phone}
+          hint="The company's main number. Shared with applicants you accept, so they can contact you."
+        >
+          <PhoneInput
+            value={form.phone}
+            onChange={change}
+            placeholder="17XX XXXX"
+          />
+        </Field>
+
+        <div className="grid2">
+          <Field label="Industry" error={errors.industry}>
+            <TypeOrPick
+              name="industry"
+              value={form.industry}
+              onChange={change}
+              options={INDUSTRIES}
+              placeholder="Pick or type your industry"
+            />
+          </Field>
+          <Field label="Location" error={errors.location}>
+            <TypeOrPick
+              name="location"
+              value={form.location}
+              onChange={change}
+              options={LOCATIONS}
+              placeholder="Pick or type a city"
+            />
+          </Field>
+        </div>
+
+        <Field label="About the company (optional)">
+          <textarea
+            name="about"
+            rows={3}
+            placeholder="What does your company do?"
+            value={form.about}
+            onChange={change}
+          />
+        </Field>
+
+        <hr className="divider" />
+        <h3 className="section-title">Your login (HR contact)</h3>
+
+        <div className="grid2">
+          <Field label="First name" error={errors.firstName}>
+            <input
+              name="firstName"
+              placeholder="First name"
+              value={form.firstName}
+              onChange={change}
+            />
+          </Field>
+          <Field label="Last name" error={errors.lastName}>
+            <input
+              name="lastName"
+              placeholder="Last name"
+              value={form.lastName}
+              onChange={change}
+            />
+          </Field>
+        </div>
+
+        <Field label="Password" error={errors.password}>
+          <PasswordInput
+            placeholder="At least 8 characters"
+            value={form.password}
+            onChange={change}
+          />
+        </Field>
+
+        <Field label="Work email" error={errors.email}>
+          <input
+            name="email"
+            type="email"
+            placeholder="hr@company.bh"
+            value={form.email}
+            onChange={change}
+            autoComplete="off"
+          />
+        </Field>
+
+        <button className="btn btn--primary btn--block" type="submit">
+          Continue: choose a plan
+        </button>
       </form>
       <SignInLink role="company" />
     </main>
-  );
+  )
 }
 
 function ChoosePlan({ plan, setPlan, onFinish }) {
-  const selected = PLANS.find((p) => p.id === plan);
+  const selected = PLANS.find((p) => p.id === plan)
   return (
     <main className="container container--wide">
       <div className="page-head center">
         <Steps step={2} />
         <h1 className="title">Choose your plan</h1>
-        <p className="muted">Start free. Upgrade when you want AI ranking. Change or cancel any time.</p>
+        <p className="muted">
+          Start free. Upgrade when you want AI ranking. Change or cancel any
+          time.
+        </p>
       </div>
 
       <div className="plans">
         {PLANS.map((p) => {
-          const active = p.id === plan;
+          const active = p.id === plan
           return (
-            <div key={p.id} className={`plan ${active ? 'plan--active' : ''}`}>
+            <div
+              key={p.id}
+              className={`plan ${active ? 'plan--active' : ''}`}
+              onClick={() => setPlan(p.id)}
+            >
               {p.popular && <span className="plan__badge">Most popular</span>}
               <h3 className="plan__name">{p.name}</h3>
               <p className="plan__tagline">{p.tagline}</p>
-              <p className="plan__price">{p.price} <span>/ month</span></p>
+              <p className="plan__price">
+                {p.price} <span>/ month</span>
+              </p>
               <ul className="plan__list">
                 {p.features.map(([text, included]) => (
                   <li key={text} className={included ? '' : 'plan__no'}>
-                    <span className="plan__tick">{included ? '✓' : '–'}</span>{text}
+                    <span className="plan__tick">{included ? '✓' : '–'}</span>
+                    {text}
                   </li>
                 ))}
               </ul>
-              <button type="button" className={`btn btn--block ${active ? 'btn--white' : 'btn--outline'}`}
-                onClick={() => setPlan(p.id)}>
+              <button
+                type="button"
+                className={`btn btn--block ${active ? 'btn--white' : 'btn--outline'}`}
+                onClick={() => setPlan(p.id)}
+              >
                 {active ? 'Selected' : `Choose ${p.name}`}
               </button>
             </div>
-          );
+          )
         })}
       </div>
 
       <div className="plan-bar">
-        <p><b>Selected: {selected.name} · {selected.price} / month</b></p>
+        {/* key={plan} restarts the fade-in each time the plan changes */}
+        <p key={plan} className="swap">
+          <b>
+            Selected: {selected.name} · {selected.price} / month
+          </b>
+        </p>
         <button type="button" className="btn btn--primary" onClick={onFinish}>
-          {plan === 'free' ? 'Start free' : 'Pay & Start'}
+          <span key={plan} className="swap">
+            {plan === 'free' ? 'Start free' : 'Pay & Start'}
+          </span>
         </button>
       </div>
     </main>
-  );
+  )
 }
 
 function CompanySignup() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1)
   const [form, setForm] = useState({
-    companyName: '', website: '', industry: '', location: '', about: '',
-    firstName: '', lastName: '', password: '', email: '', phone: '',
-  });
-  const [logo, setLogo] = useState(null);
-  const [plan, setPlan] = useState('starter');
+    companyName: '',
+    website: '',
+    industry: '',
+    location: '',
+    about: '',
+    firstName: '',
+    lastName: '',
+    password: '',
+    email: '',
+    phone: ''
+  })
+  const [logo, setLogo] = useState(null)
+  const [plan, setPlan] = useState('starter')
 
-  const goToStep = (n) => { setStep(n); window.scrollTo(0, 0); };
+  const goToStep = (n) => {
+    setStep(n)
+    window.scrollTo(0, 0)
+  }
 
   const finish = () => {
     // TODO (backend): POST /api/auth/signup as FormData { role: 'company', ...form, logo, plan }
     // Free plan → go to /company. Paid plan → go to the payment page.
-    console.log('Sign up company', { ...form, logo: logo?.file.name, plan });
-    alert(plan === 'free' ? 'Company account created (demo)' : 'Going to payment (demo)');
-  };
+    console.log('Sign up company', { ...form, logo: logo?.file.name, plan })
+    alert(
+      plan === 'free'
+        ? 'Company account created (demo)'
+        : 'Going to payment (demo)'
+    )
+  }
 
-  const right = step === 2
-    ? <button type="button" className="back-link" onClick={() => goToStep(1)}>← Back</button>
-    : null;
+  const right =
+    step === 2 ? (
+      <button type="button" className="back-link" onClick={() => goToStep(1)}>
+        ← Back
+      </button>
+    ) : null
 
+  if (step === 1) {
+    return (
+      <SignupSplit role="company">
+        <CompanyDetails
+          form={form}
+          setForm={setForm}
+          logo={logo}
+          setLogo={setLogo}
+          onNext={() => goToStep(2)}
+        />
+      </SignupSplit>
+    )
+  }
+
+  // Step 2 keeps the full width so the three plan cards fit side by side.
   return (
     <div className="page">
       <Header employer right={right} />
-      {step === 1
-        ? <CompanyDetails form={form} setForm={setForm} logo={logo} setLogo={setLogo} onNext={() => goToStep(2)} />
-        : <ChoosePlan plan={plan} setPlan={setPlan} onFinish={finish} />}
+      <ChoosePlan plan={plan} setPlan={setPlan} onFinish={finish} />
     </div>
-  );
+  )
 }
 
 /* ================= PAGE ================= */
 
 export default function Signup() {
-  const [params] = useSearchParams();
-  return params.get('role') === 'company' ? <CompanySignup /> : <JobSeekerSignup />;
+  const [params] = useSearchParams()
+  return params.get('role') === 'company' ? (
+    <CompanySignup />
+  ) : (
+    <JobSeekerSignup />
+  )
 }
