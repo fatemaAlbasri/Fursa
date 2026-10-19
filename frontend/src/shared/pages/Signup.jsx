@@ -4,7 +4,6 @@ import SkillSelect from '../components/SkillSelect.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { api } from '../api.js'
 
-// Suggestions only: the job seeker can also type a major that isn't listed.
 const MAJORS = [
   'Computer Science',
   'Information Systems',
@@ -169,14 +168,29 @@ function TypeOrPick({ name, value, onChange, options, placeholder }) {
   )
 }
 
+
 function SignInLink({ role }) {
+  const isCompany = role === 'company'
   return (
-    <p className="switch">
-      Already have an account?{' '}
-      <Link className="link" to={`/signin?role=${role}`}>
-        Sign in
+    <div className="switch">
+      <p>
+        Already have an account?{' '}
+        <Link className="link" to={`/signin?role=${role}`}>
+          Sign in
+        </Link>
+      </p>
+      <span className="switch__or">or</span>
+      <Link
+        className="switch__other"
+        to={`/signup?role=${isCompany ? 'jobseeker' : 'company'}`}
+        onClick={() => window.scrollTo(0, 0)}
+      >
+        {isCompany ? 'Looking for a job?' : 'Hiring for a company?'}{' '}
+        <b>
+          {isCompany ? 'Create a job seeker account' : 'Create a company account'}
+        </b>
       </Link>
-    </p>
+    </div>
   )
 }
 
