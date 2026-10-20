@@ -280,7 +280,6 @@ CREATE INDEX idx_payments_user         ON payments(user_id);
 CREATE INDEX idx_job_skills_skill      ON job_skills(skill_id);
 CREATE INDEX idx_seeker_skills_skill   ON seeker_skills(skill_id);
 CREATE INDEX idx_jobs_type_mode        ON jobs(job_type, work_mode);
-CREATE INDEX idx_jobs_governorate      ON jobs(governorate);
 
 -- ---------------------------------------------------------------------
 -- 8. AI embeddings (pgvector) for CV similarity
