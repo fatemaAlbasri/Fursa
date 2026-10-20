@@ -10,7 +10,8 @@ export const SKILLS = [
 
 const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 
-export default function SkillSelect({ value, onChange }) {
+// showChips=false hides the chips inside the box (when the parent lists picked skills itself).
+export default function SkillSelect({ value, onChange, showChips = true, id }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -36,7 +37,7 @@ export default function SkillSelect({ value, onChange }) {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault(); // don't submit the form
       add(typed);
-    } else if (e.key === 'Backspace' && !query && value.length) {
+    } else if (showChips && e.key === 'Backspace' && !query && value.length) {
       remove(value[value.length - 1]);
     }
   };
@@ -44,13 +45,14 @@ export default function SkillSelect({ value, onChange }) {
   return (
     <div className="skills">
       <div className="skills__box" onClick={() => setOpen(true)}>
-        {value.map((s) => (
+        {showChips && value.map((s) => (
           <span key={s} className="chip">
             {s}
             <button type="button" aria-label={`Remove ${s}`} onClick={() => remove(s)}>×</button>
           </span>
         ))}
         <input
+          id={id}
           className="skills__input"
           placeholder={value.length ? 'Add more…' : 'Search or type a skill ▾'}
           value={query}

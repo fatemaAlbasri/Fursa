@@ -3,6 +3,9 @@ import SignIn from './shared/pages/SignIn.jsx';
 import Signup from './shared/pages/Signup.jsx';
 import Layout from './shared/components/Layout.jsx';
 import Landing from './shared/pages/Landing.jsx';
+import CompanyLayout from './company/CompanyLayout.jsx';
+import PostJob from './company/pages/PostJob.jsx';
+
 
 export default function App() {
   return (
@@ -19,7 +22,12 @@ export default function App() {
 
       {/* edit routes after adding pages*/}
       <Route path="/jobseeker" element={<h1>Job seeker home</h1>} />
-      <Route path="/company" element={<h1>Company home</h1>} />
+
+      {/* Company (employer) pages — all share the employer top bar */}
+      <Route path="/company" element={<CompanyLayout />}>
+        <Route index element={<Navigate to="post-job" replace />} />
+        <Route path="post-job" element={<PostJob />} />
+      </Route>
 
     </Routes>
   );

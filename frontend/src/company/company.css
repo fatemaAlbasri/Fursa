@@ -1,0 +1,88 @@
+/* ===== Company (employer) pages — uses the brand colours from shared/styles/index.css ===== */
+.company-page { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ---------- Top bar ---------- */
+.cnav { background: var(--navy); padding: 0 24px; flex-shrink: 0; }
+.cnav__inner {
+  max-width: 1180px; margin: 0 auto; min-height: 60px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+}
+.cnav__menu { display: flex; flex-wrap: wrap; gap: 4px; }
+.cnav__link {
+  display: flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border-radius: 8px;
+  color: var(--gray); font-weight: 600; font-size: 14px;
+}
+.cnav__link svg { width: 17px; height: 17px; }
+.cnav__link:hover { background: rgba(255, 255, 255, .08); color: var(--white); }
+.cnav__link--active, .cnav__link--active:hover { background: var(--teal); color: var(--white); }
+.cnav__profile {
+  display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 3px 14px 3px 3px; border-radius: 999px;
+  background: rgba(255, 255, 255, .12); color: var(--white); font-weight: 600; font-size: 14px;
+}
+.cnav__avatar {
+  width: 34px; height: 34px; border-radius: 999px; background: var(--white); color: var(--teal);
+  font-weight: 700; display: grid; place-items: center;
+}
+
+/* ---------- Post a job ---------- */
+.pj { width: 100%; max-width: 1180px; margin: 0 auto; padding: 16px 24px 18px; }
+.pj-head { margin-bottom: 12px; }
+.pj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.pj-card {
+  background: var(--white); border: 1px solid var(--gray); border-radius: 14px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;
+}
+.pj-step { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 700; margin: 0; }
+.pj-step span {
+  width: 24px; height: 24px; border-radius: 999px; background: var(--teal); color: var(--white);
+  font-size: 13px; display: grid; place-items: center;
+}
+.pj-note { margin-top: 4px; }
+.pj-note b { color: var(--teal); }
+.pj-choices { display: flex; flex-direction: column; gap: 10px; }
+.pj-choices .field { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pj-label { font-size: 13px; font-weight: 600; }
+.pj-label span { font-weight: 400; color: var(--slate); }
+
+/* choose-one pills */
+.pj-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pj-pill {
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--gray); background: var(--white); color: var(--navy);
+}
+.pj-pill:hover { border-color: var(--teal); }
+.pj-pill--on { background: var(--teal); border-color: var(--teal); color: var(--white); }
+
+/* salary with BHD */
+.pj-money { display: flex; border: 1px solid var(--gray); border-radius: 8px; overflow: hidden; background: var(--white); }
+.pj-money:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px var(--focus); }
+.pj-money span { background: var(--light); padding: 9px 10px; font-weight: 600; border-right: 1px solid var(--gray); }
+.field .pj-money input { border: 0; border-radius: 0; }
+.field .pj-money input:focus { box-shadow: none; }
+
+/* skills with must-have */
+.pj-skills { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 120px; overflow-y: auto; }
+.pj-skill {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 6px 4px 8px; border: 1px solid var(--gray); border-radius: 10px; background: var(--light); min-width: 0;
+}
+.pj-skill__right { display: flex; align-items: center; gap: 6px; }
+.pj-must { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+.pj-skill .pj-must { margin-top: 0; }
+.pj-must input { width: 16px; height: 16px; accent-color: var(--teal); }
+.pj-remove {
+  border: 0; background: none; color: var(--slate); font-size: 18px; line-height: 1; cursor: pointer;
+  width: 28px; height: 28px; border-radius: 6px;
+}
+.pj-remove:hover { background: var(--white); color: var(--navy); }
+.field select.pj-add {
+  border: 1.5px dashed var(--accent); background: var(--light); color: var(--teal); font-weight: 600; cursor: pointer;
+}
+
+.pj-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 2px; }
+
+@media (max-width: 900px) {
+  .pj-grid { grid-template-columns: 1fr; }
+  .pj-skills { grid-template-columns: 1fr; max-height: none; }
+  .cnav__inner { padding: 8px 0; }
+}
