@@ -13,7 +13,7 @@ ORDER BY m.score DESC
 LIMIT 10;
 
 -- 2) Seeker: "Jobs for you" for Fatima (user 6), best match first
-SELECT j.title, c.name AS company, j.job_type, j.work_mode, j.governorate, m.score, m.tier, j.deadline
+SELECT j.title, c.name AS company, j.job_type, j.work_mode, m.score, m.tier, j.deadline
 FROM match_scores m
 JOIN jobs j      ON j.id = m.job_id
 JOIN companies c ON c.id = j.company_id
@@ -81,5 +81,4 @@ FROM seeker_profiles s JOIN users u ON u.id = s.user_id CROSS JOIN jobs j
 WHERE s.user_id IN (6, 8) AND j.status = 'open'
 ORDER BY u.first_name, j.id;
 
--- 12) Jobs page search filter by governorate
-SELECT title, location, governorate FROM jobs WHERE governorate = 'capital' AND status = 'open';
+

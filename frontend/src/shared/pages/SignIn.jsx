@@ -1,52 +1,81 @@
-import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import PasswordInput from '../components/PasswordInput.jsx';
+import { useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import PasswordInput from '../components/PasswordInput.jsx'
+import { api } from '../api.js'
 
 function Field({ label, error, extra, children }) {
   return (
     <div className="field">
-      <div className="field__top"><label>{label}</label>{extra}</div>
+      <div className="field__top">
+        <label>{label}</label>
+        {extra}
+      </div>
       {children}
       {error && <p className="field__error">{error}</p>}
     </div>
-  );
+  )
 }
 
 export default function SignIn() {
-  const [params] = useSearchParams();
-  const [role, setRole] = useState(params.get('role') === 'company' ? 'company' : 'jobseeker');
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
+  const [params] = useSearchParams()
+  const [role, setRole] = useState(
+    params.get('role') === 'company' ? 'company' : 'jobseeker'
+  )
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [errors, setErrors] = useState({})
 
-  const isCompany = role === 'company';
-  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const navigate = useNavigate()
 
-  const submit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Enter a valid email';
-    if (!form.password) errs.password = 'Enter your password';
-    setErrors(errs);
-    if (Object.keys(errs).length) return;
+  const isCompany = role === 'company'
+  const change = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-    // TODO (backend): POST /api/auth/signin { email, password, role }
-    // then go to /jobseeker or /company depending on role
-    console.log('Sign in', { ...form, role });
-    alert(`Signed in as ${isCompany ? 'company' : 'job seeker'} (demo)`);
-  };
+  const submit = async (e) => {
+    e.preventDefault()
+    const errs = {}
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Enter a valid email'
+    if (!form.password) errs.password = 'Enter your password'
+    setErrors(errs)
+    if (Object.keys(errs).length) return
+
+    try {
+      const { token, user } = await api('/auth/signin', {
+        method: 'POST',
+        body: { ...form, role }
+      })
+      localStorage.setItem('token', token)
+      navigate(user.role === 'employer' ? '/company' : '/jobseeker')
+    } catch (err) {
+      setErrors(
+        err.fields || { password: err.error || 'Could not reach the server' }
+      )
+    }
+  }
 
   return (
     <div className="split">
       <aside className="split__brand">
         <Link to="/" className="logo">
           <img src="/fursa-key.png" alt="" className="logo__key" />
-          <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
+          <img
+            src="/fursa-wordmark-white.png"
+            alt="Fursa"
+            className="logo__wordmark"
+          />
         </Link>
         <div className="split__copy">
-          <h1>Unlock Your <span className="accent">Chance.</span></h1>
-          <p>See the jobs and internships that match your skills, and improve your CV with AI.</p>
+          <h1>
+            Unlock Your <span className="accent">Chance.</span>
+          </h1>
+          <p>
+            See the jobs and internships that match your skills, and improve
+            your CV with AI.
+          </p>
         </div>
-        <div className="dots"><span /><span /><span /></div>
+        <div className="dots">
+          <span />
+          <span />
+          <span />
+        </div>
       </aside>
 
       <main className="split__form">
@@ -54,39 +83,73 @@ export default function SignIn() {
           <h2>Welcome back</h2>
           <p className="muted">Sign in as a job seeker or a company.</p>
 
-          <div className={isCompany ? 'tabs tabs--right' : 'tabs'} role="tablist">
-            <button type="button" role="tab" aria-selected={!isCompany}
-              className={!isCompany ? 'tab tab--active' : 'tab'} onClick={() => setRole('jobseeker')}>
+          <div
+            className={isCompany ? 'tabs tabs--right' : 'tabs'}
+            role="tablist"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!isCompany}
+              className={!isCompany ? 'tab tab--active' : 'tab'}
+              onClick={() => setRole('jobseeker')}
+            >
               Job seeker
             </button>
-            <button type="button" role="tab" aria-selected={isCompany}
-              className={isCompany ? 'tab tab--active' : 'tab'} onClick={() => setRole('company')}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isCompany}
+              className={isCompany ? 'tab tab--active' : 'tab'}
+              onClick={() => setRole('company')}
+            >
               Company
             </button>
           </div>
 
-          <Field label={isCompany ? 'Company email' : 'Email'} error={errors.email}>
-            <input name="email" type="email" placeholder="name@email.com" value={form.email} onChange={change} autoComplete="off" />
+          <Field
+            label={isCompany ? 'Company email' : 'Email'}
+            error={errors.email}
+          >
+            <input
+              name="email"
+              type="email"
+              placeholder="name@email.com"
+              value={form.email}
+              onChange={change}
+              autoComplete="off"
+            />
           </Field>
 
-          <Field label="Password" error={errors.password}
-            extra={<a href="#" className="link small">Forgot password?</a>}>
+          <Field
+            label="Password"
+            error={errors.password}
+            extra={
+              <a href="#" className="link small">
+                Forgot password?
+              </a>
+            }
+          >
             <PasswordInput value={form.password} onChange={change} />
           </Field>
 
           <button className="btn btn--primary btn--block" type="submit">
             {/* key={role} restarts the fade-in each time the role changes */}
-            <span key={role} className="swap">{isCompany ? 'Sign in as company' : 'Sign in as job seeker'}</span>
+            <span key={role} className="swap">
+              {isCompany ? 'Sign in as company' : 'Sign in as job seeker'}
+            </span>
           </button>
 
           <p className="center muted">
             New to Fursa?{' '}
             <Link key={role} className="link swap" to={`/signup?role=${role}`}>
-              {isCompany ? 'Create a company account' : 'Create a job seeker account'}
+              {isCompany
+                ? 'Create a company account'
+                : 'Create a job seeker account'}
             </Link>
           </p>
         </form>
       </main>
     </div>
-  );
+  )
 }

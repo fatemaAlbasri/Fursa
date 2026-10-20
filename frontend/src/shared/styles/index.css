@@ -871,6 +871,27 @@ button {
   color: var(--slate);
   margin-top: 18px;
 }
+.switch__or {
+  display: block;
+  margin: 8px 0;
+  font-size: 12px;
+}
+/* box linking to the other sign up (job seeker ↔ company) */
+.switch__other {
+  display: inline-block;
+  padding: 8px 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--navy);
+  text-decoration: none;
+}
+.switch__other b {
+  color: var(--teal);
+}
+.switch__other:hover {
+  border-color: var(--teal);
+}
 .link--light {
   color: var(--accent);
 }
