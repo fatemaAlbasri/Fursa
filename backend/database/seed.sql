@@ -71,12 +71,12 @@ INSERT INTO subscriptions (id, company_id, plan_id, status, started_at, renews_a
  (4, 4, 2, 'active', '2026-09-20', '2026-10-20');
 
 -- ---------- Jobs ----------
-INSERT INTO jobs (id, company_id, job_type, work_mode, governorate, location, title, description, responsibilities, salary, deadline, field, major_must_have, min_years, max_years, language, status, created_at) VALUES
- (1, 1, 'full_time', 'onsite', 'capital', 'Manama', 'Junior Frontend Developer', 'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 450.000, '2026-10-30', 'Computer Science', true, 0, 2, 'English', 'open', '2026-10-05'),
- (2, 2, 'internship', 'hybrid', 'capital', 'Seef', 'Software Engineering Intern', 'Three-month internship in our product team.', 'Write and test code; join daily stand-ups.', NULL, '2026-10-25', 'Computer Science', false, 0, 1, 'English', 'open', '2026-10-08'),
- (3, 3, 'full_time', 'onsite', 'muharraq', 'Muharraq', 'IT Support Officer', 'First-line IT support for clients.', 'Answer tickets; set up devices; basic networking.', 380.000, '2026-11-02', 'Information Technology', false, 0, 2, 'Arabic', 'open', '2026-10-01'),
- (4, 4, 'internship', 'remote', 'capital', 'Manama', 'Data Analyst Trainee', 'Learn to build reports for clients.', 'Clean data; build dashboards.', NULL, '2026-11-05', 'Information Systems', false, 0, 1, 'English', 'open', '2026-09-20'),
- (5, 1, 'part_time', 'hybrid', 'capital', 'Manama', 'Web Developer Trainee', 'Entry-level web role.', 'Build pages with HTML, CSS and JavaScript.', NULL, '2026-10-30', 'Computer Science', false, 0, 1, 'English', 'draft', '2026-10-10');
+INSERT INTO jobs (id, company_id, job_type, work_mode, location, title, description, responsibilities, salary, deadline, field, major_must_have, min_years, max_years, language, status, created_at) VALUES
+ (1, 1, 'full_time', 'onsite', 'Manama', 'Junior Frontend Developer', 'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 450.000, '2026-10-30', 'Computer Science', true, 0, 2, 'English', 'open', '2026-10-05'),
+ (2, 2, 'internship', 'hybrid', 'Seef', 'Software Engineering Intern', 'Three-month internship in our product team.', 'Write and test code; join daily stand-ups.', NULL, '2026-10-25', 'Computer Science', false, 0, 1, 'English', 'open', '2026-10-08'),
+ (3, 3, 'full_time', 'onsite', 'Muharraq', 'IT Support Officer', 'First-line IT support for clients.', 'Answer tickets; set up devices; basic networking.', 380.000, '2026-11-02', 'Information Technology', false, 0, 2, 'Arabic', 'open', '2026-10-01'),
+ (4, 4, 'internship', 'remote',  'Manama', 'Data Analyst Trainee', 'Learn to build reports for clients.', 'Clean data; build dashboards.', NULL, '2026-11-05', 'Information Systems', false, 0, 1, 'English', 'open', '2026-09-20'),
+ (5, 1, 'part_time', 'hybrid', 'Manama', 'Web Developer Trainee', 'Entry-level web role.', 'Build pages with HTML, CSS and JavaScript.', NULL, '2026-10-30', 'Computer Science', false, 0, 1, 'English', 'draft', '2026-10-10');
 
 INSERT INTO job_skills (job_id, skill_id, is_required) VALUES
  (1,1,true),
