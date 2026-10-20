@@ -5,6 +5,7 @@ import Layout from './shared/components/Layout.jsx';
 import Landing from './shared/pages/Landing.jsx';
 import CompanyLayout from './company/CompanyLayout.jsx';
 import PostJob from './company/pages/PostJob.jsx';
+import JobView from './company/pages/JobView.jsx';
 
 
 export default function App() {
@@ -27,6 +28,8 @@ export default function App() {
       <Route path="/company" element={<CompanyLayout />}>
         <Route index element={<Navigate to="post-job" replace />} />
         <Route path="post-job" element={<PostJob />} />
+        <Route path="jobs/:id" element={<JobView />} />
+        <Route path="jobs/:id/edit" element={<JobView startEditing />} />
       </Route>
 
     </Routes>

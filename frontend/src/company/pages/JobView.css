@@ -1,0 +1,96 @@
+/* View & edit job page (the edit form itself is in components/JobForm.css) */
+.jv { width: 100%; max-width: 1180px; margin: 0 auto; padding: 10px 24px 10px; display: flex; flex-direction: column; gap: 10px; }
+.jv-back { color: var(--teal); font-weight: 600; font-size: 14px; align-self: flex-start; }
+.jv-back:hover { text-decoration: underline; }
+
+/* green-ish "posted / saved" banner — uses brand teal */
+.jv-banner {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
+  background: var(--white); border: 1px solid var(--accent); color: var(--teal); font-weight: 600; font-size: 14px;
+}
+.jv-banner svg { width: 20px; height: 20px; flex-shrink: 0; }
+.jv-banner span { flex: 1; }
+.jv-banner button { border: 0; background: none; color: var(--teal); font-size: 20px; cursor: pointer; width: 30px; height: 30px; border-radius: 6px; }
+.jv-banner button:hover { background: var(--light); }
+
+/* header band */
+.jv-hero {
+  background: var(--navy); color: var(--white); border-radius: 14px; padding: 16px 20px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+}
+.jv-hero__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.jv-hero h1 { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.jv-hero p { color: var(--gray); font-size: 14px; }
+.jv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.jv-tag { padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .14); font-size: 12px; font-weight: 700; }
+.jv-tag--active { background: var(--light); color: var(--teal); }
+.jv-tag--closed { background: var(--slate); color: var(--white); }
+.jv-hero__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.jv-btn-light {
+  display: flex; align-items: center; gap: 7px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+  padding: 10px 16px; border-radius: 8px; border: 0; background: var(--white); color: var(--teal);
+}
+.jv-btn-light svg { width: 17px; height: 17px; }
+.jv-btn-light:hover { background: var(--light); }
+.jv-btn-light:disabled { opacity: .5; cursor: not-allowed; }
+.jv-btn { display: flex; align-items: center; font-size: 14px; }
+
+/* stats */
+.jv-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.jv-stats div {
+  background: var(--white); border: 1px solid var(--gray); border-radius: 12px; padding: 10px 14px;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.jv-stats b { font-size: 22px; font-weight: 700; color: var(--navy); }
+.jv-stats div:nth-child(2) b, .jv-stats div:nth-child(3) b { color: var(--teal); }
+.jv-stats span { font-size: 13px; color: var(--slate); }
+
+/* three columns */
+.jv-cols { display: grid; grid-template-columns: 1.15fr 1fr 0.9fr; gap: 12px; align-items: start; }
+.jv-side { display: flex; flex-direction: column; gap: 12px; }
+.jv-card {
+  background: var(--white); border: 1px solid var(--gray); border-radius: 14px; padding: 14px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.jv-card h2 { font-size: 15px; font-weight: 700; }
+.jv-card h2 + .hint b { color: var(--navy); }
+.jv-text { color: var(--slate); line-height: 1.55; font-size: 14px; }
+.jv-list { margin: 0; padding-left: 18px; color: var(--slate); line-height: 1.6; font-size: 14px; }
+
+.jv-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.jv-skill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; background: var(--light); color: var(--teal);
+}
+.jv-skill--must { background: var(--teal); color: var(--white); }
+.jv-skill em, .jv-must {
+  font-style: normal; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+  background: var(--white); color: var(--navy);
+}
+.jv-must { background: var(--navy); color: var(--white); margin-left: 4px; }
+
+.jv-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jv-info { padding: 7px 11px; border-radius: 8px; background: var(--light); display: flex; flex-direction: column; }
+.jv-info__label { font-size: 11px; font-weight: 600; color: var(--slate); }
+.jv-info__value { font-size: 14px; font-weight: 600; }
+
+.jv-manage { text-align: center; font-size: 14px; }
+.jv-close { background: var(--white); border: 1px solid var(--slate); color: var(--navy); font-size: 14px; }
+.jv-close:hover { background: var(--light); }
+.jv-close:disabled { opacity: .5; cursor: not-allowed; }
+
+/* edit mode: slim header with the warning */
+.jv-hero--edit { padding: 12px 20px; }
+.jv-hero--edit h1 { font-size: 20px; }
+.jv-hero__warn { display: flex; align-items: center; gap: 8px; color: var(--accent); }
+.jv-hero__warn svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+@media (max-width: 1000px) {
+  .jv-cols { grid-template-columns: 1fr 1fr; }
+  .jv-side { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  .jv-stats { grid-template-columns: 1fr 1fr; }
+  .jv-cols, .jv-side { grid-template-columns: 1fr; display: flex; flex-direction: column; }
+  .jv-side { grid-column: auto; }
+}
