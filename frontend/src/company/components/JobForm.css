@@ -16,14 +16,18 @@
 .jf-label { font-size: 13px; font-weight: 600; }
 .jf-label span { font-weight: 400; color: var(--slate); }
 
-/* choose-one pills */
+/* choose-one pills (Job type / Work mode) */
 .jf-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .jf-pill {
+  display: inline-flex; align-items: center; gap: 6px;
   font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
   padding: 6px 12px; border-radius: 999px; border: 1px solid var(--gray); background: var(--white); color: var(--navy);
 }
 .jf-pill:hover { border-color: var(--teal); }
-.jf-pill--on { background: var(--teal); border-color: var(--teal); color: var(--white); }
+/* selected = teal background + WHITE text */
+.jf-pills .jf-pill--on,
+.jf-pills .jf-pill--on:hover { background: var(--teal); border-color: var(--teal); color: var(--white); }
+.jf-pill__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--white); flex-shrink: 0; }
 
 /* salary with BHD */
 .jf-money { display: flex; border: 1px solid var(--gray); border-radius: 8px; overflow: hidden; background: var(--white); }
@@ -32,16 +36,20 @@
 .field .jf-money input { border: 0; border-radius: 0; }
 .field .jf-money input:focus { box-shadow: none; }
 
-/* skills with must-have */
+/* skills: one per row, Must-have checkbox on the right */
 .jf-skills { display: flex; flex-direction: column; gap: 6px; max-height: 130px; overflow-y: auto; padding-right: 2px; }
 .jf-skill {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
   padding: 5px 8px 5px 10px; border: 1px solid var(--gray); border-radius: 10px; background: var(--light); min-height: 38px;
 }
-.jf-skill__right { display: flex; align-items: center; gap: 6px; }
-.jf-must { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+.jf-skill__right { display: flex; align-items: center; gap: 8px; }
+.jf-must { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 6px; }
 .jf-skill .jf-must { margin-top: 0; }
-.jf-must input { width: 16px; height: 16px; accent-color: var(--teal); }
+/* reset the big text-box style so the checkbox looks like a normal tick box */
+.field .jf-must input[type="checkbox"] {
+  width: 17px; height: 17px; padding: 0; margin: 0; flex: none; border-radius: 4px;
+  accent-color: var(--teal); cursor: pointer; box-shadow: none;
+}
 .jf-remove {
   border: 0; background: none; color: var(--slate); font-size: 18px; line-height: 1; cursor: pointer;
   width: 28px; height: 28px; border-radius: 6px;

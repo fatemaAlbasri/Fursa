@@ -24,6 +24,7 @@ function ChooseOne({ id, label, options, value, onChange }) {
           return (
             <button key={opt} type="button" role="radio" aria-checked={on}
               className={on ? 'jf-pill jf-pill--on' : 'jf-pill'} onClick={() => onChange(opt)}>
+              {on && <span className="jf-pill__dot" aria-hidden="true" />}
               {opt}
             </button>
           );
