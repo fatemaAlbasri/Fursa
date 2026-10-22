@@ -2143,3 +2143,126 @@ html:has(.landing) {
   border-top: 0;
   margin-top: 0;
 }
+
+/* ===== Sign up pages: roomier sizes, as in the wireframe ===== */
+.split--signup {
+  --gap: 22px;
+  --card-pad: 32px;
+  --title-size: 34px;
+  --input-h: 48px;
+  --text-size: 15px;
+  --input-pad: 0 14px;
+  --field-gap: 8px;
+}
+/* left panel: logo, then title + points underneath, dots at the bottom */
+.split--signup .split__brand {
+  justify-content: flex-start;
+  gap: 40px;
+  padding: 40px 44px;
+}
+.split--signup .split__copy h1 {
+  font-size: clamp(28px, 2.7vw, 36px);
+}
+.split--signup .split__copy p {
+  font-size: 16px;
+  line-height: 1.6;
+}
+.split--signup .split__points {
+  margin-top: 36px;
+  gap: 20px;
+}
+.split--signup .split__points li {
+  font-size: 15px;
+}
+.split--signup .dots {
+  margin-top: auto;
+}
+/* right side: form fills the space next to the panel */
+.split--signup .split__main .container {
+  max-width: none;
+  padding: 48px 40px;
+  gap: 26px;
+}
+.split--signup .page-head .pill {
+  padding: 6px 14px;
+}
+.split--signup .page-head .muted {
+  margin-top: 8px;
+  font-size: 15px;
+}
+.split--signup .card {
+  border-radius: 18px;
+}
+.split--signup .field input:not([type='checkbox']):not([type='radio']),
+.split--signup .field select {
+  border-radius: 10px;
+}
+.split--signup .phone {
+  border-radius: 10px;
+}
+.split--signup .skills__box {
+  border-radius: 10px;
+  padding: 8px 10px;
+  gap: 8px;
+}
+.split--signup .field .skills__box input.skills__input {
+  flex-basis: 100%; /* "Search skills" on its own line under the chips */
+}
+.split--signup .chip {
+  font-size: 13px;
+  padding: 6px 8px 6px 12px;
+}
+.split--signup .choice-box {
+  padding: 18px 16px;
+  gap: 14px;
+}
+.split--signup .choice {
+  font-size: 14px;
+  padding: 10px 16px;
+}
+.split--signup .drop {
+  padding: 28px 16px;
+}
+.split--signup .drop__text {
+  font-size: 15px;
+}
+.split--signup .drop__browse {
+  text-decoration: none;
+}
+.split--signup .card .btn--primary {
+  font-size: 16px;
+  padding: 15px 18px;
+  border-radius: 10px;
+}
+/* "or" with a thin line on each side */
+.split--signup .switch {
+  font-size: 14px;
+}
+.split--signup .switch__or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 420px;
+  margin: 14px auto;
+}
+.split--signup .switch__or::before,
+.split--signup .switch__or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gray);
+}
+.split--signup .switch__other {
+  padding: 14px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+@media (max-width: 640px) {
+  .split--signup .split__main .container {
+    padding: 24px 16px 32px;
+  }
+  .split--signup {
+    --card-pad: 20px 16px;
+  }
+}

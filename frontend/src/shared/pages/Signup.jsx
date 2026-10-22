@@ -285,7 +285,7 @@ function JobSeekerSignup() {
     password: '',
     email: '',
     phone: '',
-    major: '',
+    major: MAJORS[0],
     graduationStatus: 'Graduated'
   })
   const [skills, setSkills] = useState([])
@@ -405,13 +405,11 @@ function JobSeekerSignup() {
             </Field>
 
             <Field label="Major / field of study" error={errors.major}>
-              <TypeOrPick
-                name="major"
-                value={form.major}
-                onChange={change}
-                options={MAJORS}
-                placeholder="Pick or type your major"
-              />
+              <select name="major" value={form.major} onChange={change}>
+                {MAJORS.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
+              </select>
             </Field>
             <Field label="Graduation status" error={errors.graduationStatus}>
               <select
@@ -429,9 +427,9 @@ function JobSeekerSignup() {
           <Field
             label="Skills"
             error={errors.skills}
-            hint="Pick from the list or type your own and press Enter. We use these to show you jobs that match."
+            hint="Pick from the list. We use these to show you jobs that match."
           >
-            <SkillSelect value={skills} onChange={setSkills} />
+            <SkillSelect value={skills} onChange={setSkills} placeholder="Search skills ▾" />
           </Field>
 
           <ChoiceChips
