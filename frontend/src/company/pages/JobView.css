@@ -1,96 +1,90 @@
-/* View & edit job page (the edit form itself is in components/JobForm.css) */
-.jv { width: 100%; max-width: 1180px; margin: 0 auto; padding: 10px 24px 10px; display: flex; flex-direction: column; gap: 10px; }
-.jv-back { color: var(--teal); font-weight: 600; font-size: 14px; align-self: flex-start; }
+/* View & edit job page. Page padding, gaps, cards and buttons come from shared/styles/index.css;
+   the edit form itself is in components/JobForm.css. */
+.jv-back { color: var(--teal); font-weight: 700; font-size: var(--text-size); align-self: flex-start; }
 .jv-back:hover { text-decoration: underline; }
 
-/* green-ish "posted / saved" banner — uses brand teal */
+/* green "posted / saved" banner */
 .jv-banner {
-  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
-  background: var(--white); border: 1px solid var(--accent); color: var(--teal); font-weight: 600; font-size: 14px;
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: var(--radius);
+  background: rgba(18, 183, 106, .12); color: #067647; font-weight: 700; font-size: 15px;
 }
 .jv-banner svg { width: 20px; height: 20px; flex-shrink: 0; }
 .jv-banner span { flex: 1; }
-.jv-banner button { border: 0; background: none; color: var(--teal); font-size: 20px; cursor: pointer; width: 30px; height: 30px; border-radius: 6px; }
-.jv-banner button:hover { background: var(--light); }
+.jv-banner button { border: 0; background: none; color: var(--navy); font-size: 20px; cursor: pointer; width: 30px; height: 30px; border-radius: 6px; }
+.jv-banner button:hover { background: rgba(18, 183, 106, .15); }
 
 /* header band */
 .jv-hero {
-  background: var(--navy); color: var(--white); border-radius: 14px; padding: 16px 20px;
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+  background: var(--navy); color: var(--white); border-radius: var(--radius); padding: 22px 24px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--gap);
 }
-.jv-hero__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.jv-hero h1 { font-size: 24px; font-weight: 700; line-height: 1.2; }
-.jv-hero p { color: var(--gray); font-size: 14px; }
+.jv-hero__text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.jv-hero h1 { font-size: 28px; font-weight: 800; line-height: 1.2; }
+.jv-hero p { color: var(--gray); font-size: var(--text-size); }
+.jv-hero .jv-deadline { color: var(--error); font-weight: 700; }
 .jv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .jv-tag { padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .14); font-size: 12px; font-weight: 700; }
-.jv-tag--active { background: var(--light); color: var(--teal); }
+.jv-tag--active { background: #e3f6ec; color: #067647; }
 .jv-tag--closed { background: var(--slate); color: var(--white); }
-.jv-hero__actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.jv-btn-light {
-  display: flex; align-items: center; gap: 7px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
-  padding: 10px 16px; border-radius: 8px; border: 0; background: var(--white); color: var(--teal);
-}
-.jv-btn-light svg { width: 17px; height: 17px; }
-.jv-btn-light:hover { background: var(--light); }
-.jv-btn-light:disabled { opacity: .5; cursor: not-allowed; }
-.jv-btn { display: flex; align-items: center; font-size: 14px; }
+.jv-hero__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* stats */
-.jv-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.jv-stats div {
-  background: var(--white); border: 1px solid var(--gray); border-radius: 12px; padding: 10px 14px;
-  display: flex; align-items: baseline; gap: 8px;
+/* stats: number on top, label under it */
+.jv-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
+.jv-stat {
+  background: var(--card-bg); border: var(--card-border); border-radius: var(--radius); padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 2px;
 }
-.jv-stats b { font-size: 22px; font-weight: 700; color: var(--navy); }
-.jv-stats div:nth-child(2) b, .jv-stats div:nth-child(3) b { color: var(--teal); }
-.jv-stats span { font-size: 13px; color: var(--slate); }
+.jv-stat b { font-size: 26px; font-weight: 800; line-height: 1.1; color: var(--navy); }
+.jv-stat span { font-size: var(--label-size); color: var(--slate); }
+.jv-stat--teal b { color: var(--teal); }
+.jv-stat--good b { color: var(--success); }
+.jv-stat--danger b, .jv-stat--danger span { color: var(--error); }
 
-/* three columns */
-.jv-cols { display: grid; grid-template-columns: 1.15fr 1fr 0.9fr; gap: 12px; align-items: start; }
-.jv-side { display: flex; flex-direction: column; gap: 12px; }
-.jv-card {
-  background: var(--white); border: 1px solid var(--gray); border-radius: 14px; padding: 14px 18px;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.jv-card h2 { font-size: 15px; font-weight: 700; }
-.jv-card h2 + .hint b { color: var(--navy); }
-.jv-text { color: var(--slate); line-height: 1.55; font-size: 14px; }
-.jv-list { margin: 0; padding-left: 18px; color: var(--slate); line-height: 1.6; font-size: 14px; }
+/* two columns: description / roles / requirements on the left, details + manage on the right */
+.jv-cols { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.jv-side, .jv-stack { display: flex; flex-direction: column; gap: var(--gap); }
+.card.jv-card { padding: 22px 24px; }
+.jv-card h2 { font-size: 17px; font-weight: 700; }
+.jv-card h2 + .hint b { color: var(--error); }
+.jv-text { color: var(--slate); line-height: 1.65; font-size: 15px; }
+.jv-list { margin: 0; padding-left: 20px; color: var(--slate); line-height: 1.8; font-size: 15px; }
 
-.jv-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.jv-skills { display: flex; flex-wrap: wrap; gap: 8px; }
 .jv-skill {
-  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px;
-  font-size: 13px; font-weight: 600; background: var(--light); color: var(--teal);
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px;
+  font-size: var(--label-size); font-weight: 700; background: var(--light); color: var(--teal);
 }
 .jv-skill--must { background: var(--teal); color: var(--white); }
-.jv-skill em, .jv-must {
-  font-style: normal; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
-  background: var(--white); color: var(--navy);
+.jv-skill em {
+  font-style: normal; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 999px;
+  background: var(--white); color: var(--error);
 }
-.jv-must { background: var(--navy); color: var(--white); margin-left: 4px; }
 
-.jv-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.jv-info { padding: 7px 11px; border-radius: 8px; background: var(--light); display: flex; flex-direction: column; }
-.jv-info__label { font-size: 11px; font-weight: 600; color: var(--slate); }
-.jv-info__value { font-size: 14px; font-weight: 600; }
+/* label + value boxes */
+.jv-req-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+.jv-info { padding: 10px 14px; border-radius: 10px; background: var(--bg); display: flex; flex-direction: column; gap: 2px; }
+.jv-info__label { font-size: 12px; font-weight: 600; color: var(--slate); }
+.jv-info__value { font-size: 16px; font-weight: 700; color: var(--navy); }
+.jv-must { display: block; font-style: normal; font-size: 11px; font-weight: 800; color: var(--error); margin-top: 4px; }
 
-.jv-manage { text-align: center; font-size: 14px; }
-.jv-close { background: var(--white); border: 1px solid var(--slate); color: var(--navy); font-size: 14px; }
-.jv-close:hover { background: var(--light); }
-.jv-close:disabled { opacity: .5; cursor: not-allowed; }
+/* manage buttons */
+.btn.jv-preview { background: var(--white); border-color: var(--line); color: var(--navy); }
+.btn.jv-preview:hover { background: var(--bg); }
+.btn.jv-close { background: var(--white); border-color: rgba(217, 45, 32, .35); color: var(--error); }
+.btn.jv-close:hover:not(:disabled) { background: rgba(217, 45, 32, .06); border-color: var(--error); }
 
-/* edit mode: slim header with the warning */
-.jv-hero--edit { padding: 12px 20px; }
-.jv-hero--edit h1 { font-size: 20px; }
-.jv-hero__warn { display: flex; align-items: center; gap: 8px; color: var(--accent); }
-.jv-hero__warn svg { width: 17px; height: 17px; flex-shrink: 0; }
-
-@media (max-width: 1000px) {
-  .jv-cols { grid-template-columns: 1fr 1fr; }
-  .jv-side { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; }
+@media (max-width: 900px) {
+  .jv-cols { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
   .jv-stats { grid-template-columns: 1fr 1fr; }
-  .jv-cols, .jv-side { grid-template-columns: 1fr; display: flex; flex-direction: column; }
-  .jv-side { grid-column: auto; }
+  .jv-req-grid { grid-template-columns: 1fr; }
 }
+.jv-req-grid .jv-info__value { font-size: 15px; }
+
+/* edit mode: orange "editing a live job" note */
+.jv-warn {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: var(--radius);
+  background: #fdf1e3; color: #b54708; font-size: var(--text-size); font-weight: 500;
+}
+.jv-warn svg { width: 18px; height: 18px; flex-shrink: 0; }

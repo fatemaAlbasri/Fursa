@@ -1,16 +1,15 @@
 // Options used by the job form (Post a job + Edit job)
 export const JOB_TYPES = ['Full-time', 'Part-time', 'Internship'];
 export const WORK_MODES = ['On-site', 'Remote', 'Hybrid'];
-export const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting', 'Any major'];
+export const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting'];
 export const EXPERIENCE = ['No experience needed', '0–1 years', '0–2 years', '1–3 years'];
-export const LANGUAGES = ['English & Arabic', 'English', 'Arabic'];
 export const LOCATIONS = ['Manama', 'Seef', 'Muharraq', 'Riffa', 'Isa Town', 'Hamad Town'];
 
 // An empty job (used by Post a job)
 export const EMPTY_JOB = {
   jobType: 'Full-time', workMode: 'On-site',
   title: '', description: '', responsibilities: '', deadline: '', salary: '',
-  major: MAJORS[0], majorMust: true, experience: EXPERIENCE[1], language: LANGUAGES[0], location: LOCATIONS[0],
+  major: MAJORS[0], majorMust: true, experience: EXPERIENCE[1], language: '', location: LOCATIONS[0],
   skills: [],
 };
 
@@ -24,7 +23,7 @@ const SAMPLE_JOBS = {
     description: 'Join our web team to build and improve the pages our customers use every day. Good for a recent graduate who enjoys frontend work.',
     responsibilities: 'Build and maintain website pages with React\nConnect pages to the company API\nFix bugs reported by users\nWork with the design team on new features',
     deadline: '2026-10-30', salary: '500',
-    major: 'Computer Science', majorMust: true, experience: '0–1 years', language: 'English & Arabic', location: 'Manama',
+    major: 'Computer Science', majorMust: true, experience: '0–1 years', language: 'English, Arabic', location: 'Manama',
     skills: [
       { name: 'JavaScript', must: true },
       { name: 'React', must: true },

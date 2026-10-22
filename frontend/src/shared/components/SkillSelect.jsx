@@ -11,7 +11,7 @@ export const SKILLS = [
 const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 
 // showChips=false hides the chips inside the box (when the parent lists picked skills itself).
-export default function SkillSelect({ value, onChange, showChips = true, id }) {
+export default function SkillSelect({ value, onChange, showChips = true, id, placeholder }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -54,7 +54,7 @@ export default function SkillSelect({ value, onChange, showChips = true, id }) {
         <input
           id={id}
           className="skills__input"
-          placeholder={value.length ? 'Add more…' : 'Search or type a skill ▾'}
+          placeholder={placeholder || (value.length ? 'Add more…' : 'Search or type a skill ▾')}
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onKeyDown={keyDown}
@@ -64,14 +64,14 @@ export default function SkillSelect({ value, onChange, showChips = true, id }) {
       </div>
       {open && (options.length > 0 || canAddTyped) && (
         <ul className="skills__menu">
+          {options.map((s) => (
+            <li key={s} onMouseDown={() => add(s)}>{s}</li>
+          ))}
           {canAddTyped && (
             <li className="skills__add" onMouseDown={() => add(typed)}>
               + Add “{typed}”
             </li>
           )}
-          {options.map((s) => (
-            <li key={s} onMouseDown={() => add(s)}>{s}</li>
-          ))}
         </ul>
       )}
     </div>

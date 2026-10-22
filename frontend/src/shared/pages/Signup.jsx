@@ -92,27 +92,25 @@ function Field({ label, error, hint, children }) {
   )
 }
 
-// A row of on/off buttons. Pick any (or none).
+// A row of buttons where only ONE can be on. Click the selected one again to clear it (optional).
 function ChoiceChips({ label, options, value, onChange }) {
-  const toggle = (opt) =>
-    onChange(
-      value.includes(opt) ? value.filter((x) => x !== opt) : [...value, opt]
-    )
+  const pick = (opt) => onChange(value === opt ? '' : opt)
   return (
     <div className="choice-box">
       <p className="choice-box__label">
-        {label} <span className="choice-box__opt">(optional · pick any)</span>
+        {label} <span className="choice-box__opt">(optional · choose one)</span>
       </p>
-      <div className="choice-box__chips" role="group" aria-label={label}>
+      <div className="choice-box__chips" role="radiogroup" aria-label={label}>
         {options.map((opt) => {
-          const on = value.includes(opt)
+          const on = value === opt
           return (
             <button
               key={opt}
               type="button"
+              role="radio"
               className={on ? 'choice choice--on' : 'choice'}
-              aria-pressed={on}
-              onClick={() => toggle(opt)}
+              aria-checked={on}
+              onClick={() => pick(opt)}
             >
               {on && <span className="choice__tick">✓</span>}
               {opt}
@@ -291,8 +289,8 @@ function JobSeekerSignup() {
     graduationStatus: 'Graduated'
   })
   const [skills, setSkills] = useState([])
-  const [jobTypes, setJobTypes] = useState([])
-  const [workModes, setWorkModes] = useState([])
+  const [jobType, setJobType] = useState('')
+  const [workMode, setWorkMode] = useState('')
   const [cv, setCv] = useState(null)
   const [dragging, setDragging] = useState(false)
   const [errors, setErrors] = useState({})
@@ -330,8 +328,9 @@ function JobSeekerSignup() {
     data.append('role', 'jobseeker')
     Object.entries(form).forEach(([key, value]) => data.append(key, value))
     data.append('skills', JSON.stringify(skills))
-    data.append('jobTypes', JSON.stringify(jobTypes))
-    data.append('workModes', JSON.stringify(workModes))
+    // the backend reads these as lists, so send the one choice as a list (empty = no preference)
+    data.append('jobTypes', JSON.stringify(jobType ? [jobType] : []))
+    data.append('workModes', JSON.stringify(workMode ? [workMode] : []))
     if (cv) data.append('cv', cv)
 
 
@@ -438,14 +437,14 @@ function JobSeekerSignup() {
           <ChoiceChips
             label="Job type"
             options={JOB_TYPES}
-            value={jobTypes}
-            onChange={setJobTypes}
+            value={jobType}
+            onChange={setJobType}
           />
           <ChoiceChips
             label="Work mode"
             options={WORK_MODES}
-            value={workModes}
-            onChange={setWorkModes}
+            value={workMode}
+            onChange={setWorkMode}
           />
 
           <Field

@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
-import './PostJob.css';
 
 export default function PostJob() {
   const navigate = useNavigate();
@@ -24,13 +23,14 @@ export default function PostJob() {
   };
 
   return (
-    <main className="pj">
-      <div className="pj-head">
+    <main className="container container--form">
+      <div className="page-head">
         <h1 className="title">Post a job or internship</h1>
         <p className="muted">Fursa will rank every applicant against these requirements.</p>
       </div>
 
       <JobForm
+        stacked
         submitLabel="Publish job"
         onSubmit={publish}
         secondary={{ label: 'Save draft', onClick: saveDraft, checkTitleOnly: true }}
