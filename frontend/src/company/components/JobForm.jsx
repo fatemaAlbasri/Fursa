@@ -41,7 +41,7 @@ function ChooseOne({ id, label, options, value, onChange, hint = true }) {
  *  onSubmit(job): called after the form is checked
  *  secondary    : the other button { label, onClick(job), checkTitleOnly }
  *  stacked      : true = the two boxes go one under the other, full width (page scrolls)
- *  edit         : true = Edit job look (no step numbers, Must-have as a toggle button, 3 fields per row)
+ *  edit         : true = Edit job look (no step numbers, 3 fields per row)
  */
 export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false }) {
   const [form, setForm] = useState({ ...EMPTY_JOB, ...initial });
@@ -174,7 +174,7 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
             <p className="hint jf-note">Tap <b className="jf-note--navy">Must-have</b> to turn it on or off. Remove a skill with ×.</p>
           ) : (
             <p className="hint jf-note">
-              Tick <b>Must-have</b> for anything an applicant cannot miss. Applicants missing a must-have go to the Not qualified tab.
+              Tap <b>Must-have</b> for anything an applicant cannot miss. Applicants missing a must-have go to the Not qualified tab.
             </p>
           )}
         </div>
@@ -187,17 +187,11 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
                 <div key={s.name} className="jf-skill">
                   <span className="chip">{s.name}</span>
                   <div className="jf-skill__right">
-                    {edit ? (
-                      <button type="button" aria-pressed={s.must} onClick={() => toggleMust(s.name)}
-                        className={s.must ? 'jf-toggle jf-toggle--on' : 'jf-toggle'}>
-                        {s.must && '✓ '}Must-have
-                      </button>
-                    ) : (
-                      <label className="jf-must">
-                        <input type="checkbox" checked={s.must} onChange={() => toggleMust(s.name)} /> Must-have
-                      </label>
-                    )}
-                    <button type="button" className={edit ? 'jf-remove jf-remove--box' : 'jf-remove'}
+                    <button type="button" aria-pressed={s.must} onClick={() => toggleMust(s.name)}
+                      className={s.must ? 'jf-toggle jf-toggle--on' : 'jf-toggle'}>
+                      {s.must && '✓ '}Must-have
+                    </button>
+                    <button type="button" className="jf-remove jf-remove--box"
                       aria-label={`Remove ${s.name}`} onClick={() => removeSkill(s.name)}>×</button>
                   </div>
                 </div>
