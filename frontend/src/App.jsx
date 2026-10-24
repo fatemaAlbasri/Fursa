@@ -3,6 +3,7 @@ import SignIn from './shared/pages/SignIn.jsx';
 import Signup from './shared/pages/Signup.jsx';
 import Layout from './shared/components/Layout.jsx';
 import Landing from './shared/pages/Landing.jsx';
+import ForgotPassword from './shared/pages/ForgotPassword.jsx';
 
 export default function App() {
   return (
@@ -14,7 +15,10 @@ export default function App() {
           <Route path="/jobseeker" element={<Layout links={[{ to: '/jobseeker/jobs', label: 'Jobs' }]} />}>
             <Route path="jobs" element={<Jobs />} />
           </Route> */}
-      <Route element={<Layout />}></Route>
+      <Route element={<Layout />}>
+        {/* shared by both roles; ?role=jobseeker|company only picks the Sign In tab to go back to */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* edit routes after adding pages*/}
