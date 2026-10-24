@@ -125,9 +125,9 @@ export default function SignIn() {
             label="Password"
             error={errors.password}
             extra={
-              <a href="#" className="link small">
+              <Link to={`/forgot-password?role=${role}`} className="link small">
                 Forgot password?
-              </a>
+              </Link>
             }
           >
             <PasswordInput value={form.password} onChange={change} />
