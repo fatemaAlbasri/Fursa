@@ -1,7 +1,7 @@
 const db = require('../config/db')
 
 // GET /api/jobs → view all jobs (jobseeker)
-const list = async (req, res, next) => {
+const getJobs = async (req, res, next) => {
   try {
     const { rows } = await db.query(
       `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo
@@ -17,7 +17,7 @@ const list = async (req, res, next) => {
 }
 
 // GET /api/jobs/mine → view only their jobs (company)
-const mine = async (req, res, next) =>{
+const getCompanyJobs = async (req, res, next) =>{
   try {
     const { rows } = await db.query(
       `SELECT j.*
@@ -57,7 +57,7 @@ const parseJobId = (req) => {
 }
 
 // GET /api/jobs/:id → view one job (jobseeker)
-const oneJob= async(req, res, next) => {
+const getOneJob= async(req, res, next) => {
   try {
     const jobId = parseJobId(req)
     if (!jobId) {
@@ -84,7 +84,7 @@ const oneJob= async(req, res, next) => {
 }
 
 // GET /api/jobs/mine/:id → view one job (company)
-const companyOneJob = async(req, res, next) =>{
+const getCompanyOneJob = async(req, res, next) =>{
   try {
     const jobId = parseJobId(req)
     if (!jobId) {
@@ -382,4 +382,4 @@ const deleteJob = async (req, res, next) => {
   }
 }
 
-module.exports = { list, mine, oneJob, companyOneJob, createJob, editJob, deleteJob }
+module.exports = { getJobs, getCompanyJobs, getOneJob, getCompanyOneJob, createJob, editJob, deleteJob }
