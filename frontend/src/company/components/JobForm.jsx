@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import SkillSelect from '../../shared/components/SkillSelect.jsx';
-import { JOB_TYPES, WORK_MODES, MAJORS, EXPERIENCE, LOCATIONS, EMPTY_JOB } from '../data/jobs.js';
+import { JOB_TYPES, WORK_MODES, MAJORS, EXPERIENCE, LOCATIONS, LANGUAGES, EMPTY_JOB } from '../data/jobs.js';
 import '../styles/JobForm.css';
 
 // =====================================================================
@@ -136,23 +136,46 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   );
 
   const location = (
-    /* same pick-or-type box as Create account: no default, pick from the list or type a city */
+    /* Works like Major: pick from the list OR type a city. Only ONE location:
+       once picked, the add box is hidden until it is removed with ×. No default. */
     <Field label="Location" htmlFor="jf-loc" error={errors.location}>
-      <input id="jf-loc" name="location" list="jf-loc-list" value={form.location} onChange={change}
-        placeholder="Pick or type a city" autoComplete="off" />
-      <datalist id="jf-loc-list">
-        {LOCATIONS.map((x) => <option key={x} value={x} />)}
-      </datalist>
+      {form.location ? (
+        <div className="jf-skill">
+          <span className="chip">{form.location}</span>
+          <div className="jf-skill__right">
+            <button type="button" className="jf-remove jf-remove--box"
+              aria-label={`Remove ${form.location}`} onClick={() => set('location', '')}>×</button>
+          </div>
+        </div>
+      ) : (
+        <SkillSelect id="jf-loc" options={LOCATIONS} showChips={false} placeholder="Search or type a city ▾"
+          value={[]} onChange={(names) => set('location', names[0])} />
+      )}
     </Field>
   );
 
   const major = (
-    /* no default: starts on "Choose a major" */
+    /* Works like Skills: pick from the list OR type one, with a Must-have button.
+       Only ONE major: once picked, the add box is hidden until it is removed with ×. */
     <Field label="Major / field" htmlFor="jf-major" error={errors.major}>
-      <select id="jf-major" name="major" value={form.major} onChange={change}>
-        <option value="" disabled>Choose a major</option>
-        {MAJORS.map((m) => <option key={m}>{m}</option>)}
-      </select>
+      {form.major ? (
+        <div className="jf-skill">
+          <span className="chip">{form.major}</span>
+          <div className="jf-skill__right">
+            <button type="button" aria-pressed={form.majorMust} onClick={() => set('majorMust', !form.majorMust)}
+              className={form.majorMust ? 'jf-toggle jf-toggle--on' : 'jf-toggle'}>
+              {form.majorMust && '✓ '}Must-have
+            </button>
+            <button type="button" className="jf-remove jf-remove--box"
+              aria-label={`Remove ${form.major}`} onClick={() => set('major', '')}>×</button>
+          </div>
+        </div>
+      ) : (
+        <div className="jf-skill-add">
+          <SkillSelect id="jf-major" options={MAJORS} showChips={false} placeholder="+ Add major from list ▾"
+            value={[]} onChange={(names) => set('major', names[0])} />
+        </div>
+      )}
     </Field>
   );
 
@@ -165,10 +188,13 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     </Field>
   );
 
+  // Languages are saved as one text ("English, Arabic") → split it into a list for the box, join it back when it changes.
+  const languages = form.language.split(',').map((x) => x.trim()).filter(Boolean);
   const language = (
+    /* Works like Skills: pick from the list OR type one. More than one language is allowed. */
     <Field label="Language" htmlFor="jf-lang" error={errors.language}>
-      <input id="jf-lang" name="language" placeholder="e.g. English, Arabic" required
-        value={form.language} onChange={change} />
+      <SkillSelect id="jf-lang" options={LANGUAGES} placeholder={languages.length ? 'Add more…' : 'Search or type a language ▾'}
+        value={languages} onChange={(names) => set('language', names.join(', '))} />
     </Field>
   );
 

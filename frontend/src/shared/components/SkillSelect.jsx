@@ -11,22 +11,23 @@ export const SKILLS = [
 const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 
 // showChips=false hides the chips inside the box (when the parent lists picked skills itself).
-export default function SkillSelect({ value, onChange, showChips = true, id, placeholder }) {
+// options = the suggestions to show (skills by default; the job form passes majors for the Major field).
+export default function SkillSelect({ value, onChange, showChips = true, id, placeholder, options: suggestions = SKILLS }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 
   const typed = query.trim();
-  const options = SKILLS.filter(
+  const options = suggestions.filter(
     (s) => !value.some((v) => same(v, s)) && s.toLowerCase().includes(typed.toLowerCase())
   );
   // Offer "Add <typed>" when the text isn't already a suggestion or a picked skill.
-  const canAddTyped = typed && !SKILLS.some((s) => same(s, typed)) && !value.some((v) => same(v, typed));
+  const canAddTyped = typed && !suggestions.some((s) => same(s, typed)) && !value.some((v) => same(v, typed));
 
   const add = (skill) => {
     const name = skill.trim();
     if (!name) return;
     // If it matches a suggestion (any case), keep the suggestion's spelling so matching works.
-    const listed = SKILLS.find((s) => same(s, name));
+    const listed = suggestions.find((s) => same(s, name));
     const final = listed || name;
     if (!value.some((v) => same(v, final))) onChange([...value, final]);
     setQuery('');
