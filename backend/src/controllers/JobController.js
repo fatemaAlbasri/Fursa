@@ -16,7 +16,7 @@ async function list(req, res, next) {
   }
 }
 
-// GET /api/jobs/mine → view only their jobs (company) 
+// GET /api/jobs/mine → view only their jobs (company)
 async function mine(req, res, next) {
   try {
     const { rows } = await db.query(
@@ -33,7 +33,6 @@ async function mine(req, res, next) {
   }
 }
 
-
 const ONE_JOB_SELECT = `
   SELECT j.*, c.name AS company_name, c.logo_url AS company_logo,
          c.industry AS company_industry, c.location AS company_location,
@@ -49,11 +48,10 @@ const ONE_JOB_SELECT = `
     FROM jobs j
     JOIN companies c ON c.id = j.company_id`
 
-
 function parseJobId(req) {
   const jobId = Number(req.params.id)
-  if (!Number.isInteger(jobId) || jobId <= 0){
-      return null
+  if (!Number.isInteger(jobId) || jobId <= 0) {
+    return null
   }
   return jobId
 }
@@ -76,7 +74,7 @@ async function oneJob(req, res, next) {
     }
 
     const job = rows[0]
-    delete job.jd_embedding 
+    delete job.jd_embedding
 
     const me = await seekerJobInfo(req.user.id, job.id)
     res.json({ job, me })
@@ -124,7 +122,4 @@ async function seekerJobInfo(seekerId, jobId) {
   return rows[0] || null
 }
 
-
-
 module.exports = { list, mine, oneJob, companyOneJob }
-
