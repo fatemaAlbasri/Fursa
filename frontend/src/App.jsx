@@ -7,6 +7,7 @@ import ForgotPassword from './shared/pages/ForgotPassword.jsx';
 import ChangePassword from './shared/pages/ChangePassword.jsx';
 import ResetPassword from './shared/pages/ResetPassword.jsx';
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
+import JobDetails from './jobseeker/pages/JobDetails.jsx';
 
 export default function App() {
   return (
@@ -37,6 +38,8 @@ export default function App() {
       {/* Job seeker pages: shared Navbar with only the pages that exist so far */}
       <Route element={<Layout links={[{ to: '/jobseeker/jobs', label: 'Jobs for you' }]} />}>
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
+        {/* :id = the job's real id, e.g. /jobseeker/jobs/3 */}
+        <Route path="/jobseeker/jobs/:id" element={<JobDetails />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route path="/jobseeker" element={<Navigate to="/jobseeker/jobs" replace />} />
