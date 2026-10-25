@@ -1,0 +1,239 @@
+/* ===== Jobs for you (job seeker home) =====
+   Uses the shared .card, .field, .title, .muted, .pill and .btn styles from index.css.
+   Only the extra pieces for this page live here. */
+
+/* colours used only on this page (from the wireframe) */
+.jfy {
+  --jfy-purple: #6d4ae8;
+  --jfy-purple-bg: #efeafd;
+  --jfy-blue: #3a96c7;
+  --jfy-error-bg: #fdecea;
+  --jfy-error-line: #f5c2bd;
+}
+
+/* page body: a bit wider than .container--wide so two cards fit side by side */
+.jfy {
+  max-width: 1120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---------- Greeting ---------- */
+.jfy-head .muted {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+/* ---------- Search + filters ---------- */
+.jfy-filters {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1fr 1fr;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+/* ---------- "Open jobs" heading ---------- */
+.jfy-section-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.jfy-section-head h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.jfy-count {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+/* ---------- Job cards ---------- */
+.jfy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.jfy-card {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  animation: fade-up 0.35s ease backwards;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.jfy-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(24, 59, 86, 0.09);
+}
+
+/* logo box + title + company */
+.jfy-card__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.jfy-logo {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--teal);
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 700;
+}
+/* when the company has a logo image */
+img.jfy-logo {
+  object-fit: cover;
+  background: var(--light);
+  border: 1px solid var(--gray);
+}
+/* letter boxes take turns between these colours, like the wireframe */
+.jfy-logo--1 {
+  background: var(--jfy-purple);
+}
+.jfy-logo--2 {
+  background: var(--jfy-blue);
+}
+.jfy-logo--3 {
+  background: var(--navy);
+}
+.jfy-card__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.jfy-card__company {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--slate);
+}
+
+/* small rounded labels: job type, work mode */
+.jfy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.jfy-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #d6efef;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+.jfy-tag--internship {
+  background: var(--jfy-purple-bg);
+  color: var(--jfy-purple);
+}
+.jfy-tag--plain {
+  background: var(--light);
+  color: var(--slate);
+  font-weight: 600;
+}
+
+/* salary + deadline line */
+.jfy-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+/* "View & apply" is a link styled as a button */
+.jfy-card .btn {
+  display: block;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* ---------- Loading / empty / error ---------- */
+.jfy-state {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--slate);
+  font-size: 14px;
+}
+.jfy-state h3 {
+  font-size: 17px;
+  color: var(--navy);
+}
+.jfy-state .btn {
+  margin-top: 6px;
+}
+.jfy-state--error {
+  background: var(--jfy-error-bg);
+  border-color: var(--jfy-error-line);
+}
+.jfy-state--error h3 {
+  color: var(--error);
+}
+.jfy-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--light);
+  border-top-color: var(--teal);
+  animation: jfy-spin 0.8s linear infinite;
+}
+@keyframes jfy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 900px) {
+  .jfy-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .jfy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .jfy-filters {
+    grid-template-columns: 1fr;
+  }
+  .jfy-head .title {
+    font-size: 24px;
+  }
+  .jfy-count {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jfy-card {
+    animation: none;
+  }
+  .jfy-spinner {
+    animation-duration: 2s;
+  }
+}
