@@ -11,6 +11,7 @@
   --jd-orange-bg: #fdf0e3;
   --jd-purple: #6d4ae8;
   --jd-purple-bg: #efeafd;
+  --jd-blue: #3a96c7;
   --jd-error-bg: #fdecea;
   --jd-error-line: #f5c2bd;
 }
@@ -98,6 +99,16 @@ img.jd-logo {
   object-fit: cover;
   background: var(--light);
   border: 1px solid var(--gray);
+}
+/* letter box colour from the company id (same colours as the Jobs for you cards; 0 = teal above) */
+.jd-logo--1 {
+  background: var(--jd-purple);
+}
+.jd-logo--2 {
+  background: var(--jd-blue);
+}
+.jd-logo--3 {
+  background: var(--navy);
 }
 
 .jd-tags {

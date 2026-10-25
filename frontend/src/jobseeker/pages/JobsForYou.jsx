@@ -8,31 +8,19 @@ import {
   formatDeadline,
   daysLeft,
   daysLeftText,
-  companyInitial,
   greeting
 } from '../utils/jobFormat.js'
+import CompanyLogo from '../components/CompanyLogo.jsx'
 import '../styles/JobsForYou.css'
 
 // Job types the backend allows (jobs.job_type in schema.sql)
 const JOB_TYPES = ['full_time', 'part_time', 'internship']
-
-// Logos are saved as "/uploads/logo/..." on the backend server (not under /api)
-const SERVER = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')
 
 const EMPTY_FILTERS = { search: '', type: '', field: '', location: '' }
 
 // Unique, sorted, non-empty values of one job column (for the Field / Location menus)
 const optionsFrom = (jobs, key) =>
   [...new Set(jobs.map((job) => job[key]).filter(Boolean))].sort()
-
-// Company logo image, or the first letter in a coloured box if there is none (or it fails to load)
-function CompanyLogo({ job, index }) {
-  const [broken, setBroken] = useState(false)
-  if (job.company_logo && !broken) {
-    return <img src={SERVER + job.company_logo} alt="" className="jfy-logo" onError={() => setBroken(true)} />
-  }
-  return <span className={`jfy-logo jfy-logo--${index % 4}`}>{companyInitial(job.company_name)}</span>
-}
 
 function JobCard({ job, index }) {
   const salary = formatSalary(job.salary)
@@ -42,7 +30,7 @@ function JobCard({ job, index }) {
     // index staggers the fade-in a little, card by card
     <article className="jfy-card" style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}>
       <div className="jfy-card__top">
-        <CompanyLogo job={job} index={index} />
+        <CompanyLogo job={job} className="jfy-logo" />
         <div>
           <h3 className="jfy-card__title">{job.title}</h3>
           <p className="jfy-card__company">

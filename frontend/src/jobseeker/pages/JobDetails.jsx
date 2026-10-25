@@ -8,13 +8,10 @@ import {
   formatDeadline,
   daysLeftText,
   formatExperience,
-  splitLines,
-  companyInitial
+  splitLines
 } from '../utils/jobFormat.js'
+import CompanyLogo from '../components/CompanyLogo.jsx'
 import '../styles/JobDetails.css'
-
-// Logos are saved as "/uploads/logo/..." on the backend server (not under /api)
-const SERVER = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')
 
 // ---------- Small icons used on this page ----------
 const FileIcon = (
@@ -38,15 +35,6 @@ const websiteUrl = (site) => (/^https?:\/\//i.test(site) ? site : `https://${sit
 
 // "shortlisted" → "Shortlisted"
 const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
-
-// Company logo image, or the first letter in a teal box if there is none (or it fails to load)
-function CompanyLogo({ job }) {
-  const [broken, setBroken] = useState(false)
-  if (job.company_logo && !broken) {
-    return <img src={SERVER + job.company_logo} alt="" className="jd-logo" onError={() => setBroken(true)} />
-  }
-  return <span className="jd-logo">{companyInitial(job.company_name)}</span>
-}
 
 // A small box: label on top, value under it, with a ✓ when the seeker meets it
 function Requirement({ label, value, ok }) {
@@ -203,7 +191,7 @@ export default function JobDetails() {
 
       {/* ---------- Header ---------- */}
       <section className="jd-card jd-hero">
-        <CompanyLogo job={job} />
+        <CompanyLogo job={job} className="jd-logo" />
         <div className="jd-hero__text">
           <h1>{job.title}</h1>
           <p className="jd-hero__company">
