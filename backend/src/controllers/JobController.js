@@ -352,4 +352,34 @@ const editJob = async (req, res, next) => {
   }
 }
 
-module.exports = { list, mine, oneJob, companyOneJob, createJob, editJob }
+// DELETE /api/jobs/mine/:id → delete job (company) -not in frontend-
+const deleteJob = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) {
+      return res.status(400).json({ error: 'Invalid job id' })
+    }
+
+    const { rows } = await db.query(
+      `SELECT j.id, (SELECT COUNT(*)::int FROM applications WHERE job_id = j.id) AS applicants
+         FROM jobs j
+         JOIN companies c ON c.id = j.company_id
+        WHERE j.id = $1 AND c.user_id = $2`,
+      [jobId, req.user.id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' })
+    }
+
+    if (rows[0].applicants > 0) {
+      return res.status(409).json({ error: 'This job has applicants. Close it instead of deleting it.' })
+    }
+
+    await db.query(`DELETE FROM jobs WHERE id = $1`, [jobId])
+    res.status(204).end()
+  } catch (err) {
+    next(err)
+  }
+}
+
+module.exports = { list, mine, oneJob, companyOneJob, createJob, editJob, deleteJob }

@@ -23,6 +23,9 @@ router.post('/', requireAuth, requireRole('employer'), JobController.createJob)
 // PUT /api/jobs/mine/:id  (company)
 router.put('/mine/:id', requireAuth, requireRole('employer'), JobController.editJob)
 
+// DELETE /api/jobs/mine/:id  (company)
+router.delete('/mine/:id', requireAuth, requireRole('employer'), JobController.deleteJob)
+
 
 
 module.exports = router
