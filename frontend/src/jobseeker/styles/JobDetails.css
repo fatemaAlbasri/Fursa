@@ -1,0 +1,421 @@
+/* ===== Job details (job seeker) =====
+   Uses the brand colours from index.css. Every class here starts with "jd-".
+   Rules that change a shared class (.container, .btn) use two classes,
+   because index.css loads after this file and would win otherwise. */
+
+/* colours used only on this page (from the wireframe) */
+.container.jd {
+  --jd-green: #127a4b;
+  --jd-green-bg: #e3f6ec;
+  --jd-orange: #b4541a;
+  --jd-orange-bg: #fdf0e3;
+  --jd-purple: #6d4ae8;
+  --jd-purple-bg: #efeafd;
+  --jd-error-bg: #fdecea;
+  --jd-error-line: #f5c2bd;
+}
+
+/* page body: wide enough for the main column + side panel */
+.container.jd {
+  max-width: 1120px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jd-back {
+  align-self: flex-start;
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 600;
+}
+.jd-back:hover {
+  color: var(--teal-hover);
+}
+
+/* ---------- White box used by every section ---------- */
+.jd-card {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  animation: fade-up 0.35s ease backwards;
+}
+.jd-card__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.jd-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--slate);
+  white-space: pre-line; /* keep the company's line breaks */
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Header: logo, title, tags, match ring ---------- */
+.jd-hero {
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+}
+.jd-hero__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.jd-hero h1 {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+.jd-hero__company {
+  font-size: 15px;
+  color: var(--slate);
+}
+.jd-logo {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--teal);
+  color: var(--white);
+  font-size: 24px;
+  font-weight: 700;
+}
+img.jd-logo {
+  object-fit: cover;
+  background: var(--light);
+  border: 1px solid var(--gray);
+}
+
+.jd-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.jd-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d6efef;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+.jd-tag--internship {
+  background: var(--jd-purple-bg);
+  color: var(--jd-purple);
+}
+.jd-tag--plain {
+  background: var(--light);
+  color: var(--slate);
+  font-weight: 600;
+}
+.jd-tag--deadline {
+  background: var(--jd-orange-bg);
+  color: var(--jd-orange);
+}
+
+/* match ring: the JSX sets --score (0–100) on the element */
+.jd-ring {
+  --score: 0;
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--teal) calc(var(--score) * 1%), var(--light) 0);
+}
+.jd-ring__inner {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+.jd-ring__value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--teal);
+}
+.jd-ring__label {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+/* ---------- Two columns: details left, apply + company right ---------- */
+.jd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+.jd-main,
+.jd-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* responsibilities */
+.jd-list {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--slate);
+}
+
+/* ---------- Requirements & your match ---------- */
+.jd-skills {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.jd-skill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--light);
+  font-size: 14px;
+}
+.jd-skill__name {
+  font-weight: 600;
+  color: var(--navy);
+}
+.jd-must {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--error);
+}
+.jd-skill__status {
+  font-size: 13px;
+  font-weight: 700;
+}
+.jd-skill--have {
+  background: var(--jd-green-bg);
+}
+.jd-skill--have .jd-skill__status {
+  color: var(--jd-green);
+}
+.jd-skill--missing {
+  background: var(--jd-orange-bg);
+}
+.jd-skill--missing .jd-skill__status {
+  color: var(--jd-orange);
+}
+
+/* Major / Experience / Language boxes */
+.jd-reqs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.jd-req {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--light);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.jd-req__label {
+  font-size: 12px;
+  color: var(--slate);
+}
+.jd-req__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+.jd-req__ok {
+  margin-left: 4px;
+  color: var(--jd-green);
+}
+.jd-note {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+/* ---------- Apply panel (navy) ---------- */
+.jd-apply {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+.jd-apply .jd-card__title {
+  color: var(--white);
+}
+.jd-cv {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.jd-cv svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.jd-cv__name {
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.jd-cv__sub {
+  font-size: 12px;
+  color: var(--gray);
+}
+.jd-apply .btn {
+  background: var(--accent);
+  color: var(--navy);
+}
+.jd-apply .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.jd-apply__note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--gray);
+  text-align: center;
+}
+/* "You applied · Shortlisted" when the seeker already applied */
+.jd-apply__status {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(142, 209, 209, 0.18);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------- About the company ---------- */
+.jd-company__meta {
+  font-size: 13px;
+  color: var(--slate);
+}
+.jd-company__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.jd-company__link:hover {
+  color: var(--teal-hover);
+}
+.jd-company__link svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ---------- Loading / not found / error ---------- */
+.jd-state {
+  align-items: center;
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--slate);
+  font-size: 14px;
+}
+.jd-state h2 {
+  font-size: 18px;
+  color: var(--navy);
+}
+.jd-state--error {
+  background: var(--jd-error-bg);
+  border-color: var(--jd-error-line);
+}
+.jd-state--error h2 {
+  color: var(--error);
+}
+.jd-state .btn {
+  margin-top: 6px;
+}
+.jd-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--light);
+  border-top-color: var(--teal);
+  animation: jd-spin 0.8s linear infinite;
+}
+@keyframes jd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Smaller screens: one column ---------- */
+@media (max-width: 900px) {
+  .jd-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .jd-hero {
+    flex-wrap: wrap;
+    padding: 18px;
+  }
+  .jd-hero h1 {
+    font-size: 22px;
+  }
+  .jd-logo {
+    width: 52px;
+    height: 52px;
+    font-size: 20px;
+  }
+  /* ring moves under the title, on its own line */
+  .jd-hero__text {
+    flex-basis: calc(100% - 70px);
+  }
+  .jd-skills,
+  .jd-reqs {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jd-card {
+    animation: none;
+  }
+  .jd-spinner {
+    animation-duration: 2s;
+  }
+}
