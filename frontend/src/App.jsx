@@ -7,6 +7,7 @@ import CompanyLayout from './company/CompanyLayout.jsx';
 import PostJob from './company/pages/PostJob.jsx';
 import JobView from './company/pages/JobView.jsx';
 import RejectApplicants from './company/pages/RejectApplicants.jsx';
+import Applicants from './company/pages/Applicants.jsx';
 
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView startEditing />} />
         <Route path="jobs/:id/reject" element={<RejectApplicants />} />
+        <Route path="applicants" element={<Applicants />} />
       </Route>
 
     </Routes>
