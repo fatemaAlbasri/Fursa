@@ -3,7 +3,7 @@
    Only the extra pieces for this page live here. */
 
 /* colours used only on this page (from the wireframe) */
-.jfy {
+.container.jfy {
   --jfy-purple: #6d4ae8;
   --jfy-purple-bg: #efeafd;
   --jfy-blue: #3a96c7;
@@ -12,7 +12,7 @@
 }
 
 /* page body: a bit wider than .container--wide so two cards fit side by side */
-.jfy {
+.container.jfy {
   max-width: 1120px;
   display: flex;
   flex-direction: column;
@@ -26,7 +26,7 @@
 }
 
 /* ---------- Search + filters ---------- */
-.jfy-filters {
+.card.jfy-filters {
   display: grid;
   grid-template-columns: 2fr 1.2fr 1fr 1fr;
   gap: 12px;
@@ -208,7 +208,7 @@ img.jfy-logo {
 
 /* ---------- Smaller screens ---------- */
 @media (max-width: 900px) {
-  .jfy-filters {
+  .card.jfy-filters {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -218,7 +218,7 @@ img.jfy-logo {
   }
 }
 @media (max-width: 520px) {
-  .jfy-filters {
+  .card.jfy-filters {
     grid-template-columns: 1fr;
   }
   .jfy-head .title {
