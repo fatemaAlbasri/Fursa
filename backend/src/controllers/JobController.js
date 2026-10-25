@@ -1,7 +1,7 @@
 const db = require('../config/db')
 
 // GET /api/jobs → view all jobs (jobseeker)
-async function list(req, res, next) {
+const list = async (req, res, next) => {
   try {
     const { rows } = await db.query(
       `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo
@@ -17,7 +17,7 @@ async function list(req, res, next) {
 }
 
 // GET /api/jobs/mine → view only their jobs (company)
-async function mine(req, res, next) {
+const mine = async (req, res, next) =>{
   try {
     const { rows } = await db.query(
       `SELECT j.*
@@ -57,7 +57,7 @@ function parseJobId(req) {
 }
 
 // GET /api/jobs/:id → view one job (jobseeker)
-async function oneJob(req, res, next) {
+const oneJob= async(req, res, next) => {
   try {
     const jobId = parseJobId(req)
     if (!jobId) {
@@ -84,7 +84,7 @@ async function oneJob(req, res, next) {
 }
 
 // GET /api/jobs/mine/:id → view one job (company)
-async function companyOneJob(req, res, next) {
+const companyOneJob = async(req, res, next) =>{
   try {
     const jobId = parseJobId(req)
     if (!jobId) {
@@ -108,7 +108,7 @@ async function companyOneJob(req, res, next) {
   }
 }
 
-async function seekerJobInfo(seekerId, jobId) {
+const seekerJobInfo = async(seekerId, jobId) => {
   const { rows } = await db.query(
     `SELECT sp.major, sp.years_experience,
             COALESCE((SELECT array_agg(skill_id) FROM seeker_skills WHERE seeker_id = $1), '{}') AS skill_ids,
