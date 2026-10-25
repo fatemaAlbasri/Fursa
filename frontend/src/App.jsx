@@ -6,6 +6,7 @@ import Landing from './shared/pages/Landing.jsx';
 import ForgotPassword from './shared/pages/ForgotPassword.jsx';
 import ChangePassword from './shared/pages/ChangePassword.jsx';
 import ResetPassword from './shared/pages/ResetPassword.jsx';
+import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
 
 export default function App() {
   return (
@@ -33,8 +34,14 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 
+      {/* Job seeker pages: shared Navbar with only the pages that exist so far */}
+      <Route element={<Layout links={[{ to: '/jobseeker/jobs', label: 'Jobs for you' }]} />}>
+        <Route path="/jobseeker/jobs" element={<JobsForYou />} />
+      </Route>
+      {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
+      <Route path="/jobseeker" element={<Navigate to="/jobseeker/jobs" replace />} />
+
       {/* edit routes after adding pages*/}
-      <Route path="/jobseeker" element={<h1>Job seeker home</h1>} />
       <Route path="/company" element={<h1>Company home</h1>} />
 
     </Routes>
