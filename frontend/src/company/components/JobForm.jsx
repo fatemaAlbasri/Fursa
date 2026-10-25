@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import SkillSelect from '../../shared/components/SkillSelect.jsx';
 import { JOB_TYPES, WORK_MODES, MAJORS, EXPERIENCE, LOCATIONS, EMPTY_JOB } from '../data/jobs.js';
-import './JobForm.css';
+import '../styles/JobForm.css';
 
+// =====================================================================
+// The job form — used by BOTH "Post a job" and "Edit job".
+// =====================================================================
+
+// One form field: label on top, the input, then a red error under it (if any).
 function Field({ label, htmlFor, error, children }) {
   return (
     <div className="field">
@@ -13,11 +18,14 @@ function Field({ label, htmlFor, error, children }) {
   );
 }
 
-// "Choose one" pill buttons (Job type / Work mode)
+// "Choose one" pill buttons (used for Job type and Work mode).
+// Only one pill can be on at a time.
 function ChooseOne({ id, label, options, value, onChange, hint = true }) {
   return (
     <div className="field">
-      <span id={id} className="field__label">{label} {hint && <span>(choose one)</span>}</span>
+      <span id={id} className="field__label">
+        {label} {hint && <span>(choose one)</span>}
+      </span>
       <div role="radiogroup" aria-labelledby={id} className="choice-box__chips">
         {options.map((opt) => {
           const on = value === opt;
@@ -35,7 +43,7 @@ function ChooseOne({ id, label, options, value, onChange, hint = true }) {
 }
 
 /**
- * The job form — used by BOTH "Post a job" and "Edit job".
+ * Props:
  *  initial      : the job to start with (empty for Post, the saved job for Edit)
  *  submitLabel  : text on the main button ("Publish job" / "Save changes")
  *  onSubmit(job): called after the form is checked
@@ -44,10 +52,12 @@ function ChooseOne({ id, label, options, value, onChange, hint = true }) {
  *  edit         : true = Edit job look (no step numbers, 3 fields per row)
  */
 export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false }) {
-  const [form, setForm] = useState({ ...EMPTY_JOB, ...initial });
-  const [errors, setErrors] = useState({});
+  // ---------- Form state ----------
+  const [form, setForm] = useState({ ...EMPTY_JOB, ...initial }); // all field values
+  const [errors, setErrors] = useState({}); // e.g. { title: 'Required' }
   const skills = form.skills;
 
+  // ---------- Auto-scroll the skills list ----------
   // When a skill is added, scroll the skills list down so the new row is visible.
   const skillList = useRef(null);
   const skillCount = useRef(skills.length);
@@ -58,71 +68,103 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     skillCount.current = skills.length;
   }, [skills.length]);
 
+  // ---------- Update a field ----------
   const set = (key, value) => setForm({ ...form, [key]: value });
-  const change = (e) => set(e.target.name, e.target.value);
+  const change = (e) => set(e.target.name, e.target.value); // for normal inputs (uses the input's name)
 
+  // ---------- Skills ----------
   // SkillSelect works with skill names; keep each skill's Must-have tick when the list changes.
   // SkillSelect already blocks duplicates (any letter case).
   const setSkillNames = (names) =>
     set('skills', names.map((name) => skills.find((s) => s.name === name) || { name, must: false }));
+  // Turn Must-have on/off for one skill
   const toggleMust = (name) => set('skills', skills.map((s) => (s.name === name ? { ...s, must: !s.must } : s)));
+  // Remove one skill (the × button)
   const removeSkill = (name) => set('skills', skills.filter((s) => s.name !== name));
 
+  // ---------- Check the form ----------
+  // titleOnly = true → only the title is needed (used by "Save draft").
+  // Returns true when there are no errors.
   const validate = (titleOnly) => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Required';
+
     if (!titleOnly) {
       if (!form.description.trim()) errs.description = 'Required';
+
+      const today = new Date(new Date().toDateString());
       if (!form.deadline) errs.deadline = 'Pick a deadline';
-      else if (new Date(form.deadline) < new Date(new Date().toDateString())) errs.deadline = 'Deadline must be in the future';
+      else if (new Date(form.deadline) < today) errs.deadline = 'Deadline must be in the future';
+
       if (skills.length === 0) errs.skills = 'Add at least one skill';
+      if (!form.major) errs.major = 'Choose a major';
       if (!form.language.trim()) errs.language = 'Required';
+      if (!form.location.trim()) errs.location = 'Required';
       if (form.salary && Number.isNaN(Number(form.salary))) errs.salary = 'Numbers only';
     }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
+  // ---------- Buttons ----------
+  // Main button ("Publish job" / "Save changes"): check everything first
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate(false)) onSubmit(form);
   };
+  // Other button ("Save draft" / "Cancel")
   const handleSecondary = () => {
     if (secondary.checkTitleOnly && !validate(true)) return;
     secondary.onClick(form);
   };
 
+  // ---------- Fields ----------
+  // Each field is built once here, then placed in the layout below
+  // (Post and Edit put some of them in different places).
   const deadline = (
     <Field label="Application deadline" htmlFor="jf-deadline" error={errors.deadline}>
       <input id="jf-deadline" name="deadline" type="date" value={form.deadline} onChange={change} />
     </Field>
   );
+
   const salary = (
     <Field label="Salary (optional)" htmlFor="jf-salary" error={errors.salary}>
       <input id="jf-salary" name="salary" inputMode="numeric" placeholder="BHD · leave empty to hide"
         value={form.salary} onChange={change} />
     </Field>
   );
+
   const location = (
-    <Field label="Location" htmlFor="jf-loc">
-      <input id="jf-loc" name="location" list="jf-loc-list" value={form.location} onChange={change} placeholder="Pick or type a city" />
-      <datalist id="jf-loc-list">{LOCATIONS.map((x) => <option key={x} value={x} />)}</datalist>
+    /* same pick-or-type box as Create account: no default, pick from the list or type a city */
+    <Field label="Location" htmlFor="jf-loc" error={errors.location}>
+      <input id="jf-loc" name="location" list="jf-loc-list" value={form.location} onChange={change}
+        placeholder="Pick or type a city" autoComplete="off" />
+      <datalist id="jf-loc-list">
+        {LOCATIONS.map((x) => <option key={x} value={x} />)}
+      </datalist>
     </Field>
   );
+
   const major = (
-    <Field label="Major / field" htmlFor="jf-major">
+    /* no default: starts on "Choose a major" */
+    <Field label="Major / field" htmlFor="jf-major" error={errors.major}>
       <select id="jf-major" name="major" value={form.major} onChange={change}>
+        <option value="" disabled>Choose a major</option>
         {MAJORS.map((m) => <option key={m}>{m}</option>)}
       </select>
     </Field>
   );
+
   const experience = (
+    /* default: "No experience" (the first option) */
     <Field label={edit ? 'Experience' : 'Experience range'} htmlFor="jf-exp">
       <select id="jf-exp" name="experience" value={form.experience} onChange={change}>
         {EXPERIENCE.map((x) => <option key={x}>{x}</option>)}
       </select>
     </Field>
   );
+
   const language = (
     <Field label="Language" htmlFor="jf-lang" error={errors.language}>
       <input id="jf-lang" name="language" placeholder="e.g. English, Arabic" required
@@ -130,11 +172,12 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     </Field>
   );
 
+  // CSS classes for the whole form, e.g. "jf-grid jf-grid--stacked jf-grid--edit"
   const formClass = ['jf-grid', stacked && 'jf-grid--stacked', edit && 'jf-grid--edit'].filter(Boolean).join(' ');
 
   return (
     <form className={formClass} onSubmit={handleSubmit} noValidate autoComplete="off">
-      {/* ---------- Job details ---------- */}
+      {/* =================== Box 1: Job details =================== */}
       <section className="card">
         <h2 className="jf-step">{!edit && <span>1</span>}Job details</h2>
 
@@ -146,19 +189,21 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
         </div>
 
         <Field label="Job title" htmlFor="jf-title" error={errors.title}>
-          <input id="jf-title" name="title" placeholder="e.g. Junior Frontend Developer" value={form.title} onChange={change} />
+          <input id="jf-title" name="title" placeholder="e.g. Junior Frontend Developer"
+            value={form.title} onChange={change} />
         </Field>
 
         <Field label="Job description" htmlFor="jf-desc" error={errors.description}>
-          <textarea id="jf-desc" name="description" rows={edit ? 3 : stacked ? 3 : 2} placeholder="What is this job about?"
-            value={form.description} onChange={change} />
+          <textarea id="jf-desc" name="description" rows={edit ? 3 : stacked ? 3 : 2}
+            placeholder="What is this job about?" value={form.description} onChange={change} />
         </Field>
 
         <Field label="Role & responsibilities" htmlFor="jf-resp">
-          <textarea id="jf-resp" name="responsibilities" rows={edit ? 4 : stacked ? 3 : 2} placeholder="What will this person be responsible for?"
-            value={form.responsibilities} onChange={change} />
+          <textarea id="jf-resp" name="responsibilities" rows={edit ? 4 : stacked ? 3 : 2}
+            placeholder="What will this person be responsible for?" value={form.responsibilities} onChange={change} />
         </Field>
 
+        {/* Edit: deadline | salary | location in one row.  Post: deadline | salary. */}
         {edit ? (
           <div className="grid3">{deadline}{salary}{location}</div>
         ) : (
@@ -166,7 +211,7 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
         )}
       </section>
 
-      {/* ---------- Requirements ---------- */}
+      {/* =================== Box 2: Requirements =================== */}
       <section className="card">
         <div>
           <h2 className="jf-step">{!edit && <span>2</span>}Requirements</h2>
@@ -179,8 +224,11 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
           )}
         </div>
 
+        {/* ----- Skills ----- */}
         <div className="field">
           {!edit && <label htmlFor="jf-skill">Skills</label>}
+
+          {/* one row per skill: name on the left, Must-have + × on the right */}
           {skills.length > 0 && (
             <div className="jf-skills" ref={skillList}>
               {skills.map((s) => (
@@ -198,6 +246,8 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
               ))}
             </div>
           )}
+
+          {/* "+ Add skill from list" box */}
           <div className="jf-skill-add">
             <SkillSelect id="jf-skill" showChips={false} placeholder="+ Add skill from list ▾"
               value={skills.map((s) => s.name)} onChange={setSkillNames} />
@@ -205,6 +255,7 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
           {errors.skills && <p className="field__error">{errors.skills}</p>}
         </div>
 
+        {/* Edit: major | experience | language.  Post: also location (2 per row). */}
         {edit ? (
           <div className="grid3">{major}{experience}{language}</div>
         ) : (
@@ -212,10 +263,12 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
         )}
       </section>
 
-      {/* buttons sit under the boxes, on the right */}
+      {/* =================== Buttons (under the boxes, on the right) =================== */}
       <div className="jf-actions">
         {secondary && (
-          <button type="button" className={edit ? 'btn jf-cancel' : 'btn btn--outline'} onClick={handleSecondary}>{secondary.label}</button>
+          <button type="button" className={edit ? 'btn jf-cancel' : 'btn btn--outline'} onClick={handleSecondary}>
+            {secondary.label}
+          </button>
         )}
         <button type="submit" className="btn btn--primary">{submitLabel}</button>
       </div>

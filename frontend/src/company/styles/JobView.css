@@ -21,7 +21,8 @@
 .jv-hero__text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .jv-hero h1 { font-size: 28px; font-weight: 800; line-height: 1.2; }
 .jv-hero p { color: var(--gray); font-size: var(--text-size); }
-.jv-hero .jv-deadline { color: var(--error); font-weight: 700; }
+.jv-hero .jv-company { color: inherit; font-weight: 700; }
+.jv-hero .jv-company:hover { text-decoration: underline; }
 .jv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .jv-tag { padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .14); font-size: 12px; font-weight: 700; }
 .jv-tag--active { background: #e3f6ec; color: #067647; }

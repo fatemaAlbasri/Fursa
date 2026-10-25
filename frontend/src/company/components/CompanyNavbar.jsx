@@ -1,8 +1,10 @@
 import { Link, NavLink } from 'react-router-dom';
-import './CompanyNavbar.css';
+import '../styles/CompanyNavbar.css';
 
 // Top bar for every company (employer) page.
+// Left: logo · Middle: Jobs / Applicants / Post a job · Right: notifications + profile.
 export default function CompanyNavbar({ companyInitial = 'A' }) {
+  // NavLink tells us if its page is open → highlight that link
   const linkClass = ({ isActive }) => (isActive ? 'cnav__link cnav__link--active' : 'cnav__link');
 
   return (
