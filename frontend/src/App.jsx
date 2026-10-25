@@ -6,6 +6,7 @@ import Landing from './shared/pages/Landing.jsx';
 import CompanyLayout from './company/CompanyLayout.jsx';
 import PostJob from './company/pages/PostJob.jsx';
 import JobView from './company/pages/JobView.jsx';
+import RejectApplicants from './company/pages/RejectApplicants.jsx';
 
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="post-job" element={<PostJob />} />
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView startEditing />} />
+        <Route path="jobs/:id/reject" element={<RejectApplicants />} />
       </Route>
 
     </Routes>

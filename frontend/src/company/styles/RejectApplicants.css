@@ -1,0 +1,68 @@
+/* Reject applicants page. Colours and sizes come from shared/styles/index.css. */
+
+/* navy background under the top bar; the box sits in the middle */
+.rj {
+  flex: 1; background: #2b5574; padding: 40px 20px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+/* ===== Step 1: the white confirm box ===== */
+.rj-dialog {
+  width: 100%; max-width: 580px; background: var(--white); border-radius: 22px; padding: 30px;
+  display: flex; flex-direction: column; gap: 18px; box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+}
+
+/* red icon + title */
+.rj-head { display: flex; gap: 16px; align-items: flex-start; }
+.rj-icon {
+  width: 52px; height: 52px; border-radius: 14px; background: #fdecea; color: var(--error);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.rj-icon svg { width: 26px; height: 26px; }
+.rj-kicker { font-size: var(--label-size); font-weight: 700; color: #b42318; }
+.rj-head h1 { margin-top: 4px; font-size: var(--title-size); font-weight: 700; }
+
+.rj-text { font-size: 15px; line-height: 1.6; color: var(--slate); }
+
+/* reasons box */
+.rj-reasons {
+  background: var(--bg); border: var(--card-border); border-radius: var(--radius); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px; font-size: var(--text-size);
+}
+.rj-reasons__title { font-weight: 700; }
+.rj-reason { display: flex; justify-content: space-between; gap: 12px; }
+
+/* notify tick box */
+.rj-notify {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px;
+  background: var(--light); font-size: var(--text-size); cursor: pointer;
+}
+.rj-notify input { width: 18px; height: 18px; margin-top: 1px; flex-shrink: 0; accent-color: var(--teal); cursor: pointer; }
+
+/* buttons */
+.rj-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.rj-actions .btn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; }
+.btn.rj-cancel { background: var(--white); border-color: var(--line); color: var(--navy); }
+.btn.rj-cancel:hover { background: var(--bg); }
+.btn.rj-reject { background: var(--error); border-color: var(--error); color: var(--white); }
+.btn.rj-reject:hover { background: #b42318; border-color: #b42318; }
+
+/* ===== Step 2: the dark "done" message ===== */
+.rj-toast {
+  display: flex; flex-wrap: wrap; gap: 18px; align-items: center; padding: 16px 22px; border-radius: var(--radius);
+  background: var(--navy); color: var(--white); font-size: 15px; box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+}
+.rj-toast__text { display: flex; gap: 10px; align-items: center; }
+.rj-toast__text svg { width: 20px; height: 20px; color: var(--accent); flex-shrink: 0; }
+.rj-undo {
+  min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; cursor: pointer;
+  font: inherit; font-weight: 700; background: var(--accent); color: var(--navy);
+}
+.rj-undo:hover { background: #a5dcdc; }
+.rj-back { color: #b9e4e4; font-weight: 600; text-decoration: underline; }
+.rj-back:hover { color: var(--white); }
+
+@media (max-width: 640px) {
+  .rj-dialog { padding: 22px; }
+  .rj-actions .btn { flex: 1; justify-content: center; }
+}
