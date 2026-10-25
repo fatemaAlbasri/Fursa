@@ -122,10 +122,11 @@ const seekerJobInfo = async(seekerId, jobId) => {
   return rows[0] || null
 }
 
-const createJob = async (req, res, next)=>{
-  const body = req.body || null
+
+// Checks the "Post a job" body (used by createJob and editJob)
+const readJobBody = (body) => {
   const errors = {}
-  
+
   const title = (body.title || '').trim()
   const description = (body.description || '').trim()
   const location = (body.location || '').trim()
@@ -148,51 +149,36 @@ const createJob = async (req, res, next)=>{
   if (!['internship', 'full_time', 'part_time'].includes(job_type)) errors.job_type = 'Pick a job type'
   if (!['onsite', 'remote', 'hybrid'].includes(work_mode)) errors.work_mode = 'Pick a work mode'
 
-  const today = new Date().toISOString().slice(0, 10) 
+  const today = new Date().toISOString().slice(0, 10)
   if (!deadline || isNaN(new Date(deadline))) errors.deadline = 'Deadline is required'
-  else if (deadline.slice(0, 10) < today) errors.deadline = 'Deadline must be today or later'
+  else if (String(deadline).slice(0, 10) < today) errors.deadline = 'Deadline must be today or later'
 
   if (salary !== null && (isNaN(salary) || salary < 0)) errors.salary = 'Salary must be 0 or more'
   if (!Number.isInteger(min_years) || min_years < 0) errors.min_years = 'Must be 0 or more'
   if (max_years !== null && (!Number.isInteger(max_years) || max_years < min_years)) {
-  errors.max_years = 'Must be at least the minimum years'
-}
-
-const skills = []
-const seen = new Set()
-for (const skill of Array.isArray(body.skills) ? body.skills : []) {
-  const name = (skill?.name || '').trim()
-  if (!name || seen.has(name.toLowerCase())) continue 
-  seen.add(name.toLowerCase())
-  skills.push({ name, is_required: skill.is_required === true })
-}
-if (skills.length === 0) errors.skills = 'Add at least one skill'
-
-if (Object.keys(errors).length) {
-  return res.status(400).json({ error: 'Please fix the highlighted fields', fields: errors })
-}
-
-let client 
-try{
-  client = await db.connect()
-} catch(err){
-  return next(err)
-}
-
-try{
-  await client.query('BEGIN')
-  const { rows: companyRows } = await client.query(
-  `SELECT id FROM companies WHERE user_id = $1`,
-  [req.user.id]
-)
-  if (companyRows.length === 0) {
-    await client.query('ROLLBACK')
-    return res.status(404).json({ error: 'Company not found' })
+    errors.max_years = 'Must be at least the minimum years'
   }
-  const companyId = companyRows[0].id
 
-  if (status === 'open') {
-    const { rows: planRows } = await client.query(
+  const skills = []
+  const seen = new Set()
+  for (const skill of Array.isArray(body.skills) ? body.skills : []) {
+    const name = (skill?.name || '').trim()
+    if (!name || seen.has(name.toLowerCase())) continue
+    seen.add(name.toLowerCase())
+    skills.push({ name, is_required: skill.is_required === true })
+  }
+  if (skills.length === 0) errors.skills = 'Add at least one skill'
+
+  const job = {
+    title, description, location, responsibilities, field, language, job_type, work_mode,
+    deadline, major_must_have, salary, min_years, max_years, status
+  }
+  return { job, skills, errors }
+}
+
+// Returns the plan's max_active_jobs if the company already reached it, otherwise null
+const planLimitReached = async (client, companyId) => {
+  const { rows } = await client.query(
     `SELECT p.max_active_jobs,
             (SELECT COUNT(*)::int FROM jobs
               WHERE company_id = $1 AND status = 'open' AND deadline >= CURRENT_DATE) AS active_jobs
@@ -201,27 +187,19 @@ try{
       WHERE s.company_id = $1 AND s.status = 'active'`,
     [companyId]
   )
-    const plan = planRows[0]
-    if (plan && plan.max_active_jobs !== null && plan.active_jobs >= plan.max_active_jobs) {
-      await client.query('ROLLBACK')
-      return res.status(403).json({
-      error: `Your plan allows ${plan.max_active_jobs} active job(s). Upgrade your plan or save it as a draft.`
-    })
+  const plan = rows[0]
+  if (plan && plan.max_active_jobs !== null && plan.active_jobs >= plan.max_active_jobs) {
+    return plan.max_active_jobs
   }
+  return null
 }
 
-  const { rows } = await client.query(
-  `INSERT INTO jobs (company_id, job_type, work_mode, title, description, responsibilities,
-                     location, salary, deadline, field, major_must_have, min_years, max_years,
-                     language, status)
-   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-   RETURNING id`,
-  [companyId, job_type, work_mode, title, description, responsibilities,
-   location, salary, deadline, field, major_must_have, min_years, max_years,
-   language, status]
-)
-  const jobId = rows[0].id
+const planLimitError = (max) => ({
+  error: `Your plan allows ${max} active job(s). Upgrade your plan or save it as a draft.`
+})
 
+// Adds any skill that isn't in the skills table yet, then links all of them to the job
+const saveJobSkills = async (client, jobId, skills) => {
   const names = skills.map((s) => s.name)
   const required = skills.filter((s) => s.is_required).map((s) => s.name)
 
@@ -229,26 +207,149 @@ try{
     `INSERT INTO skills (name) SELECT unnest($1::text[]) ON CONFLICT (name) DO NOTHING`,
     [names]
   )
-
   await client.query(
     `INSERT INTO job_skills (job_id, skill_id, is_required)
-    SELECT $1, id, name = ANY($3::text[]) FROM skills WHERE name = ANY($2::text[])`,
+     SELECT $1, id, name = ANY($3::text[]) FROM skills WHERE name = ANY($2::text[])`,
     [jobId, names, required]
   )
+}
 
-  await client.query('COMMIT')
-
-  const { rows: created } = await db.query(`${ONE_JOB_SELECT} WHERE j.id = $1`, [jobId])
-  const job = created[0]
+const loadJob = async (jobId) => {
+  const { rows } = await db.query(`${ONE_JOB_SELECT} WHERE j.id = $1`, [jobId])
+  const job = rows[0]
   delete job.jd_embedding
-  res.status(201).json({ job })
-
-} catch(err){
-  await client.query('ROLLBACK')
-  next(err)
-} finally {
-  client.release()
-}
+  return job
 }
 
-module.exports = { list, mine, oneJob, companyOneJob, createJob }
+// POST /api/jobs/ → add job (company)
+const createJob = async (req, res, next) => {
+  const { job, skills, errors } = readJobBody(req.body || {})
+  if (Object.keys(errors).length) {
+    return res.status(400).json({ error: 'Please fix the highlighted fields', fields: errors })
+  }
+
+  let client
+  try {
+    client = await db.connect()
+  } catch (err) {
+    return next(err)
+  }
+
+  try {
+    await client.query('BEGIN')
+    const { rows: companyRows } = await client.query(
+      `SELECT id FROM companies WHERE user_id = $1`,
+      [req.user.id]
+    )
+    if (companyRows.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Company not found' })
+    }
+    const companyId = companyRows[0].id
+
+    if (job.status === 'open') {
+      const max = await planLimitReached(client, companyId)
+      if (max !== null) {
+        await client.query('ROLLBACK')
+        return res.status(403).json(planLimitError(max))
+      }
+    }
+
+    const { rows } = await client.query(
+      `INSERT INTO jobs (company_id, job_type, work_mode, title, description, responsibilities,
+                         location, salary, deadline, field, major_must_have, min_years, max_years,
+                         language, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       RETURNING id`,
+      [companyId, job.job_type, job.work_mode, job.title, job.description, job.responsibilities,
+       job.location, job.salary, job.deadline, job.field, job.major_must_have, job.min_years,
+       job.max_years, job.language, job.status]
+    )
+    const jobId = rows[0].id
+
+    await saveJobSkills(client, jobId, skills)
+
+    await client.query('COMMIT')
+
+    res.status(201).json({ job: await loadJob(jobId) })
+  } catch (err) {
+    await client.query('ROLLBACK')
+    next(err)
+  } finally {
+    client.release()
+  }
+}
+
+// PUT /api/jobs/mine/:id → edit job (company)
+const editJob = async (req, res, next) => {
+  const jobId = parseJobId(req)
+  if (!jobId) {
+    return res.status(400).json({ error: 'Invalid job id' })
+  }
+
+  const { job, skills, errors } = readJobBody(req.body || {})
+  if (Object.keys(errors).length) {
+    return res.status(400).json({ error: 'Please fix the highlighted fields', fields: errors })
+  }
+
+  let client
+  try {
+    client = await db.connect()
+  } catch (err) {
+    return next(err)
+  }
+
+  try {
+    await client.query('BEGIN')
+
+    const { rows: found } = await client.query(
+      `SELECT j.id, j.status, j.company_id
+         FROM jobs j
+         JOIN companies c ON c.id = j.company_id
+        WHERE j.id = $1 AND c.user_id = $2
+        FOR UPDATE OF j`,
+      [jobId, req.user.id]
+    )
+    if (found.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Job not found' })
+    }
+    const oldJob = found[0]
+
+    
+    if (job.status === 'open' && oldJob.status !== 'open') {
+      const max = await planLimitReached(client, oldJob.company_id)
+      if (max !== null) {
+        await client.query('ROLLBACK')
+        return res.status(403).json(planLimitError(max))
+      }
+    }
+
+    await client.query(
+      `UPDATE jobs
+          SET job_type = $2, work_mode = $3, title = $4, description = $5, responsibilities = $6,
+              location = $7, salary = $8, deadline = $9, field = $10, major_must_have = $11,
+              min_years = $12, max_years = $13, language = $14, status = $15
+        WHERE id = $1`,
+      [jobId, job.job_type, job.work_mode, job.title, job.description, job.responsibilities,
+       job.location, job.salary, job.deadline, job.field, job.major_must_have,
+       job.min_years, job.max_years, job.language, job.status]
+    )
+
+    await client.query(`DELETE FROM job_skills WHERE job_id = $1`, [jobId])
+    await saveJobSkills(client, jobId, skills)
+
+    await client.query(`DELETE FROM match_scores WHERE job_id = $1`, [jobId])
+
+    await client.query('COMMIT')
+
+    res.json({ job: await loadJob(jobId) })
+  } catch (err) {
+    await client.query('ROLLBACK')
+    next(err)
+  } finally {
+    client.release()
+  }
+}
+
+module.exports = { list, mine, oneJob, companyOneJob, createJob, editJob }

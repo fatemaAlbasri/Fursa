@@ -20,6 +20,9 @@ router.get('/:id', requireAuth, requireRole('seeker'), JobController.oneJob)
 // POST /api/jobs  (company)
 router.post('/', requireAuth, requireRole('employer'), JobController.createJob)
 
+// PUT /api/jobs/mine/:id  (company)
+router.put('/mine/:id', requireAuth, requireRole('employer'), JobController.editJob)
+
 
 
 module.exports = router
