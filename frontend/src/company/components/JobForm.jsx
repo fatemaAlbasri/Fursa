@@ -136,21 +136,13 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   );
 
   const location = (
-    /* Works like Major: pick from the list OR type a city. Only ONE location:
-       once picked, the add box is hidden until it is removed with ×. No default. */
     <Field label="Location" htmlFor="jf-loc" error={errors.location}>
-      {form.location ? (
-        <div className="jf-skill">
-          <span className="chip">{form.location}</span>
-          <div className="jf-skill__right">
-            <button type="button" className="jf-remove jf-remove--box"
-              aria-label={`Remove ${form.location}`} onClick={() => set('location', '')}>×</button>
-          </div>
-        </div>
-      ) : (
-        <SkillSelect id="jf-loc" options={LOCATIONS} showChips={false} placeholder="Search or type a city ▾"
-          value={[]} onChange={(names) => set('location', names[0])} />
-      )}
+      <input id="jf-loc" list="jf-loc-options" value={form.location}
+        onChange={(e) => set('location', e.target.value)}
+        placeholder="Pick or type a city" autoComplete="off" />
+      <datalist id="jf-loc-options">
+        {LOCATIONS.map((x) => <option key={x} value={x} />)}
+      </datalist>
     </Field>
   );
 
