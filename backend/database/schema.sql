@@ -130,7 +130,7 @@ CREATE TABLE jobs (
   major_must_have  BOOLEAN NOT NULL DEFAULT false,
   min_years        SMALLINT NOT NULL DEFAULT 0,
   max_years        SMALLINT,
-  language         VARCHAR(50),
+  language         TEXT,                                  -- one or more, e.g. 'English, Arabic'
   status           VARCHAR(10) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','open','closed')),
   created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
   CHECK (max_years IS NULL OR max_years >= min_years)
