@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
-import { getJob, formatDate, daysLeft } from '../data/jobs.js';
+import { formatDate, daysLeft } from '../data/jobs.js';
 import '../styles/JobView.css';
 
 // =====================================================================
