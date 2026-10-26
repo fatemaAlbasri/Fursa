@@ -10,9 +10,10 @@ export const SKILLS = [
 
 const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 
-// showChips=false hides the chips inside the box (when the parent lists picked skills itself).
-// options = the suggestions to show (skills by default; the job form passes majors for the Major field).
-export default function SkillSelect({ value, onChange, showChips = true, id, placeholder, options: suggestions = SKILLS }) {
+// A "pick many" box: choose from the list or type your own (Enter). Used for Skills and Languages.
+// showChips=false hides the chips inside the box (when the parent lists the picked items itself).
+// options = the suggestions to show (skills by default; the job form passes LANGUAGES for Language).
+export default function MultiSelect({ value, onChange, showChips = true, id, placeholder, options: suggestions = SKILLS }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 
