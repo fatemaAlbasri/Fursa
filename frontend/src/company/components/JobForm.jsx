@@ -147,27 +147,17 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   );
 
   const major = (
-    /* Works like Skills: pick from the list OR type one, with a Must-have button.
-       Only ONE major: once picked, the add box is hidden until it is removed with ×. */
     <Field label="Major / field" htmlFor="jf-major" error={errors.major}>
-      {form.major ? (
-        <div className="jf-skill">
-          <span className="chip">{form.major}</span>
-          <div className="jf-skill__right">
-            <button type="button" aria-pressed={form.majorMust} onClick={() => set('majorMust', !form.majorMust)}
-              className={form.majorMust ? 'jf-toggle jf-toggle--on' : 'jf-toggle'}>
-              {form.majorMust && '✓ '}Must-have
-            </button>
-            <button type="button" className="jf-remove jf-remove--box"
-              aria-label={`Remove ${form.major}`} onClick={() => set('major', '')}>×</button>
-          </div>
-        </div>
-      ) : (
-        <div className="jf-skill-add">
-          <SkillSelect id="jf-major" options={MAJORS} showChips={false} placeholder="+ Add major from list ▾"
-            value={[]} onChange={(names) => set('major', names[0])} />
-        </div>
-      )}
+      <input id="jf-major" list="jf-major-options" value={form.major}
+        onChange={(e) => set('major', e.target.value)}
+        placeholder="Pick or type a major" autoComplete="off" />
+      <datalist id="jf-major-options">
+        {MAJORS.map((x) => <option key={x} value={x} />)}
+      </datalist>
+      <label className="jf-check">
+        <input type="checkbox" checked={form.majorMust} onChange={(e) => set('majorMust', e.target.checked)} />
+        Must-have
+      </label>
     </Field>
   );
 

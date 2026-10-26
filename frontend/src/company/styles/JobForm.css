@@ -66,6 +66,12 @@
 .jf-toggle:hover { border-color: var(--slate); }
 .jf-toggle--on { background: rgba(217, 45, 32, .08); border-color: rgba(217, 45, 32, .45); color: var(--error); }
 .jf-toggle--on:hover { border-color: var(--error); }
+/* Must-have checkbox under the Major box */
+.field .jf-check {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; cursor: pointer;
+  font-size: var(--label-size); font-weight: 700; color: var(--slate);
+}
+.field .jf-check input { width: auto; margin: 0; accent-color: var(--teal); cursor: pointer; }
 /* × in a small bordered square */
 .jf-remove--box { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--white); font-size: 16px; }
 .jf-remove--box:hover { background: var(--bg); }
