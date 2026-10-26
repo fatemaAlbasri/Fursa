@@ -1,9 +1,5 @@
-// Small helpers that turn job data from the backend into text for the job seeker pages.
-// Used by: Jobs for you (list) and Job details.
-
-// Database values → labels shown on the page
-const JOB_TYPES = { full_time: 'Full-time', part_time: 'Part-time', internship: 'Internship' }
-const WORK_MODES = { onsite: 'On-site', remote: 'Remote', hybrid: 'Hybrid' }
+export  const JOB_TYPES = { full_time: 'Full-time', part_time: 'Part-time', internship: 'Internship' }
+export const WORK_MODES = { onsite: 'On-site', remote: 'Remote', hybrid: 'Hybrid' }
 
 export const formatJobType = (type) => JOB_TYPES[type] || type
 export const formatWorkMode = (mode) => WORK_MODES[mode] || mode
@@ -14,11 +10,11 @@ export function formatSalary(salary) {
   return `BHD ${Number(salary).toLocaleString('en-US', { maximumFractionDigits: 3 })}`
 }
 
-// Deadline → "30 Oct"
+// Deadline → "30 Oct 2026"
 export function formatDeadline(deadline) {
   const date = new Date(deadline)
   if (isNaN(date)) return ''
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric'})
 }
 
 // Whole days from today until the deadline (0 = today is the last day)

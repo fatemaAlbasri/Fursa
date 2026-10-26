@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
-import { formatDate, daysLeft } from '../data/jobs.js';
+import { formatDeadline , daysLeft } from '../../shared/utils/jobFormat.js';
 import '../styles/JobView.css';
 
 // =====================================================================
@@ -45,19 +45,18 @@ export default function JobView({ startEditing = false }) {
   const location = useLocation();
 
   // ---------- Page state ----------
-  const [job, setJob] = useState(() => getJob(id));
+  const [job, setJob] = useState(null); // null = still loading, false = not found
   const [editing, setEditing] = useState(startEditing); // true = show the edit form
   // Green banner at the top: 'posted' (just published), 'saved' (just edited) or null (hidden).
   const [banner, setBanner] = useState(location.state?.justPosted ? 'posted' : null);
 
-  // ---------- Values worked out from the job ----------
-  // Responsibilities are saved as text, one per line → turn them into a list (and drop "-" or "•" at the start).
-  const roles = job.responsibilities
-    .split('\n')
-    .map((r) => r.replace(/^[-•]\s*/, '').trim())
-    .filter(Boolean);
-  const isClosed = job.status === 'closed';
-  const left = daysLeft(job.deadline);
+  // ---------- Load the job (from the backend) ----------
+  // GET /api/jobs/mine/:id → { job }
+  useEffect(() => {
+    api('/jobs/mine/' + id)
+      .then((data) => setJob(data.job))
+      .catch(() => setJob(false)); // not found / not your job / server down
+  }, [id]);
 
   // ---------- Company name (from the backend) ----------
   // Comes from the signed-in employer: GET /api/auth/me → user.company.name
@@ -68,6 +67,20 @@ export default function JobView({ startEditing = false }) {
       .then(({ user }) => setCompanyName(user.company?.name || ''))
       .catch(() => {}); // not signed in / server down → keep the fallback text
   }, []);
+
+  // ---------- Wait for the job before using it ----------
+  // Must come AFTER every useState / useEffect above.
+  if (job === null) return <main className="container">Loading…</main>;
+  if (job === false) return <main className="container">Job not found.</main>;
+
+  // ---------- Values worked out from the job ----------
+  // Responsibilities are saved as text, one per line → turn them into a list (and drop "-" or "•" at the start).
+  const roles = (job.responsibilities || '')
+    .split('\n')
+    .map((r) => r.replace(/^[-•]\s*/, '').trim())
+    .filter(Boolean);
+  const isClosed = job.status === 'closed';
+  const left = daysLeft(job.deadline);
 
   // ---------- Buttons ----------
   // "Save changes" in the edit form
@@ -122,7 +135,7 @@ export default function JobView({ startEditing = false }) {
           <p>
             {/* TODO: point this at the public company page once it exists */}
             <Link to="/company/profile" className="jv-company">{companyName || 'Your company'}</Link>
-            {' '}· Posted {formatDate(job.postedOn)} · Deadline {formatDate(job.deadline)}
+            {' '}· Posted {formatDeadline(job.postedOn)} · Deadline {formatDeadline(job.deadline)}
           </p>
         </div>
 
@@ -215,7 +228,7 @@ export default function JobView({ startEditing = false }) {
                 <Info label="Job type">{job.jobType}</Info>
                 <Info label="Work mode">{job.workMode}</Info>
                 <Info label="Location">{job.location}</Info>
-                <Info label="Deadline">{formatDate(job.deadline)}</Info>
+                <Info label="Deadline">{formatDeadline(job.deadline)}</Info>
                 <Info label="Salary">{job.salary ? `BHD ${job.salary} / month` : 'Hidden'}</Info>
               </section>
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import MultiSelect from '../../shared/components/MultiSelect.jsx';
-import { JOB_TYPES, WORK_MODES, MAJORS, EXPERIENCE, LOCATIONS, LANGUAGES, EMPTY_JOB } from '../data/jobs.js';
+import { MAJORS, EXPERIENCE, LOCATIONS, LANGUAGES, EMPTY_JOB } from '../data/jobs.js';
+import { JOB_TYPES, WORK_MODES } from '../../shared/utils/jobFormat.js';
 import '../styles/JobForm.css';
 
 // =====================================================================
@@ -27,16 +28,17 @@ function ChooseOne({ id, label, options, value, onChange, hint = true }) {
         {label} {hint && <span>(choose one)</span>}
       </span>
       <div role="radiogroup" aria-labelledby={id} className="choice-box__chips">
-        {options.map((opt) => {
-          const on = value === opt;
+        {Object.entries(options).map(([val, text]) => {
+          const on = value === val;
           return (
-            <button key={opt} type="button" role="radio" aria-checked={on}
-              className={on ? 'choice choice--on' : 'choice'} onClick={() => onChange(opt)}>
-              {on && <span className="choice__dot" aria-hidden="true" />}
-              {opt}
-            </button>
-          );
-        })}
+          <button key={val} type="button" role="radio" aria-checked={on}
+          className={on ? 'choice choice--on' : 'choice'} onClick={() => onChange(val)}>
+          {on && <span className="choice__dot" aria-hidden="true" />}
+      {text}
+    </button>
+  );
+})}
+
       </div>
     </div>
   );

@@ -102,10 +102,27 @@ const getCompanyOneJob = async(req, res, next) =>{
 
     const job = rows[0]
     delete job.jd_embedding
+    job.stats = await jobStats(jobId)
     res.json({ job })
   } catch (err) {
     next(err)
   }
+}
+
+// Numbers for the stat boxes on the company "View job" page
+// applicants = everyone who applied, qualified = has every must-have (match_scores.is_qualified),
+// newCount = still 'applied' (not reviewed yet)
+const jobStats = async (jobId) => {
+  const { rows } = await db.query(
+    `SELECT COUNT(*)::int AS applicants,
+            COUNT(*) FILTER (WHERE ms.is_qualified)::int AS qualified,
+            COUNT(*) FILTER (WHERE a.status = 'applied')::int AS "newCount"
+       FROM applications a
+       LEFT JOIN match_scores ms ON ms.job_id = a.job_id AND ms.seeker_id = a.seeker_id
+      WHERE a.job_id = $1`,
+    [jobId]
+  )
+  return rows[0]
 }
 
 const seekerJobInfo = async(seekerId, jobId) => {
@@ -343,7 +360,9 @@ const editJob = async (req, res, next) => {
 
     await client.query('COMMIT')
 
-    res.json({ job: await loadJob(jobId) })
+    const updated = await loadJob(jobId)
+    updated.stats = await jobStats(jobId)
+    res.json({ job: updated })
   } catch (err) {
     await client.query('ROLLBACK')
     next(err)
