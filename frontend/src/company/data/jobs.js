@@ -30,7 +30,6 @@ export const LANGUAGES = [
 ]
 
 export const EMPTY_JOB = {
-  // Job details
   jobType: '',
   workMode: '',
   title: '',
@@ -39,11 +38,23 @@ export const EMPTY_JOB = {
   deadline: '',
   salary: '',
 
-  // Requirements
   major: '',
   majorMust: true,
   experience: EXPERIENCE[0],
   language: '',
   location: '',
   skills: []
+}
+
+export const EXPERIENCE_YEARS = {
+  'No experience': { min_years: 0, max_years: 0 },
+  '0–1 years':     { min_years: 0, max_years: 1 },
+  '0–2 years':     { min_years: 0, max_years: 2 },
+  '1–3 years':     { min_years: 1, max_years: 3 }
+}
+
+export function experienceFromYears(min, max) {
+  const found = Object.entries(EXPERIENCE_YEARS)
+    .find(([, y]) => y.min_years === min && y.max_years === max)
+  return found ? found[0] : EXPERIENCE[0]
 }

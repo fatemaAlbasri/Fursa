@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
-import { formatJobType,formatWorkMode,formatDeadline , daysLeft ,splitLines} from '../../shared/utils/jobFormat.js';
+import { formatJobType,formatWorkMode,formatDeadline , daysLeft ,splitLines, formatExperience, toDateInput } from '../../shared/utils/jobFormat.js';
+import { EXPERIENCE_YEARS, experienceFromYears } from '../data/jobs.js';
 import '../styles/JobView.css';
 
 // =====================================================================
@@ -89,15 +90,34 @@ if (job === false) {
   const isClosed = job.status === 'closed';
   const left = daysLeft(job.deadline);
 
+  const toBackend = (form)=>({
+    title: form.title,
+    description: form.description,
+    responsibilities: form.responsibilities,
+    location : form.location,
+    job_type: form.jobType,
+    work_mode: form.workMode,
+    deadline: form.deadline,
+    salary: form.salary,
+    field: form.major,
+    major_must_have: form.majorMust,
+    language: form.language,
+    status: job.status === 'draft' ? 'draft' : 'open',
+    skills: form.skills.map((s) => ({ name: s.name, is_required: s.must })),
+    ...EXPERIENCE_YEARS[form.experience],
+
+  });
+
   // ---------- Buttons ----------
   // "Save changes" in the edit form
   const saveChanges = (form) => {
-    const updated = { ...job, ...form };
-    // TODO (backend): PUT /api/company/jobs/:id  { ...updated }  → backend re-ranks applicants
-    console.log('Save changes', updated);
-    setJob(updated);
-    setEditing(false);
-    setBanner('saved');
+    api('/jobs/mine/' + id , {method : 'PUT', body: toBackend(form)})
+      .then((data) => {
+        setJob(data.job);
+        setEditing(false);
+        setBanner('saved');
+      })
+      .catch((err) => alert(err.error || 'Could not save the job')); 
   };
 
   // "Close this job" in the Manage box
@@ -142,7 +162,7 @@ if (job === false) {
           <p>
             {/* TODO: point this at the public company page once it exists */}
             <Link to="/company/profile" className="jv-company">{job.company_name || 'Your company'}</Link>
-            {' '}· Posted {formatDeadline(job.postedOn)} · Deadline {formatDeadline(job.deadline)}
+            {' '}· Posted {formatDeadline(job.created_at)} · Deadline {formatDeadline(job.deadline)}
           </p>
         </div>
 
@@ -177,7 +197,16 @@ if (job === false) {
 
           {/* same form as "Post a job", filled with this job */}
           <JobForm
-            initial={job}
+            initial={{
+              ...job,
+              jobType: job.job_type,
+              workMode: job.work_mode,
+              major: job.field || '',
+              majorMust: job.major_must_have,
+              experience: experienceFromYears(job.min_years, job.max_years),
+              deadline: toDateInput(job.deadline),
+              skills: job.skills.map((s) => ({ name: s.name, must: s.is_required })),
+          }}
             stacked
             edit
             submitLabel="Save changes"
@@ -210,19 +239,19 @@ if (job === false) {
                 {/* skills: must-have skills are filled teal with a MUST label */}
                 <div className="jv-skills">
                   {job.skills.map((s) => (
-                    <span key={s.name} className={s.must ? 'jv-skill jv-skill--must' : 'jv-skill'}>
+                    <span key={s.name} className={s.is_required ? 'jv-skill jv-skill--must' : 'jv-skill'}>
                       {s.name}
-                      {s.must && <em>MUST</em>}
+                      {s.is_required && <em>MUST</em>}
                     </span>
                   ))}
                 </div>
 
                 <div className="jv-req-grid">
                   <Info label="Major">
-                    {job.major}
-                    {job.majorMust && <em className="jv-must">MUST</em>}
+                    {job.field || 'Any major'}
+                    {job.field && job.major_must_have && <em className="jv-must">MUST</em>}
                   </Info>
-                  <Info label="Experience">{job.experience}</Info>
+                  <Info label="Experience">{formatExperience(job.min_years, job.max_years)}</Info>
                   <Info label="Language">{job.language}</Info>
                 </div>
               </section>

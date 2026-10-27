@@ -17,6 +17,15 @@ export function formatDeadline(deadline) {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric'})
 }
 
+// Any date → "YYYY-MM-DD" for <input type="date"> (uses local time, so the day doesn't shift)
+export function toDateInput(date) {
+  const d = new Date(date)
+  if (isNaN(d)) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+
 // Whole days from today until the deadline (0 = today is the last day)
 export function daysLeft(deadline) {
   const end = new Date(deadline)
@@ -65,3 +74,4 @@ export function greeting(now = new Date()) {
   if (hour < 18) return 'Good afternoon'
   return 'Good evening'
 }
+
