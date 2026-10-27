@@ -4,11 +4,9 @@ import { MAJORS, EXPERIENCE, LOCATIONS, LANGUAGES, EMPTY_JOB } from '../data/job
 import { JOB_TYPES, WORK_MODES } from '../../shared/utils/jobFormat.js';
 import '../styles/JobForm.css';
 
-// =====================================================================
-// The job form — used by BOTH "Post a job" and "Edit job".
-// =====================================================================
+// job form 
 
-// One form field: label on top, the input, then a red error under it (if any).
+// to show errors
 function Field({ label, htmlFor, error, children }) {
   return (
     <div className="field">
@@ -19,7 +17,6 @@ function Field({ label, htmlFor, error, children }) {
   );
 }
 
-// "Choose one" pill buttons (used for Job type and Work mode).
 // Only one pill can be on at a time.
 function ChooseOne({ id, label, options, value, onChange, hint = true }) {
   return (
@@ -44,19 +41,11 @@ function ChooseOne({ id, label, options, value, onChange, hint = true }) {
   );
 }
 
-/**
- * Props:
- *  initial      : the job to start with (empty for Post, the saved job for Edit)
- *  submitLabel  : text on the main button ("Publish job" / "Save changes")
- *  onSubmit(job): called after the form is checked
- *  secondary    : the other button { label, onClick(job), checkTitleOnly }
- *  stacked      : true = the two boxes go one under the other, full width (page scrolls)
- *  edit         : true = Edit job look (no step numbers, 3 fields per row)
- */
+
 export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false }) {
   // ---------- Form state ----------
-  const [form, setForm] = useState({ ...EMPTY_JOB, ...initial }); // all field values
-  const [errors, setErrors] = useState({}); // e.g. { title: 'Required' }
+  const [form, setForm] = useState({ ...EMPTY_JOB, ...initial }); 
+  const [errors, setErrors] = useState({}); 
   const skills = form.skills;
 
   // ---------- Auto-scroll the skills list ----------
@@ -164,7 +153,6 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   );
 
   const experience = (
-    /* default: "No experience" (the first option) */
     <Field label={edit ? 'Experience' : 'Experience range'} htmlFor="jf-exp">
       <select id="jf-exp" name="experience" value={form.experience} onChange={change}>
         {EXPERIENCE.map((x) => <option key={x}>{x}</option>)}
