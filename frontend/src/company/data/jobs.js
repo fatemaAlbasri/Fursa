@@ -1,3 +1,5 @@
+import { toDateInput } from '../../shared/utils/jobFormat.js'
+
 // ---------- Lists shown in the job form ----------
 export const MAJORS = [
   'Computer Science',
@@ -68,7 +70,7 @@ export const toJobBody = (form, status) => ({
   status,
   skills: form.skills.map((s) => ({ name: s.name, is_required: s.must })),
   ...EXPERIENCE_YEARS[form.experience],
-});
+})
 
 
 export function experienceFromYears(min, max) {
@@ -76,3 +78,14 @@ export function experienceFromYears(min, max) {
     .find(([, y]) => y.min_years === min && y.max_years === max)
   return found ? found[0] : EXPERIENCE[0]
 }
+
+export const jobToForm = (job) => ({
+  ...job,
+  jobType: job.job_type,
+  workMode: job.work_mode,
+  major: job.field || '',
+  majorMust: job.major_must_have,
+  experience: experienceFromYears(job.min_years, job.max_years),
+  deadline: toDateInput(job.deadline),
+  skills: job.skills.map((s) => ({ name: s.name, must: s.is_required })),
+})

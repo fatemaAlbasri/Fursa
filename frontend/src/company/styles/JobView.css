@@ -130,3 +130,12 @@
 @media (prefers-reduced-motion: reduce) {
   .jv-spinner { animation-duration: 2s; }
 }
+
+/* yellow "this is a draft" bar */
+.jv-draft {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 18px;
+  border-radius: var(--radius); background: #fffaeb; border: 1px solid #fedf89;
+  color: #93370d; font-size: 15px;
+}
+.jv-draft svg { width: 20px; height: 20px; flex-shrink: 0; }
+.jv-draft span { flex: 1; min-width: 200px; }

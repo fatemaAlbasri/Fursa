@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate,useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
-import { formatJobType,formatWorkMode,formatDeadline , daysLeft ,splitLines, formatExperience, toDateInput } from '../../shared/utils/jobFormat.js';
-import { experienceFromYears, toJobBody } from '../data/jobs.js';
+import { formatJobType,formatWorkMode,formatDeadline , daysLeft ,splitLines, formatExperience, toDateInput, } from '../../shared/utils/jobFormat.js';
+import { experienceFromYears, toJobBody, jobToForm } from '../data/jobs.js';
 import '../styles/JobView.css';
 
 // =====================================================================
@@ -111,6 +111,18 @@ if (job === false) {
       .finally(()=> setSaving(false));
   };
 
+  const publishDraft = () => {
+  if (saving) return;
+  setSaving(true);
+  api('/jobs/mine/' + id, { method: 'PUT', body: toJobBody(jobToForm(job), 'open') })
+    .then((data) => {
+      setJob(data.job);
+      setBanner('posted'); 
+    })
+    .catch((err) => alert(err.error || 'Could not publish the job'))
+    .finally(() => setSaving(false));
+};
+
   // "Close this job" in the Manage box
   const closeJob = () => {
     if (!window.confirm('Close this job? Job seekers will no longer see it or be able to apply.')) return;
@@ -136,6 +148,18 @@ if (job === false) {
           <button type="button" aria-label="Dismiss" onClick={() => setBanner(null)}>×</button>
         </div>
       )}
+
+      {/* ---------- Draft notice + Publish button (view mode only) ---------- */}
+    {!editing && isDraft && (
+      <div className="jv-draft" role="status">
+        {InfoIcon}
+        <span>This job is a <b>draft</b>. Only you can see it. Publish it so job seekers can apply.</span>
+        <button type="button" className="btn btn--primary" onClick={publishDraft} disabled={saving}>
+          {saving ? 'Publishing…' : 'Publish job'}
+        </button>
+      </div>
+    )}
+
 
       {/* ---------- Header (navy band) ---------- */}
       <section className="jv-hero">
@@ -183,21 +207,14 @@ if (job === false) {
           {/* orange note */}
           <p className="jv-warn" role="note">
             {InfoIcon}
-            You are editing a live job. If you change the requirements, Fursa will re-rank all applicants.
+            {isDraft
+              ? 'You are editing a draft. Job seekers can\'t see it until you publish it.'
+              : 'You are editing a live job. If you change the requirements, Fursa will re-rank all applicants.'}
           </p>
 
           {/* same form as "Post a job", filled with this job */}
           <JobForm
-            initial={{
-              ...job,
-              jobType: job.job_type,
-              workMode: job.work_mode,
-              major: job.field || '',
-              majorMust: job.major_must_have,
-              experience: experienceFromYears(job.min_years, job.max_years),
-              deadline: toDateInput(job.deadline),
-              skills: job.skills.map((s) => ({ name: s.name, must: s.is_required })),
-          }}
+            initial={jobToForm(job)}
             stacked
             edit
             saving={saving}
