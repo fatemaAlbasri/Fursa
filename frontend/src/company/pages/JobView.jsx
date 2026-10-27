@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate,useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
 import { formatJobType,formatWorkMode,formatDeadline , daysLeft ,splitLines, formatExperience, toDateInput } from '../../shared/utils/jobFormat.js';
@@ -44,12 +44,16 @@ function Info({ label, children }) {
 export default function JobView({ startEditing = false }) {
   const { id } = useParams(); 
   const location = useLocation();
+  const navigate = useNavigate();
 
   // ---------- Page state ----------
   const [job, setJob] = useState(null); 
-  const [editing, setEditing] = useState(startEditing); 
-  const [banner, setBanner] = useState(location.state?.justPosted ? 'posted' : null);
+  const [banner, setBanner] = useState(
+  location.state?.justPosted ? 'posted' : location.state?.justSaved ? 'saved' : null
+);
   const [saving , setSaving]= useState(false)
+
+  const editing = startEditing; 
   
   // Load the job (from the backend) 
   useEffect(() => {
@@ -117,8 +121,8 @@ if (job === false) {
     api('/jobs/mine/' + id , {method : 'PUT', body: toBackend(form)})
       .then((data) => {
         setJob(data.job);
-        setEditing(false);
         setBanner('saved');
+        navigate(`/company/jobs/${id}`, { replace: true, state: { justSaved: true } });
       })
       .catch((err) => alert(err.error || 'Could not save the job'))
       .finally(()=> setSaving(false));
@@ -173,7 +177,8 @@ if (job === false) {
         {/* header buttons (view mode only) */}
         {!editing && (
           <div className="jv-hero__actions">
-            <button type="button" className="btn btn--white" onClick={() => setEditing(true)} disabled={isClosed}>
+            <button type="button" className="btn btn--white" onClick={() => navigate(`/company/jobs/${id}/edit`)}
+            disabled={isClosed}>
               {PencilIcon}
               Edit job
             </button>
@@ -216,7 +221,7 @@ if (job === false) {
             saving={saving}
             submitLabel="Save changes"
             onSubmit={saveChanges}
-            secondary={{ label: 'Cancel', onClick: () => setEditing(false) }}
+            secondary={{ label: 'Cancel', onClick: () => navigate(`/company/jobs/${id}`)}}
           />
         </>
       ) : (
