@@ -77,7 +77,7 @@ if (job === false) {
         <span className="jv-popup__icon">{InfoIcon}</span>
         <h2 id="jv-popup-title">Job not found</h2>
         <p>This job doesn't exist, or it isn't one of your jobs.</p>
-        <Link to="/company/jobs" className="btn btn--primary">Back to your jobs</Link>
+        <Link to="/company/" className="btn btn--primary">Back to your jobs</Link>
       </div>
     </div>
   );
