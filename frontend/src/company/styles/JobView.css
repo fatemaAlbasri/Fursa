@@ -25,8 +25,9 @@
 .jv-hero .jv-company:hover { text-decoration: underline; }
 .jv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .jv-tag { padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .14); font-size: 12px; font-weight: 700; }
-.jv-tag--active { background: #e3f6ec; color: #067647; }
+.jv-tag--open { background: #e3f6ec; color: #067647; }
 .jv-tag--closed { background: var(--slate); color: var(--white); }
+.jv-tag--draft { background: #fef0c7; color: #93370d; }
 .jv-hero__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 /* stats: number on top, label under it */

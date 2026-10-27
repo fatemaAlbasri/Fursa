@@ -93,6 +93,7 @@ if (job === false) {
   // ---------- Values worked out from the job ----------
   const roles = splitLines(job.responsibilities);
   const isClosed = job.status === 'closed';
+  const isDraft = job.status === 'draft';
   const left = daysLeft(job.deadline);
 
   // ---------- Buttons ----------
@@ -126,9 +127,11 @@ if (job === false) {
         <div className="jv-banner" role="status">
           {CheckIcon}
           <span>
-            {banner === 'saved'
-              ? 'Changes saved. Applicants have been re-ranked.'
-              : 'Your job is live. Job seekers who match can now see and apply.'}
+            {banner === 'posted'
+              ? 'Your job is live. Job seekers who match can now see and apply.'
+              : isDraft
+              ? 'Draft saved. Publish it when you are ready.'
+              : 'Changes saved. Applicants have been re-ranked.'}
           </span>
           <button type="button" aria-label="Dismiss" onClick={() => setBanner(null)}>×</button>
         </div>
@@ -137,10 +140,9 @@ if (job === false) {
       {/* ---------- Header (navy band) ---------- */}
       <section className="jv-hero">
         <div className="jv-hero__text">
-          {/* tags: Active/Closed · job type · work mode */}
           <div className="jv-tags">
-            <span className={isClosed ? 'jv-tag jv-tag--closed' : 'jv-tag jv-tag--active'}>
-              {isClosed ? 'Closed' : ' Active'}
+            <span className={`jv-tag jv-tag--${job.status}`}>
+              {isDraft ? 'Draft' : isClosed ? 'Closed' : 'Active'}
             </span>
             <span className="jv-tag">{formatJobType(job.job_type)}</span>
             <span className="jv-tag">{formatWorkMode(job.work_mode)}</span>
@@ -148,9 +150,7 @@ if (job === false) {
 
           <h1>{job.title}</h1>
 
-          {/* Company name · Posted date · Deadline */}
           <p>
-            {/* TODO: point this at the public company page once it exists */}
             <Link to="/company/profile" className="jv-company">{job.company_name || 'Your company'}</Link>
             {' '}· Posted {formatDeadline(job.created_at)} · Deadline {formatDeadline(job.deadline)}
           </p>
