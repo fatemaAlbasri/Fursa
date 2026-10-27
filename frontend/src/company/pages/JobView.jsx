@@ -41,37 +41,48 @@ function Info({ label, children }) {
 }
 
 export default function JobView({ startEditing = false }) {
-  const { id } = useParams(); // the job id from the URL
+  const { id } = useParams(); 
   const location = useLocation();
 
   // ---------- Page state ----------
-  const [job, setJob] = useState(null); // null = still loading, false = not found
-  const [editing, setEditing] = useState(startEditing); // true = show the edit form
-  // Green banner at the top: 'posted' (just published), 'saved' (just edited) or null (hidden).
+  const [job, setJob] = useState(null); 
+  const [editing, setEditing] = useState(startEditing); 
   const [banner, setBanner] = useState(location.state?.justPosted ? 'posted' : null);
 
-  // ---------- Load the job (from the backend) ----------
-  // GET /api/jobs/mine/:id → { job }
+  // Load the job (from the backend) 
   useEffect(() => {
     api('/jobs/mine/' + id)
       .then((data) => setJob(data.job))
-      .catch(() => setJob(false)); // not found / not your job / server down
+      .catch(() => setJob(false)); 
   }, [id]);
 
-  // ---------- Company name (from the backend) ----------
-  // Comes from the signed-in employer: GET /api/auth/me → user.company.name
-  // TODO (backend): once GET /api/company/jobs/:id returns the company, use job.company.name instead.
-  const [companyName, setCompanyName] = useState('');
-  useEffect(() => {
-    api('/auth/me')
-      .then(({ user }) => setCompanyName(user.company?.name || ''))
-      .catch(() => {}); // not signed in / server down → keep the fallback text
-  }, []);
 
-  // ---------- Wait for the job before using it ----------
-  // Must come AFTER every useState / useEffect above.
-  if (job === null) return <main className="container">Loading…</main>;
-  if (job === false) return <main className="container">Job not found.</main>;
+// Loading 
+if (job === null) {
+  return (
+    <main className="container">
+      <div className="jv-loading" role="status">
+        <span className="jv-spinner" aria-hidden="true" />
+        Loading job…
+      </div>
+    </main>
+  );
+}
+
+// Not found ( pop-up )
+if (job === false) {
+  return (
+    <div className="jv-overlay">
+      <div className="jv-popup" role="dialog" aria-modal="true" aria-labelledby="jv-popup-title">
+        <span className="jv-popup__icon">{InfoIcon}</span>
+        <h2 id="jv-popup-title">Job not found</h2>
+        <p>This job doesn't exist, or it isn't one of your jobs.</p>
+        <Link to="/company/jobs" className="btn btn--primary">Back to your jobs</Link>
+      </div>
+    </div>
+  );
+}
+
 
   // ---------- Values worked out from the job ----------
   // Responsibilities are saved as text, one per line → turn them into a list (and drop "-" or "•" at the start).
@@ -134,7 +145,7 @@ export default function JobView({ startEditing = false }) {
           {/* Company name · Posted date · Deadline */}
           <p>
             {/* TODO: point this at the public company page once it exists */}
-            <Link to="/company/profile" className="jv-company">{companyName || 'Your company'}</Link>
+            <Link to="/company/profile" className="jv-company">{job.company_name || 'Your company'}</Link>
             {' '}· Posted {formatDeadline(job.postedOn)} · Deadline {formatDeadline(job.deadline)}
           </p>
         </div>
