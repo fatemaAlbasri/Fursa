@@ -42,7 +42,7 @@ function ChooseOne({ id, label, options, value, onChange, hint = true }) {
 }
 
 
-export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false }) {
+export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false , saving=false}) {
   // ---------- Form state ----------
   const [form, setForm] = useState({ ...EMPTY_JOB, ...initial }); 
   const [errors, setErrors] = useState({}); 
@@ -264,11 +264,15 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
       {/* =================== Buttons (under the boxes, on the right) =================== */}
       <div className="jf-actions">
         {secondary && (
-          <button type="button" className={edit ? 'btn jf-cancel' : 'btn btn--outline'} onClick={handleSecondary}>
-            {secondary.label}
+          <button type="button" className={edit ? 'btn jf-cancel' : 'btn btn--outline'}
+          onClick={handleSecondary} disabled={saving}>
+          {secondary.label}
           </button>
-        )}
-        <button type="submit" className="btn btn--primary">{submitLabel}</button>
+      )}
+        <button type="submit" className="btn btn--primary jf-submit"  disabled={saving} aria-busy={saving}>
+        {saving && <span className="jf-btn-spinner" aria-hidden="true" />}
+        {saving ? 'Saving…' : submitLabel}
+        </button>
       </div>
     </form>
   );

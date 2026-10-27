@@ -49,7 +49,8 @@ export default function JobView({ startEditing = false }) {
   const [job, setJob] = useState(null); 
   const [editing, setEditing] = useState(startEditing); 
   const [banner, setBanner] = useState(location.state?.justPosted ? 'posted' : null);
-
+  const [saving , setSaving]= useState(false)
+  
   // Load the job (from the backend) 
   useEffect(() => {
     api('/jobs/mine/' + id)
@@ -111,13 +112,16 @@ if (job === false) {
   // ---------- Buttons ----------
   // "Save changes" in the edit form
   const saveChanges = (form) => {
+    if (saving) return;
+    setSaving(true);
     api('/jobs/mine/' + id , {method : 'PUT', body: toBackend(form)})
       .then((data) => {
         setJob(data.job);
         setEditing(false);
         setBanner('saved');
       })
-      .catch((err) => alert(err.error || 'Could not save the job')); 
+      .catch((err) => alert(err.error || 'Could not save the job'))
+      .finally(()=> setSaving(false));
   };
 
   // "Close this job" in the Manage box
@@ -209,6 +213,7 @@ if (job === false) {
           }}
             stacked
             edit
+            saving={saving}
             submitLabel="Save changes"
             onSubmit={saveChanges}
             secondary={{ label: 'Cancel', onClick: () => setEditing(false) }}
