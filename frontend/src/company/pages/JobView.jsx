@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
-import { formatJobType,formatWorkMode,formatDeadline , daysLeft } from '../../shared/utils/jobFormat.js';
+import { formatJobType,formatWorkMode,formatDeadline , daysLeft ,splitLines} from '../../shared/utils/jobFormat.js';
 import '../styles/JobView.css';
 
 // =====================================================================
@@ -85,11 +85,7 @@ if (job === false) {
 
 
   // ---------- Values worked out from the job ----------
-  // Responsibilities are saved as text, one per line → turn them into a list (and drop "-" or "•" at the start).
-  const roles = (job.responsibilities || '')
-    .split('\n')
-    .map((r) => r.replace(/^[-•]\s*/, '').trim())
-    .filter(Boolean);
+  const roles = splitLines(job.responsibilities);
   const isClosed = job.status === 'closed';
   const left = daysLeft(job.deadline);
 
