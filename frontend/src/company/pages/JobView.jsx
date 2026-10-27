@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
-import { formatDeadline , daysLeft } from '../../shared/utils/jobFormat.js';
+import { formatJobType,formatWorkMode,formatDeadline , daysLeft } from '../../shared/utils/jobFormat.js';
 import '../styles/JobView.css';
 
 // =====================================================================
@@ -123,10 +123,10 @@ export default function JobView({ startEditing = false }) {
           {/* tags: Active/Closed · job type · work mode */}
           <div className="jv-tags">
             <span className={isClosed ? 'jv-tag jv-tag--closed' : 'jv-tag jv-tag--active'}>
-              {isClosed ? 'Closed' : '● Active'}
+              {isClosed ? 'Closed' : ' Active'}
             </span>
-            <span className="jv-tag">{job.jobType}</span>
-            <span className="jv-tag">{job.workMode}</span>
+            <span className="jv-tag">{formatJobType(job.job_type)}</span>
+            <span className="jv-tag">{formatWorkMode(job.work_mode)}</span>
           </div>
 
           <h1>{job.title}</h1>
@@ -225,8 +225,8 @@ export default function JobView({ startEditing = false }) {
             <aside className="jv-side">
               <section className="card jv-card">
                 <h2>Job details</h2>
-                <Info label="Job type">{job.jobType}</Info>
-                <Info label="Work mode">{job.workMode}</Info>
+                <Info label="Job type">{formatJobType(job.job_type)}</Info>
+                <Info label="Work mode">{formatWorkMode(job.work_mode)}</Info>
                 <Info label="Location">{job.location}</Info>
                 <Info label="Deadline">{formatDeadline(job.deadline)}</Info>
                 <Info label="Salary">{job.salary ? `BHD ${job.salary} / month` : 'Hidden'}</Info>
