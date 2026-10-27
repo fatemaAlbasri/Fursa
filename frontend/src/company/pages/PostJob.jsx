@@ -3,24 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
 import { toJobBody } from '../data/jobs.js';
+import Notice from '../../shared/components/Notice.jsx'
 
 export default function PostJob() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false); 
+  const [notice, setNotice] = useState(null);
 
   // POST /api/jobs → { job }  (then open the new job's page)
   // Plan limit: the backend answers 403 with a message if the plan has no active jobs left.
   const send = (form, status) => {
     if (saving) return;
     setSaving(true);
+    setNotice(null);
     api('/jobs', { method: 'POST', body: toJobBody(form, status) })
       .then((data) => {
         const state = status === 'open' ? { justPosted: true } : { justSaved: true };
         navigate(`/company/jobs/${data.job.id}`, { state }); 
       })
       .catch((err) => {
-        alert(err.error || 'Could not save the job');
+        setNotice({ type: 'error', text: err.error || 'Could not save the job' });
         setSaving(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
       });
   };
 
@@ -33,6 +37,8 @@ export default function PostJob() {
         <h1 className="title">Post a job or internship</h1>
         <p className="muted">Fursa will rank every applicant against these requirements.</p>
       </div>
+
+      <Notice notice={notice} onClose={() => setNotice(null)} />
 
       <JobForm
         stacked

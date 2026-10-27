@@ -11,21 +11,12 @@ import {
   formatExperience
 } from '../../shared/utils/jobFormat.js'
 import { toJobBody, jobToForm } from '../data/jobs.js'
+import Notice from '../../shared/components/Notice.jsx'
+import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
+
 import '../styles/JobView.css'
 
 // icons
-const CheckIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <path d="M5 12l5 5 9-10" />
-  </svg>
-)
 const PencilIcon = (
   <svg
     viewBox="0 0 24 24"
@@ -70,13 +61,17 @@ export default function JobView({ startEditing = false }) {
   const navigate = useNavigate()
 
   const [job, setJob] = useState(null)
-  const [banner, setBanner] = useState(
+  const [notice, setNotice] = useState(
     location.state?.justPosted
-      ? 'posted'
+      ? {
+          type: 'success',
+          text: 'Your job is live. Job seekers who match can now see and apply.'
+        }
       : location.state?.justSaved
-        ? 'saved'
+        ? { type: 'success', text: 'Changes saved.' }
         : null
   )
+  const [confirm, setConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
 
   const editing = startEditing
@@ -121,13 +116,13 @@ export default function JobView({ startEditing = false }) {
     )
   }
 
-  // Values worked out from the job 
+  // Values worked out from the job
   const roles = splitLines(job.responsibilities)
   const isClosed = job.status === 'closed'
   const isDraft = job.status === 'draft'
   const left = daysLeft(job.deadline)
 
-  // Buttons 
+  // Buttons
   // "Save changes" in the edit form
   const saveChanges = (form) => {
     if (saving) return
@@ -138,13 +133,25 @@ export default function JobView({ startEditing = false }) {
     })
       .then((data) => {
         setJob(data.job)
-        setBanner('saved')
+        setNotice({
+          type: 'success',
+          text: isDraft
+            ? 'Draft saved. Publish it when you are ready.'
+            : 'Changes saved. Applicants have been re-ranked.'
+        })
+
         navigate(`/company/jobs/${id}`, {
           replace: true,
           state: { justSaved: true }
         })
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       })
-      .catch((err) => alert(err.error || 'Could not save the job'))
+      .catch((err) =>
+        setNotice({
+          type: 'error',
+          text: err.error || 'Something went wrong. Please try again.'
+        })
+      )
       .finally(() => setSaving(false))
   }
 
@@ -157,20 +164,22 @@ export default function JobView({ startEditing = false }) {
     })
       .then((data) => {
         setJob(data.job)
-        setBanner('posted')
+        setNotice({
+          type: 'success',
+          text: 'Your job is live. Job seekers who match can now see and apply.'
+        })
       })
-      .catch((err) => alert(err.error || 'Could not publish the job'))
+      .catch((err) =>
+        setNotice({
+          type: 'error',
+          text: err.error || 'Something went wrong. Please try again.'
+        })
+      )
       .finally(() => setSaving(false))
   }
 
   // "Close this job" in the Manage box
   const closeJob = () => {
-    if (
-      !window.confirm(
-        'Close this job? Job seekers will no longer see it or be able to apply.'
-      )
-    )
-      return
     // TODO (backend): PATCH /api/company/jobs/:id  { status: 'closed' }
     setJob({ ...job, status: 'closed' })
   }
@@ -178,15 +187,16 @@ export default function JobView({ startEditing = false }) {
   // "Delete draft" in the Manage box
   // DELETE /api/jobs/mine/:id
   const deleteDraft = () => {
-    if (!window.confirm('Delete this draft? This cannot be undone.')) return
     setSaving(true)
     api('/jobs/mine/' + id, { method: 'DELETE' })
-      .then((data) => {
-        alert(data.message)
+      .then(() => {
         navigate('/company', { replace: true })
       })
       .catch((err) => {
-        alert(err.error || 'Could not delete the draft')
+        setNotice({
+          type: 'error',
+          text: err.error || 'Something went wrong. Please try again.'
+        })
         setSaving(false)
       })
   }
@@ -197,26 +207,7 @@ export default function JobView({ startEditing = false }) {
         ← Back to your jobs
       </Link>
 
-      {/* ---------- Green banner (view mode only) ---------- */}
-      {!editing && banner && (
-        <div className="jv-banner" role="status">
-          {CheckIcon}
-          <span>
-            {banner === 'posted'
-              ? 'Your job is live. Job seekers who match can now see and apply.'
-              : isDraft
-                ? 'Draft saved. Publish it when you are ready.'
-                : 'Changes saved. Applicants have been re-ranked.'}
-          </span>
-          <button
-            type="button"
-            aria-label="Dismiss"
-            onClick={() => setBanner(null)}
-          >
-            ×
-          </button>
-        </div>
-      )}
+      <Notice notice={notice} onClose={() => setNotice(null)} />
 
       {/* ---------- Draft notice + Publish button (view mode only) ---------- */}
       {!editing && isDraft && (
@@ -399,7 +390,7 @@ export default function JobView({ startEditing = false }) {
                   <button
                     type="button"
                     className="btn jv-close"
-                    onClick={deleteDraft}
+                    onClick={() => setConfirm('delete')}
                     disabled={saving}
                   >
                     Delete draft
@@ -415,7 +406,7 @@ export default function JobView({ startEditing = false }) {
                     <button
                       type="button"
                       className="btn jv-close"
-                      onClick={closeJob}
+                      onClick={() => setConfirm('close')}
                       disabled={isClosed}
                     >
                       {isClosed ? 'Job closed' : 'Close this job'}
@@ -427,6 +418,32 @@ export default function JobView({ startEditing = false }) {
           </div>
         </>
       )}
+      <ConfirmDialog
+        open={confirm === 'delete'}
+        title="Delete this draft?"
+        message="This cannot be undone."
+        confirmLabel="Delete draft"
+        danger
+        busy={saving}
+        onConfirm={() => {
+          setConfirm(null)
+          deleteDraft()
+        }}
+        onCancel={() => setConfirm(null)}
+      />
+
+      <ConfirmDialog
+        open={confirm === 'close'}
+        title="Close this job?"
+        message="Job seekers will no longer see it or be able to apply."
+        confirmLabel="Close job"
+        danger
+        onConfirm={() => {
+          setConfirm(null)
+          closeJob()
+        }}
+        onCancel={() => setConfirm(null)}
+      />
     </main>
   )
 }
