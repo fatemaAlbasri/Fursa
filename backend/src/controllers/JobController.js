@@ -371,7 +371,7 @@ const editJob = async (req, res, next) => {
   }
 }
 
-// DELETE /api/jobs/mine/:id → delete job (company) -not in frontend-
+// DELETE /api/jobs/mine/:id → delete job (company) 
 const deleteJob = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
@@ -395,7 +395,7 @@ const deleteJob = async (req, res, next) => {
     }
 
     await db.query(`DELETE FROM jobs WHERE id = $1`, [jobId])
-    res.status(204).end()
+    res.json({ message: 'Job deleted successfully' })
   } catch (err) {
     next(err)
   }

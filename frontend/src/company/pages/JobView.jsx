@@ -130,6 +130,22 @@ if (job === false) {
     setJob({ ...job, status: 'closed' });
   };
 
+  // "Delete draft" in the Manage box
+// DELETE /api/jobs/mine/:id 
+const deleteDraft = () => {
+  if (!window.confirm('Delete this draft? This cannot be undone.')) return;
+  setSaving(true);
+  api('/jobs/mine/' + id, { method: 'DELETE' })
+    .then((data) => {
+      alert(data.message); 
+      navigate('/company', { replace: true });
+    })
+    .catch((err) => {
+      alert(err.error || 'Could not delete the draft');
+      setSaving(false);
+    });
+};
+
   return (
     <main className="container container--wide jv">
       <Link to="/company/jobs" className="jv-back">← Back to your jobs</Link>
@@ -279,11 +295,20 @@ if (job === false) {
 
               <section className="card jv-card">
                 <h2>Manage</h2>
-                <Link to={`/jobseeker/jobs/${job.id}`} className="btn jv-preview">Preview as job seeker</Link>
-                <button type="button" className="btn jv-close" onClick={closeJob} disabled={isClosed}>
-                  {isClosed ? 'Job closed' : 'Close this job'}
-                </button>
+                {isDraft ? (
+                  <button type="button" className="btn jv-close" onClick={deleteDraft} disabled={saving}>
+                    Delete draft
+                  </button>
+                ) : (
+                  <>
+                    <Link to={`/jobseeker/jobs/${job.id}`} className="btn jv-preview">Preview as job seeker</Link>
+                    <button type="button" className="btn jv-close" onClick={closeJob} disabled={isClosed}>
+                      {isClosed ? 'Job closed' : 'Close this job'}
+                    </button>
+                  </>
+                )}
               </section>
+
             </aside>
           </div>
         </>
