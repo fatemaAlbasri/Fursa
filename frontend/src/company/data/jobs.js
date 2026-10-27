@@ -53,6 +53,24 @@ export const EXPERIENCE_YEARS = {
   '1–3 years':     { min_years: 1, max_years: 3 }
 }
 
+export const toJobBody = (form, status) => ({
+  title: form.title,
+  description: form.description,
+  responsibilities: form.responsibilities,
+  location: form.location,
+  job_type: form.jobType,
+  work_mode: form.workMode,
+  deadline: form.deadline,
+  salary: form.salary,
+  field: form.major,
+  major_must_have: form.majorMust,
+  language: form.language,
+  status,
+  skills: form.skills.map((s) => ({ name: s.name, is_required: s.must })),
+  ...EXPERIENCE_YEARS[form.experience],
+});
+
+
 export function experienceFromYears(min, max) {
   const found = Object.entries(EXPERIENCE_YEARS)
     .find(([, y]) => y.min_years === min && y.max_years === max)

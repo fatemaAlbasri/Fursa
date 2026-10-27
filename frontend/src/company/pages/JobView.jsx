@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate,useParams } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
 import { api } from '../../shared/api.js';
 import { formatJobType,formatWorkMode,formatDeadline , daysLeft ,splitLines, formatExperience, toDateInput } from '../../shared/utils/jobFormat.js';
-import { EXPERIENCE_YEARS, experienceFromYears } from '../data/jobs.js';
+import { experienceFromYears, toJobBody } from '../data/jobs.js';
 import '../styles/JobView.css';
 
 // =====================================================================
@@ -95,30 +95,12 @@ if (job === false) {
   const isClosed = job.status === 'closed';
   const left = daysLeft(job.deadline);
 
-  const toBackend = (form)=>({
-    title: form.title,
-    description: form.description,
-    responsibilities: form.responsibilities,
-    location : form.location,
-    job_type: form.jobType,
-    work_mode: form.workMode,
-    deadline: form.deadline,
-    salary: form.salary,
-    field: form.major,
-    major_must_have: form.majorMust,
-    language: form.language,
-    status: job.status === 'draft' ? 'draft' : 'open',
-    skills: form.skills.map((s) => ({ name: s.name, is_required: s.must })),
-    ...EXPERIENCE_YEARS[form.experience],
-
-  });
-
   // ---------- Buttons ----------
   // "Save changes" in the edit form
   const saveChanges = (form) => {
     if (saving) return;
     setSaving(true);
-    api('/jobs/mine/' + id , {method : 'PUT', body: toBackend(form)})
+    api('/jobs/mine/' + id , {method : 'PUT', body: toJobBody(form, job.status === 'draft' ? 'draft' : 'open')})
       .then((data) => {
         setJob(data.job);
         setBanner('saved');
