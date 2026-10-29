@@ -20,7 +20,7 @@ const getJobs = async (req, res, next) => {
 const getCompanyJobs = async (req, res, next) =>{
   try {
     const { rows } = await db.query(
-      `SELECT j.*
+      `SELECT j.*, (SELECT COUNT(*)::int FROM applications a WHERE a.job_id = j.id) AS applicants
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
         WHERE c.user_id = $1
@@ -352,6 +352,70 @@ const editJob = async (req, res, next) => {
   }
 }
 
+// GET /api/jobs/mine/:id/applicants → applicants of one job, best match first (company)
+const getApplicants = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) {
+      return res.status(400).json({ error: 'Invalid job id' })
+    }
+
+    const { rows } = await db.query(
+      `SELECT a.id, a.status, a.applied_at, u.first_name, u.last_name,
+              m.score, COALESCE(m.is_qualified, true) AS is_qualified,
+              COALESCE(m.breakdown->'missing', '[]') AS missing
+         FROM applications a
+         JOIN jobs j ON j.id = a.job_id
+         JOIN companies c ON c.id = j.company_id
+         JOIN users u ON u.id = a.seeker_id
+         LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+        WHERE a.job_id = $1 AND c.user_id = $2
+        ORDER BY m.score DESC NULLS LAST, a.applied_at`,
+      [jobId, req.user.id]
+    )
+    res.json({ applicants: rows })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// PATCH /api/jobs/mine/:id/applicants → shortlist the ticked applicants (company)
+// body: { ids: [1, 2], status: 'shortlisted' }
+const updateApplicants = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(Number).filter(Number.isInteger) : []
+    const { status } = req.body || {}
+    if (!jobId || ids.length === 0) {
+      return res.status(400).json({ error: 'Pick at least one applicant' })
+    }
+    if (status !== 'shortlisted') {
+      return res.status(400).json({ error: 'Invalid status' })
+    }
+
+    // Change the status and keep a history row for each changed application
+    const { rows } = await db.query(
+      `WITH old AS (
+         SELECT a.id, a.status
+           FROM applications a
+           JOIN jobs j ON j.id = a.job_id
+           JOIN companies c ON c.id = j.company_id
+          WHERE a.id = ANY($1::int[]) AND a.job_id = $2 AND c.user_id = $3 AND a.status <> $4
+       ),
+       changed AS (
+         UPDATE applications SET status = $4 WHERE id IN (SELECT id FROM old) RETURNING id
+       )
+       INSERT INTO application_history (application_id, changed_by, from_status, to_status)
+       SELECT id, $3, status, $4 FROM old
+       RETURNING application_id AS id`,
+      [ids, jobId, req.user.id, status]
+    )
+    res.json({ updated: rows.map((r) => r.id), status })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // DELETE /api/jobs/mine/:id → delete job (company) -not in frontend-
 const deleteJob = async (req, res, next) => {
   try {
@@ -382,4 +446,4 @@ const deleteJob = async (req, res, next) => {
   }
 }
 
-module.exports = { getJobs, getCompanyJobs, getOneJob, getCompanyOneJob, createJob, editJob, deleteJob }
+module.exports = { getJobs, getCompanyJobs, getOneJob, getCompanyOneJob, createJob, editJob, deleteJob, getApplicants, updateApplicants }

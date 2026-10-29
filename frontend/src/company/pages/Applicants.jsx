@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { JOB_OPTIONS, getApplicants } from '../data/applicants.js';
+import { api } from '../../shared/api.js';
+import { toApplicant, countStats } from '../data/applicants.js';
 import '../styles/Applicants.css';
 
 // =====================================================================
@@ -31,18 +32,20 @@ const TABS = [
   { id: 'all', label: (s) => `All (${s.total})`, show: () => true },
 ];
 
-// Round match-score ring (e.g. 92%)
+// Round match-score ring (e.g. 92%). score = null → empty ring with "–"
 function ScoreRing({ score }) {
   const CIRCLE = 125.66; // length of the circle's edge (2 × π × 20)
-  const filled = (score / 100) * CIRCLE;
+  const filled = ((score ?? 0) / 100) * CIRCLE;
   return (
-    <div className="ap-score" role="img" aria-label={`${score}% match`}>
+    <div className="ap-score" role="img" aria-label={score == null ? 'Not ranked yet' : `${score}% match`}>
       <svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true">
         <circle cx="25" cy="25" r="20" fill="none" stroke="#DDF1F1" strokeWidth="5" />
-        <circle cx="25" cy="25" r="20" fill="none" stroke="#159A9C" strokeWidth="5" strokeLinecap="round"
-          strokeDasharray={`${filled.toFixed(1)} ${CIRCLE}`} transform="rotate(-90 25 25)" />
+        {score != null && (
+          <circle cx="25" cy="25" r="20" fill="none" stroke="#159A9C" strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={`${filled.toFixed(1)} ${CIRCLE}`} transform="rotate(-90 25 25)" />
+        )}
       </svg>
-      <span>{score}%</span>
+      <span>{score == null ? '–' : `${score}%`}</span>
     </div>
   );
 }
@@ -51,19 +54,41 @@ export default function Applicants() {
   const navigate = useNavigate();
 
   // ---------- Page state ----------
-  const [jobId, setJobId] = useState(JOB_OPTIONS[0].id); // job in the drop-down
-  const [applicants, setApplicants] = useState(() => getApplicants(JOB_OPTIONS[0].id).list);
+  const [jobs, setJobs] = useState([]); // the company's jobs (for the drop-down)
+  const [jobId, setJobId] = useState(null); // job in the drop-down
+  const [applicants, setApplicants] = useState([]);
   const [tab, setTab] = useState('top');
   const [sort, setSort] = useState('score'); // 'score' | 'date'
   const [selected, setSelected] = useState([]); // ids of the ticked applicants
+  const [error, setError] = useState('');
 
-  const { stats } = getApplicants(jobId);
+  const stats = countStats(applicants);
+
+  // ---------- Load from the backend ----------
+  // 1) the company's jobs → open the first one that has applicants
+  useEffect(() => {
+    api('/jobs/mine')
+      .then(({ jobs }) => {
+        setJobs(jobs);
+        const first = jobs.find((j) => j.applicants > 0) || jobs[0];
+        if (first) setJobId(first.id);
+      })
+      .catch((err) => setError(err.error || 'Could not load your jobs.'));
+  }, []);
+
+  // 2) the applicants of the picked job
+  useEffect(() => {
+    if (!jobId) return;
+    api(`/jobs/mine/${jobId}/applicants`)
+      .then((data) => setApplicants(data.applicants.map(toApplicant)))
+      .catch((err) => setError(err.error || 'Could not load the applicants.'));
+  }, [jobId]);
 
   // ---------- The list for the open tab ----------
   const currentTab = TABS.find((t) => t.id === tab);
   let rows = applicants.filter(currentTab.show);
   rows = [...rows].sort((a, b) =>
-    sort === 'score' ? b.score - a.score : b.appliedOn.localeCompare(a.appliedOn) // newest first
+    sort === 'score' ? (b.score ?? -1) - (a.score ?? -1) : b.appliedOn.localeCompare(a.appliedOn) // newest first
   );
   if (tab === 'top') rows = rows.slice(0, 10);
 
@@ -75,9 +100,7 @@ export default function Applicants() {
 
   // ---------- Drop-down / tab changes ----------
   const changeJob = (e) => {
-    const id = Number(e.target.value);
-    setJobId(id);
-    setApplicants(getApplicants(id).list);
+    setJobId(Number(e.target.value));
     setSelected([]);
   };
   const changeTab = (id) => {
@@ -86,11 +109,15 @@ export default function Applicants() {
   };
 
   // ---------- Buttons ----------
-  const shortlistSelected = () => {
+  const shortlistSelected = async () => {
     if (selected.length === 0) return;
-    // TODO (backend): PATCH /api/company/jobs/:id/applicants  { ids: selected, status: 'Shortlisted' }
-    setApplicants(applicants.map((a) => (selected.includes(a.id) ? { ...a, status: 'Shortlisted' } : a)));
-    setSelected([]);
+    try {
+      await api(`/jobs/mine/${jobId}/applicants`, { method: 'PATCH', body: { ids: selected, status: 'shortlisted' } });
+      setApplicants(applicants.map((a) => (selected.includes(a.id) ? { ...a, status: 'Shortlisted' } : a)));
+      setSelected([]);
+    } catch (err) {
+      setError(err.error || 'Could not shortlist. Try again.');
+    }
   };
   const rejectSelected = () => {
     // goes to the confirm page; the ticked ids go with it
@@ -108,13 +135,15 @@ export default function Applicants() {
         </div>
         <div className="ap-job">
           <label htmlFor="ap-jobpick">Job</label>
-          <select id="ap-jobpick" value={jobId} onChange={changeJob}>
-            {JOB_OPTIONS.map((j) => (
+          <select id="ap-jobpick" value={jobId ?? ''} onChange={changeJob}>
+            {jobs.map((j) => (
               <option key={j.id} value={j.id}>{j.title} · {j.applicants} applicants</option>
             ))}
           </select>
         </div>
       </div>
+
+      {error && <p className="field__error" role="alert">{error}</p>}
 
       {/* ---------- Stat boxes ---------- */}
       <div className="ap-stats">
@@ -174,11 +203,13 @@ export default function Applicants() {
         </div>
 
         {/* footer link → opens the All qualified tab */}
-        <div className="ap-foot">
-          <button type="button" onClick={() => changeTab('qualified')}>
-            Show all {stats.qualified} qualified applicants →
-          </button>
-        </div>
+        {stats.qualified > 0 && (
+          <div className="ap-foot">
+            <button type="button" onClick={() => changeTab('qualified')}>
+              Show all {stats.qualified} qualified applicants →
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );

@@ -1,6 +1,7 @@
 /* Applicants dashboard. Colours follow the wireframe "13b · Employer: applicants". */
 
 .ap { display: flex; flex-direction: column; gap: 22px; }
+.container.ap { max-width: 1180px; padding: 32px 20px; } /* same size as the wireframe, so all tabs fit on one line */
 
 /* ===== Title + job drop-down ===== */
 .ap-head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end; }
