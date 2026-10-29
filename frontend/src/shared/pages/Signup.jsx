@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate,useSearchParams } from 'react-router-dom'
-import SkillSelect from '../components/SkillSelect.jsx'
+import MultiSelect from '../components/MultiSelect.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { api } from '../api.js'
 
@@ -429,7 +429,7 @@ function JobSeekerSignup() {
             error={errors.skills}
             hint="Pick from the list. We use these to show you jobs that match."
           >
-            <SkillSelect value={skills} onChange={setSkills} placeholder="Search skills ▾" />
+            <MultiSelect value={skills} onChange={setSkills} placeholder="Search skills ▾" />
           </Field>
 
           <ChoiceChips

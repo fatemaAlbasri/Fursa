@@ -2266,3 +2266,154 @@ html:has(.landing) {
     --card-pad: 20px 16px;
   }
 }
+
+/* ===== Password pages (change / forgot / reset password) ===== */
+.pw {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+.pw .card {
+  padding: 32px;
+  border-radius: 20px;
+}
+/* lock icon + title + email */
+.pw-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pw-head__icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: #d6efef;
+  color: var(--teal);
+}
+.pw-head__icon svg {
+  width: 24px;
+  height: 24px;
+}
+.pw-head h1 {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--navy);
+}
+.pw-head p {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--slate);
+  overflow-wrap: anywhere;
+}
+.pw-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--slate);
+}
+
+/* strength meter: 4 bars, filled ones are teal */
+.pw-strength {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+.pw-strength__bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+  transition: background 0.2s;
+}
+.pw-strength__bar--on {
+  background: var(--teal);
+}
+.pw-strength__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal);
+}
+
+/* requirements list: met = teal, not met yet = slate */
+.pw-rules {
+  list-style: none;
+  padding: 12px 16px;
+  background: var(--light);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.pw-rules li {
+  color: var(--slate);
+}
+.pw-rules .pw-rules__ok {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+/* Cancel + Update password */
+.pw-actions {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+.btn--cancel {
+  background: var(--white);
+  color: var(--navy);
+  border: 1px solid var(--line);
+}
+.btn--cancel:hover {
+  border-color: var(--teal);
+}
+.pw .btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* success / error message at the top of the form */
+.pw-alert {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px solid;
+  animation: fade-in 0.2s ease both;
+}
+.pw-alert--success {
+  background: var(--light);
+  border-color: var(--accent);
+  color: var(--teal);
+}
+.pw-alert--error {
+  background: #fdecea;
+  border-color: #f5c2bd;
+  color: var(--error);
+}
+
+@media (max-width: 640px) {
+  .pw {
+    padding: 24px 16px;
+  }
+  .pw .card {
+    padding: 22px 18px;
+  }
+  .pw-head h1 {
+    font-size: 22px;
+  }
+  /* stack the buttons, main action on top */
+  .pw-actions {
+    grid-template-columns: 1fr;
+  }
+  .pw-actions .btn--primary {
+    order: -1;
+  }
+}

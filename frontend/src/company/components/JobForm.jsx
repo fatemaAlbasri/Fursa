@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import SkillSelect from '../../shared/components/SkillSelect.jsx';
-import { JOB_TYPES, WORK_MODES, MAJORS, EXPERIENCE, LOCATIONS, EMPTY_JOB } from '../data/jobs.js';
+import MultiSelect from '../../shared/components/MultiSelect.jsx';
+import { JOB_TYPES, WORK_MODES, MAJORS, EXPERIENCE, LOCATIONS, LANGUAGES, EMPTY_JOB } from '../data/jobs.js';
 import '../styles/JobForm.css';
 
 // =====================================================================
@@ -73,8 +73,8 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   const change = (e) => set(e.target.name, e.target.value); // for normal inputs (uses the input's name)
 
   // ---------- Skills ----------
-  // SkillSelect works with skill names; keep each skill's Must-have tick when the list changes.
-  // SkillSelect already blocks duplicates (any letter case).
+  // MultiSelect works with skill names; keep each skill's Must-have tick when the list changes.
+  // MultiSelect already blocks duplicates (any letter case).
   const setSkillNames = (names) =>
     set('skills', names.map((name) => skills.find((s) => s.name === name) || { name, must: false }));
   // Turn Must-have on/off for one skill
@@ -136,23 +136,28 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   );
 
   const location = (
-    /* same pick-or-type box as Create account: no default, pick from the list or type a city */
     <Field label="Location" htmlFor="jf-loc" error={errors.location}>
-      <input id="jf-loc" name="location" list="jf-loc-list" value={form.location} onChange={change}
+      <input id="jf-loc" list="jf-loc-options" value={form.location}
+        onChange={(e) => set('location', e.target.value)}
         placeholder="Pick or type a city" autoComplete="off" />
-      <datalist id="jf-loc-list">
+      <datalist id="jf-loc-options">
         {LOCATIONS.map((x) => <option key={x} value={x} />)}
       </datalist>
     </Field>
   );
 
   const major = (
-    /* no default: starts on "Choose a major" */
     <Field label="Major / field" htmlFor="jf-major" error={errors.major}>
-      <select id="jf-major" name="major" value={form.major} onChange={change}>
-        <option value="" disabled>Choose a major</option>
-        {MAJORS.map((m) => <option key={m}>{m}</option>)}
-      </select>
+      <input id="jf-major" list="jf-major-options" value={form.major}
+        onChange={(e) => set('major', e.target.value)}
+        placeholder="Pick or type a major" autoComplete="off" />
+      <datalist id="jf-major-options">
+        {MAJORS.map((x) => <option key={x} value={x} />)}
+      </datalist>
+      <label className="jf-check">
+        <input type="checkbox" checked={form.majorMust} onChange={(e) => set('majorMust', e.target.checked)} />
+        Must-have
+      </label>
     </Field>
   );
 
@@ -165,10 +170,13 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     </Field>
   );
 
+  // Languages are saved as one text ("English, Arabic") → split it into a list for the box, join it back when it changes.
+  const languages = form.language.split(',').map((x) => x.trim()).filter(Boolean);
   const language = (
+    /* Works like Skills: pick from the list OR type one. More than one language is allowed. */
     <Field label="Language" htmlFor="jf-lang" error={errors.language}>
-      <input id="jf-lang" name="language" placeholder="e.g. English, Arabic" required
-        value={form.language} onChange={change} />
+      <MultiSelect id="jf-lang" options={LANGUAGES} placeholder={languages.length ? 'Add more…' : 'Search or type a language ▾'}
+        value={languages} onChange={(names) => set('language', names.join(', '))} />
     </Field>
   );
 
@@ -249,7 +257,7 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
 
           {/* "+ Add skill from list" box */}
           <div className="jf-skill-add">
-            <SkillSelect id="jf-skill" showChips={false} placeholder="+ Add skill from list ▾"
+            <MultiSelect id="jf-skill" showChips={false} placeholder="+ Add skill from list ▾"
               value={skills.map((s) => s.name)} onChange={setSkillNames} />
           </div>
           {errors.skills && <p className="field__error">{errors.skills}</p>}

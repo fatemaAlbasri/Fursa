@@ -9,6 +9,7 @@ export const WORK_MODES = ['On-site', 'Remote', 'Hybrid'];
 export const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting'];
 export const EXPERIENCE = ['No experience', '0–1 years', '0–2 years', '1–3 years'];
 export const LOCATIONS = ['Manama', 'Seef', 'Muharraq', 'Riffa', 'Isa Town', 'Hamad Town'];
+export const LANGUAGES = ['English', 'Arabic', 'Hindi', 'Urdu', 'French', 'Tagalog'];
 
 // ---------- An empty job (the starting values for "Post a job") ----------
 // major and location start empty, so the employer must choose them.
@@ -27,8 +28,8 @@ export const EMPTY_JOB = {
   major: '',
   majorMust: true,
   experience: EXPERIENCE[0],
-  language: '',
-  location: '',
+  language: '', // saved as text, e.g. 'English, Arabic'
+  location: '', // one city, e.g. 'Manama'
   skills: [], // each skill looks like { name: 'React', must: true }
 };
 
