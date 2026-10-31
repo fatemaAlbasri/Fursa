@@ -19,6 +19,7 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/AuthRouter')
 const cvRoutes = require('./routes/CvRouter')
 const jobRoutes = require('./routes/JobRouter')
+const companyRoutes = require('./routes/CompanyRouter')
 
 // Uploaded CVs and logos
 app.use('/uploads', express.static(UPLOADS_DIR))
@@ -27,6 +28,7 @@ app.use('/uploads', express.static(UPLOADS_DIR))
 app.use('/api/auth', authRoutes)
 app.use('/api/cv', cvRoutes)
 app.use('/api/jobs', jobRoutes)
+app.use('/api/companies', companyRoutes)
 
 // 404 for unknown routes
 app.use((req, res) => {
