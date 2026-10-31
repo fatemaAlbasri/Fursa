@@ -2,20 +2,8 @@ import { useEffect, useState } from 'react'
 import { api } from '../../shared/api.js'
 import { userInitials } from '../utils/jobFormat.js'
 
-// Round "FA" badge for the right side of the shared Navbar (passed as <Layout right={...} />).
-// Styled here because it is only this one small circle (brand colours from index.css).
-const circle = {
-  width: 36,
-  height: 36,
-  borderRadius: '50%',
-  display: 'grid',
-  placeItems: 'center',
-  background: 'var(--accent)',
-  color: 'var(--navy)',
-  fontSize: 14,
-  fontWeight: 700
-}
-
+// "FA" for the avatar circle in the shared Navbar (<NavbarAccount avatar={<UserInitials />} />).
+// The circle itself is styled by the Navbar (.topbar__avatar in index.css).
 export default function UserInitials() {
   const [user, setUser] = useState(null)
 
@@ -40,7 +28,7 @@ export default function UserInitials() {
 
   const fullName = `${user.first_name} ${user.last_name}`
   return (
-    <span style={circle} title={fullName} aria-label={`Signed in as ${fullName}`}>
+    <span title={fullName} aria-label={`Signed in as ${fullName}`}>
       {initials}
     </span>
   )
