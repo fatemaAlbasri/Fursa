@@ -13,6 +13,7 @@ import ResetPassword from './shared/pages/ResetPassword.jsx'
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx'
 import JobDetails from './jobseeker/pages/JobDetails.jsx'
 import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx'
+import CvReport from './jobseeker/pages/CvReport.jsx'
 import UserInitials from './jobseeker/components/UserInitials.jsx'
 
 export default function App() {
@@ -83,6 +84,7 @@ export default function App() {
         {/* :id = the job's real id, e.g. /jobseeker/jobs/3 */}
         <Route path="/jobseeker/jobs/:id" element={<JobDetails />} />
         <Route path="/jobseeker/cv-optimizer" element={<CvOptimizer />} />
+        <Route path="/jobseeker/cv-optimizer/report" element={<CvReport />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
