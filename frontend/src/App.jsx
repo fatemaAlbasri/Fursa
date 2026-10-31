@@ -12,6 +12,7 @@ import ChangePassword from './shared/pages/ChangePassword.jsx'
 import ResetPassword from './shared/pages/ResetPassword.jsx'
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx'
 import JobDetails from './jobseeker/pages/JobDetails.jsx'
+import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx'
 import UserInitials from './jobseeker/components/UserInitials.jsx'
 
 export default function App() {
@@ -70,7 +71,10 @@ export default function App() {
       <Route
         element={
           <Layout
-            links={[{ to: '/jobseeker/jobs', label: 'Jobs for you' }]}
+            links={[
+              { to: '/jobseeker/jobs', label: 'Jobs for you' },
+              { to: '/jobseeker/cv-optimizer', label: 'AI CV Optimizer' }
+            ]}
             right={<UserInitials />}
           />
         }
@@ -78,6 +82,7 @@ export default function App() {
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
         {/* :id = the job's real id, e.g. /jobseeker/jobs/3 */}
         <Route path="/jobseeker/jobs/:id" element={<JobDetails />} />
+        <Route path="/jobseeker/cv-optimizer" element={<CvOptimizer />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
