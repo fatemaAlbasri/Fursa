@@ -259,6 +259,7 @@ img.co-logo {
   flex: 1;
   min-width: 0;
   padding-top: 12px;
+  overflow: hidden; /* hides the "·" that starts each meta line (see .co-hero__meta) */
 }
 .co-hero h1 {
   font-size: 28px;
@@ -267,18 +268,23 @@ img.co-logo {
   color: var(--navy);
   overflow-wrap: anywhere;
 }
-/* Technology · Manama, Bahrain · On Fursa since Sep 2026 */
+/* Technology · Manama, Bahrain · On Fursa since Sep 2026
+   Every item starts with a "·" of the same width, and the line is pulled left by that width,
+   so the "·" at the start of a line (also after wrapping on small screens) is cut off. */
 .co-hero__meta {
   margin-top: 4px;
+  margin-left: -24px;
   display: flex;
   flex-wrap: wrap;
   gap: 2px 0;
   font-size: 14px;
   color: var(--slate);
 }
-.co-hero__meta span + span::before {
+.co-hero__meta span::before {
   content: '·';
-  margin: 0 10px;
+  display: inline-block;
+  width: 24px;
+  text-align: center;
 }
 .co-website {
   flex-shrink: 0;
