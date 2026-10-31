@@ -1,0 +1,202 @@
+/* ===== AI CV Optimizer: one suggestion card (components/CvSuggestion.jsx) =====
+   Shared by the AI CV Optimizer page and the Advanced CV report.
+   Uses the shared .btn styles and colours from index.css; only the card pieces live here. */
+
+/* colours used only by this card (from the wireframe) */
+.cvs-card,
+.cvs-locked {
+  --cvs-red: #b42318;
+  --cvs-red-bg: #fdecea;
+  --cvs-green: #0f7b55;
+  --cvs-green-bg: #e3f6ec;
+  --cvs-pill-bg: #d6efef;
+  --cvs-row-bg: #f3f7f8;
+}
+
+/* ---------- Card ---------- */
+.cvs-card {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  transition:
+    border-color 0.2s,
+    opacity 0.2s;
+}
+.cvs-card--accepted {
+  border-color: var(--cvs-green);
+}
+.cvs-card--dismissed .cvs-compare {
+  opacity: 0.55;
+}
+
+/* "SUMMARY" pill + "+7 points" */
+.cvs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cvs-section {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--cvs-pill-bg);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cvs-points {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cvs-green);
+  white-space: nowrap;
+}
+
+/* ---------- Before / After ---------- */
+.cvs-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  transition: opacity 0.2s;
+}
+.cvs-box {
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cvs-box--before {
+  background: var(--cvs-red-bg);
+}
+.cvs-box--after {
+  background: var(--cvs-green-bg);
+}
+.cvs-box__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cvs-box--before .cvs-box__label {
+  color: var(--cvs-red);
+}
+.cvs-box--after .cvs-box__label {
+  color: var(--cvs-green);
+}
+.cvs-box__text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+.cvs-box--before .cvs-box__text {
+  color: var(--slate);
+}
+
+.cvs-why {
+  font-size: var(--hint-size);
+  color: var(--slate);
+}
+
+/* ---------- Accept / Dismiss ---------- */
+.cvs-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cvs-actions .btn {
+  padding: 9px 18px;
+}
+.btn.cvs-dismiss {
+  background: var(--white);
+  color: var(--navy);
+  border-color: var(--line);
+}
+.btn.cvs-dismiss:hover {
+  background: var(--bg);
+}
+.cvs-result {
+  font-size: 13px;
+  font-weight: 700;
+}
+.cvs-result--accepted {
+  color: var(--cvs-green);
+}
+.cvs-result--dismissed {
+  color: var(--slate);
+}
+.cvs-undo {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--teal);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.cvs-undo:hover {
+  color: var(--teal-hover);
+}
+
+/* ---------- Locked row (free plan) ---------- */
+.cvs-locked {
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--cvs-row-bg);
+  color: var(--slate);
+  font-size: 14px;
+}
+.cvs-locked__icon {
+  align-self: center;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.cvs-locked__icon svg {
+  width: 14px;
+  height: 14px;
+}
+.cvs-locked__section {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cvs-locked__text {
+  opacity: 0.8;
+}
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 640px) {
+  .cvs-compare {
+    grid-template-columns: 1fr;
+  }
+  .cvs-locked {
+    flex-wrap: wrap;
+  }
+  .cvs-locked__text {
+    flex-basis: 100%;
+    padding-left: 22px; /* lines up under the section name, past the lock */
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cvs-card,
+  .cvs-compare {
+    transition: none;
+  }
+}
