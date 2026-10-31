@@ -105,3 +105,29 @@ export function currentScore(statuses) {
 
 // 7 → "+7 points", 1 → "+1 point"
 export const pointsText = (points) => `+${points} ${points === 1 ? 'point' : 'points'}`
+
+// ---------- Downloads (plain text files, made in the browser) ----------
+// Sections of the CV text, top to bottom (CV preview and downloaded CV)
+export const CV_SECTIONS = ['summary', 'projects', 'skills', 'education']
+
+export function downloadText(fileName, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// The CV text with the accepted suggestions applied
+export function updatedCvText(statuses) {
+  return (
+    CV_SECTIONS.map((section) => {
+      const s = REVIEW.suggestions.find((item) => item.section === section)
+      const body = statuses[section] === 'accepted' ? s.after_text : s.before_text
+      return `${SECTION_LABELS[section].toUpperCase()}\n${body}`
+    }).join('\n\n') + '\n'
+  )
+}
+
+export const downloadUpdatedCv = (statuses) => downloadText('updated_cv.txt', updatedCvText(statuses))
