@@ -5,9 +5,11 @@ import {
   REVIEW,
   REPORT_PRICE_BHD,
   SECTION_LABELS,
+  CV_SECTIONS,
   loadProgress,
   saveProgress,
-  currentScore
+  currentScore,
+  downloadUpdatedCv
 } from '../data/cvOptimizer.js'
 import { formatDeadline } from '../utils/jobFormat.js'
 import ScoreRing from '../components/ScoreRing.jsx'
@@ -18,28 +20,9 @@ import '../styles/CvOptimizer.css'
 // the other suggestions locked until the Advanced CV report is unlocked (its own page).
 const REPORT_PATH = '/jobseeker/cv-optimizer/report'
 
-// Sections shown in the CV preview, top to bottom (as in the wireframe)
-const CV_SECTIONS = ['summary', 'projects', 'skills', 'education']
-
 const suggestionFor = (section) => REVIEW.suggestions.find((s) => s.section === section)
 const freeSuggestions = REVIEW.suggestions.filter((s) => s.is_free_preview)
 const lockedSuggestions = REVIEW.suggestions.filter((s) => !s.is_free_preview)
-
-// The CV text after the accepted suggestions, downloaded as a .txt file
-function downloadUpdatedCv(statuses) {
-  const text = CV_SECTIONS.map((section) => {
-    const s = suggestionFor(section)
-    const body = statuses[section] === 'accepted' ? s.after_text : s.before_text
-    return `${SECTION_LABELS[section].toUpperCase()}\n${body}`
-  }).join('\n\n')
-
-  const url = URL.createObjectURL(new Blob([text + '\n'], { type: 'text/plain' }))
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'updated_cv.txt'
-  a.click()
-  URL.revokeObjectURL(url)
-}
 
 function SparkleIcon() {
   return (
