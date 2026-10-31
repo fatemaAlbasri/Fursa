@@ -1,4 +1,5 @@
-/* ===== Jobs for you (job seeker home) =====
+/* ===== Jobs for you (job seeker home) + All jobs =====
+   Both pages share the filters, cards and messages, so they share this file.
    Uses the shared .card, .field, .title, .muted, .pill and .btn styles from index.css.
    Only the extra pieces for this page live here. */
 
@@ -28,7 +29,7 @@
 /* ---------- Search + filters ---------- */
 .card.jfy-filters {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 1fr;
+  grid-template-columns: 2fr repeat(4, 1fr);
   gap: 12px;
   padding: 16px 18px;
 }
@@ -49,6 +50,70 @@
   margin-left: auto;
   font-size: 13px;
   color: var(--slate);
+}
+/* "Browse all jobs" sits at the right end (after the count when it is shown) */
+.jfy-browse {
+  margin-left: auto;
+}
+.jfy-count + .jfy-browse {
+  margin-left: 6px;
+}
+
+/* ---------- All jobs: back link, "N jobs found", Grid / List switch ---------- */
+.jfy-back {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 600;
+}
+.jfy-back:hover {
+  color: var(--teal-hover);
+}
+.jfy-found {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.jfy-views {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+}
+.jfy-views__btn {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.jfy-views__btn svg {
+  width: 18px;
+  height: 18px;
+}
+.jfy-views__btn:hover {
+  background: var(--light);
+  color: var(--navy);
+}
+.jfy-views__btn--active,
+.jfy-views__btn--active:hover {
+  background: var(--teal);
+  color: var(--white);
+}
+.jfy-views__btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus);
 }
 
 /* ---------- Job cards ---------- */
@@ -164,6 +229,53 @@ img.jfy-logo {
   margin-top: auto;
 }
 
+/* ---------- Job rows (All jobs → List view) ---------- */
+.jfy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.jfy-row {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  animation: fade-up 0.35s ease backwards;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.jfy-row:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(24, 59, 86, 0.09);
+}
+.jfy-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.jfy-row__bottom {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.jfy-row__salary {
+  font-size: 13px;
+  color: var(--slate);
+}
+.jfy-row__btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* ---------- Loading / empty / error ---------- */
 .jfy-state {
   background: var(--white);
@@ -216,6 +328,15 @@ img.jfy-logo {
   .jfy-grid {
     grid-template-columns: 1fr;
   }
+  /* rows: logo + text on top, full-width button underneath */
+  .jfy-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .jfy-row__btn {
+    width: 100%;
+    text-align: center;
+  }
 }
 @media (max-width: 520px) {
   .card.jfy-filters {
@@ -230,7 +351,8 @@ img.jfy-logo {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .jfy-card {
+  .jfy-card,
+  .jfy-row {
     animation: none;
   }
   .jfy-spinner {
