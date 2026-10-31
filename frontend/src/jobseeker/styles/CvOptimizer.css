@@ -1,0 +1,260 @@
+/* ===== AI CV Optimizer (free plan) =====
+   Uses the shared .card, .title, .muted, .section-title and .btn styles from index.css.
+   The suggestion cards style themselves (CvSuggestion.css); only this page's pieces live here. */
+
+/* colours used only on this page (from the wireframe) */
+.container.cvo {
+  --cvo-mark: #fff4e0;
+  --cvo-mark-line: #f5d9a8;
+  --cvo-green-bg: #e3f6ec;
+  --cvo-unlock-bg: #dff1f0;
+}
+
+.container.cvo {
+  max-width: 1000px;
+  gap: 20px;
+}
+
+/* ---------- Title row ---------- */
+.cvo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.cvo-head__title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.cvo-head__icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--teal);
+  color: var(--white);
+}
+.cvo-head__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.cvo-head .muted {
+  margin-top: 2px;
+  font-size: var(--text-size);
+}
+.cvo-head .btn {
+  flex-shrink: 0;
+}
+
+/* ---------- Two columns: CV | score + suggestions ---------- */
+.cvo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.cvo-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- Your CV ---------- */
+.card.cvo-cv {
+  padding: 20px 22px;
+  gap: 14px;
+}
+.cvo-cv__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+.cvo-cv__file {
+  font-size: var(--hint-size);
+  color: var(--slate);
+  overflow-wrap: anywhere;
+}
+.cvo-cv__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cvo-cv__label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.cvo-cv__text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--navy);
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.cvo-cv__text--marked {
+  background: var(--cvo-mark);
+  border-color: var(--cvo-mark-line);
+}
+.cvo-cv__text--accepted {
+  background: var(--cvo-green-bg);
+}
+.cvo-cv__hint {
+  font-size: var(--hint-size);
+  color: var(--slate);
+}
+
+/* grey placeholder lines for the parts of the CV that are not shown */
+.cvo-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cvo-line {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gray);
+}
+.cvo-line--name {
+  height: 18px;
+  width: 50%;
+  border-radius: 6px;
+}
+.cvo-line--90 {
+  width: 88%;
+}
+.cvo-line--80 {
+  width: 76%;
+}
+.cvo-line--70 {
+  width: 70%;
+}
+
+/* ---------- CV strength (navy box) ---------- */
+.cvo-score {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  background: var(--navy);
+  color: var(--white);
+}
+.cvo-score__text {
+  flex: 1;
+  min-width: 0;
+}
+.cvo-score__text h2 {
+  font-size: 17px;
+  font-weight: 800;
+}
+.cvo-score__text p {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--gray);
+}
+.cvo-score__plan {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--gray);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- "4 more improvements found" ---------- */
+.card.cvo-more {
+  padding: 16px 18px;
+  gap: 10px;
+}
+.cvo-more__list {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- Advanced CV report (dashed box) ---------- */
+.cvo-unlock {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1.5px dashed var(--teal);
+  border-radius: var(--radius);
+  background: var(--cvo-unlock-bg);
+}
+.cvo-unlock__text {
+  flex: 1;
+  min-width: 0;
+}
+.cvo-unlock__text h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.cvo-unlock__text h2 svg {
+  width: 16px;
+  height: 16px;
+  color: var(--teal);
+}
+.cvo-unlock__text p {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--navy);
+}
+.btn.cvo-unlock__btn {
+  flex-shrink: 0;
+  background: var(--navy);
+  color: var(--white);
+  text-align: center;
+}
+.btn.cvo-unlock__btn:hover {
+  background: #102b40;
+}
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 860px) {
+  .cvo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .cvo-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cvo-head .title {
+    font-size: 24px;
+  }
+  .cvo-score {
+    flex-wrap: wrap;
+    --score-ring-size: 56px;
+  }
+  .cvo-unlock {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cvo-cv__text {
+    transition: none;
+  }
+}
