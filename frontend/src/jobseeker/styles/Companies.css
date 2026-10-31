@@ -1,0 +1,616 @@
+/* ===== Companies (job seeker) + Company details =====
+   Both pages share the logo boxes, banners and messages, so they share this file.
+   Uses the shared .card, .field, .title, .muted, .pill and .btn styles from index.css.
+   Every class here starts with "co-". Rules that change a shared class (.container, .card)
+   use two classes, because index.css loads after this file and would win otherwise. */
+
+/* colours used only on these pages (same as Jobs for you / Job details) */
+.container.co {
+  --co-purple: #6d4ae8;
+  --co-purple-bg: #efeafd;
+  --co-blue: #3a96c7;
+  --co-error-bg: #fdecea;
+  --co-error-line: #f5c2bd;
+  --co-banner: linear-gradient(110deg, var(--navy) 0%, #127a7c 100%);
+}
+
+/* page body: same width as Jobs for you */
+.container.co {
+  max-width: 1120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.co-head .muted {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.co-back {
+  align-self: flex-start;
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 600;
+}
+.co-back:hover {
+  color: var(--teal-hover);
+}
+
+/* ---------- Logo box (CompanyLogo with className "co-logo") ----------
+   White frame so it stands out where it overlaps the banner. */
+.co-logo {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 3px solid var(--white);
+  display: grid;
+  place-items: center;
+  background: var(--teal);
+  color: var(--white);
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(24, 59, 86, 0.12);
+}
+img.co-logo {
+  object-fit: cover;
+  background: var(--white);
+}
+/* letter box colour from the company id (same colours as the job cards; 0 = teal above) */
+.co-logo--1 {
+  background: var(--co-purple);
+}
+.co-logo--2 {
+  background: var(--co-blue);
+}
+.co-logo--3 {
+  background: var(--navy);
+}
+
+/* ========== Companies list ========== */
+
+/* ---------- Search + filters ---------- */
+.card.co-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+/* ---------- Hiring now / All companies + count ---------- */
+.co-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.co-tab {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--navy);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.co-tab:hover {
+  border-color: var(--accent);
+}
+.co-tab--active,
+.co-tab--active:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+.co-tab:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.co-count {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+/* ---------- Company cards ---------- */
+.co-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.co-card {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  animation: fade-up 0.35s ease backwards;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+.co-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(24, 59, 86, 0.09);
+  transform: translateY(-2px);
+}
+.co-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.co-card__banner {
+  height: 50px;
+  background: var(--co-banner);
+}
+.co-card__body {
+  flex: 1;
+  padding: 0 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* logo sits half on the banner */
+.co-card__body .co-logo {
+  margin-top: -27px;
+  margin-bottom: 10px;
+}
+.co-card__name {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.co-card__meta {
+  font-size: 13px;
+  color: var(--slate);
+}
+/* about text: at most 2 lines so the cards stay the same height */
+.co-card__about {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--slate);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* gap above the line (kept on the text, so the line itself can stick to the bottom) */
+.co-card__about,
+.co-card__meta:has(+ .co-card__foot) {
+  margin-bottom: 12px;
+}
+/* "3 open jobs" + "View →" under a thin line, always at the bottom of the card */
+.co-card__foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.co-open {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #d6efef;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+.co-open--none {
+  background: var(--light);
+  color: var(--slate);
+  font-weight: 600;
+}
+.co-card__view {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal);
+}
+.co-card:hover .co-card__view {
+  color: var(--teal-hover);
+}
+
+/* ========== Company details ========== */
+
+/* ---------- Header: banner, logo, name, website ---------- */
+.co-hero {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  animation: fade-up 0.35s ease backwards;
+}
+.co-hero__banner {
+  height: 110px;
+  background: linear-gradient(100deg, var(--navy) 0%, #127a7c 50%, var(--accent) 100%);
+}
+.co-hero__body {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 0 24px 20px;
+}
+.co-hero .co-logo {
+  width: 92px;
+  height: 92px;
+  margin-top: -26px;
+  border-width: 4px;
+  border-radius: 16px;
+  font-size: 34px;
+}
+.co-hero__text {
+  flex: 1;
+  min-width: 0;
+  padding-top: 12px;
+}
+.co-hero h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+/* Technology · Manama, Bahrain · On Fursa since Sep 2026 */
+.co-hero__meta {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  font-size: 14px;
+  color: var(--slate);
+}
+.co-hero__meta span + span::before {
+  content: '·';
+  margin: 0 10px;
+}
+.co-website {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn--outline.co-website {
+  padding: 10px 18px;
+  font-size: 15px;
+}
+.co-website svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Two columns: about + jobs left, info + tips right ---------- */
+.co-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 276px;
+  gap: 18px;
+  align-items: start;
+}
+.co-main,
+.co-side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* white box used by every section */
+.co-section {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  animation: fade-up 0.35s ease backwards;
+}
+.co-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.co-section__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+/* "(3)" after "Open jobs" */
+.co-section__title small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate);
+}
+.co-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--slate);
+  white-space: pre-line; /* keep the company's line breaks */
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Open jobs ---------- */
+.co-jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.co-job {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--gray);
+  border-radius: 12px;
+  background: #f7fbfb;
+  transition: border-color 0.15s;
+}
+.co-job:hover {
+  border-color: var(--accent);
+}
+.co-job__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.co-job__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+/* job type tag, then On-site · Deadline 30 Oct */
+.co-job__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 12px;
+  color: var(--slate);
+}
+.co-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #d6efef;
+  color: #0f6b6d;
+  font-size: 12px;
+  font-weight: 700;
+}
+.co-tag--internship {
+  background: var(--co-purple-bg);
+  color: var(--co-purple);
+}
+.co-job__btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.btn--primary.co-job__btn {
+  padding: 10px 18px;
+}
+
+/* match ring: the JSX sets --score (0–100) on the element */
+.co-ring {
+  --score: 0;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--teal) calc(var(--score) * 1%), #d6efef 0);
+}
+.co-ring__value {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--white);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f6b6d;
+}
+
+/* ---------- Company info ---------- */
+.co-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.co-info__item {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--light);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.co-info__label {
+  font-size: 12px;
+  color: var(--slate);
+}
+.co-info__value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+a.co-info__value {
+  color: var(--teal);
+  text-decoration: underline;
+}
+a.co-info__value:hover {
+  color: var(--teal-hover);
+}
+
+/* ---------- How to stand out here (navy) ---------- */
+.co-section.co-tip {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+.co-tip .co-section__title {
+  color: var(--white);
+}
+.co-tip__text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gray);
+}
+.co-tip__text strong {
+  color: var(--white);
+}
+.co-tip .btn {
+  background: var(--accent);
+  color: var(--navy);
+}
+.co-tip .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ========== Loading / empty / not found / error (both pages) ========== */
+.co-state {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--slate);
+  font-size: 14px;
+}
+.co-state h2,
+.co-state h3 {
+  font-size: 17px;
+  color: var(--navy);
+}
+.co-state .btn {
+  margin-top: 6px;
+}
+.co-state--error {
+  background: var(--co-error-bg);
+  border-color: var(--co-error-line);
+}
+.co-state--error h2,
+.co-state--error h3 {
+  color: var(--error);
+}
+/* inside a section (e.g. no open jobs): no second box */
+.co-section .co-state {
+  border: 0;
+  box-shadow: none;
+  padding: 20px 12px;
+}
+.co-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--light);
+  border-top-color: var(--teal);
+  animation: co-spin 0.8s linear infinite;
+}
+@keyframes co-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 900px) {
+  .co-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .co-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .card.co-filters {
+    grid-template-columns: 1fr;
+  }
+  .co-grid {
+    grid-template-columns: 1fr;
+  }
+  .co-head .title {
+    font-size: 24px;
+  }
+  .co-count {
+    margin-left: 0;
+    width: 100%;
+  }
+  /* header: logo + name, website button underneath */
+  .co-hero__banner {
+    height: 80px;
+  }
+  .co-hero__body {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 0 18px 18px;
+  }
+  .co-hero .co-logo {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+  }
+  .co-hero h1 {
+    font-size: 22px;
+  }
+  .co-hero__text {
+    flex-basis: calc(100% - 90px);
+    padding-top: 8px;
+  }
+  .co-website {
+    width: 100%;
+    justify-content: center;
+  }
+  /* job rows: ring + text on top, full-width button underneath */
+  .co-job {
+    flex-wrap: wrap;
+  }
+  .co-job__btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-card,
+  .co-hero,
+  .co-section {
+    animation: none;
+    transition: none;
+  }
+  .co-card:hover {
+    transform: none;
+  }
+  .co-spinner {
+    animation-duration: 2s;
+  }
+}
