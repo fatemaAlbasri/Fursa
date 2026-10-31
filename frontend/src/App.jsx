@@ -9,6 +9,8 @@ import ResetPassword from './shared/pages/ResetPassword.jsx';
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
 import JobDetails from './jobseeker/pages/JobDetails.jsx';
 import AllJobs from './jobseeker/pages/AllJobs.jsx';
+import Companies from './jobseeker/pages/Companies.jsx';
+import CompanyDetails from './jobseeker/pages/CompanyDetails.jsx';
 import UserInitials from './jobseeker/components/UserInitials.jsx';
 import { NavbarAccount } from './shared/components/Navbar.jsx';
 import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/components/icons.jsx';
@@ -16,7 +18,7 @@ import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/componen
 // Job seeker menu. `soon` = shown in the menu but not built yet, so it can't be clicked.
 const SEEKER_LINKS = [
   { to: '/jobseeker/jobs', label: 'Jobs for you', icon: <HomeIcon /> },
-  { label: 'Companies', icon: <BuildingIcon />, soon: true },
+  { to: '/jobseeker/companies', label: 'Companies', icon: <BuildingIcon /> },
   { label: 'AI CV Optimizer', icon: <SparkleIcon />, soon: true },
   { label: 'My applications', icon: <FileIcon />, soon: true }
 ];
@@ -47,12 +49,15 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 
-      {/* Job seeker pages: shared Navbar (only Jobs for you works so far) + bell / profile */}
+      {/* Job seeker pages: shared Navbar (Jobs for you and Companies work so far) + bell / profile */}
       <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} />} />}>
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
         <Route path="/jobseeker/jobs/all" element={<AllJobs />} />
         {/* :id = the job's real id, e.g. /jobseeker/jobs/3 */}
         <Route path="/jobseeker/jobs/:id" element={<JobDetails />} />
+        <Route path="/jobseeker/companies" element={<Companies />} />
+        {/* :id = the company's real id, e.g. /jobseeker/companies/2 */}
+        <Route path="/jobseeker/companies/:id" element={<CompanyDetails />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route path="/jobseeker" element={<Navigate to="/jobseeker/jobs" replace />} />
