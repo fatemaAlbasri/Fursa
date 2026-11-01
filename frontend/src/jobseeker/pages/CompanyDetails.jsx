@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
-import { formatJobType, formatWorkMode, formatDeadline } from '../utils/jobFormat.js'
+import { formatJobType, formatWorkMode, formatDeadline } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
 import '../styles/Companies.css'
 

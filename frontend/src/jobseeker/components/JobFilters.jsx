@@ -1,4 +1,4 @@
-import { formatJobType, formatWorkMode } from '../utils/jobFormat.js'
+import { formatJobType, formatWorkMode } from '../../shared/utils/jobFormat.js'
 
 // Search + filters box shared by Jobs for you and All jobs.
 // The backend returns all open jobs, so filtering happens here in the browser (filterJobs).

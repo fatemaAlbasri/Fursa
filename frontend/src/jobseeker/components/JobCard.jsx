@@ -6,7 +6,7 @@ import {
   formatDeadline,
   daysLeft,
   daysLeftText
-} from '../utils/jobFormat.js'
+} from '../../shared/utils/jobFormat.js'
 import CompanyLogo from './CompanyLogo.jsx'
 
 // One job, shown two ways with the same information:

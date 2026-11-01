@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { greeting } from '../../shared/utils/jobFormat.js'
-import useOpenJobs from '../../shared/utils/useOpenJobs.js'
+import useOpenJobs from '../utils/useOpenJobs.js'
 import JobFilters, { EMPTY_FILTERS, filterJobs } from '../components/JobFilters.jsx'
 import JobResults from '../components/JobResults.jsx'
 import JobCard from '../components/JobCard.jsx'
