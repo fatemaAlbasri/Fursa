@@ -120,7 +120,7 @@ export default function JobView({ startEditing = false }) {
   const roles = splitLines(job.responsibilities)
   const isClosed = job.status === 'closed'
   const isDraft = job.status === 'draft'
-  const left = daysLeft(job.deadline)
+  const left = Math.max(0, daysLeft(job.deadline))
 
   // Buttons
   // "Save changes" in the edit form
