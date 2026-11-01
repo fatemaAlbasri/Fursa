@@ -1629,6 +1629,74 @@ button {
 .topbar .link--light {
   color: var(--brand-accent);
 }
+/* optional icon before a link's label */
+.topbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar__link svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+/* page not built yet: looks like the other links but can't be clicked */
+.topbar__link--soon {
+  cursor: default;
+}
+.topbar__link--soon:hover {
+  background: none;
+  color: var(--brand-gray);
+}
+
+/* signed-in right side: bell + profile (visual only for now) */
+.topbar__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar__bell {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+}
+.topbar__bell svg {
+  width: 19px;
+  height: 19px;
+}
+.topbar__profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 16px 4px 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 700;
+}
+.topbar__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--brand-accent);
+  color: var(--brand-navy);
+  font-size: 14px;
+  font-weight: 700;
+}
+@media (max-width: 420px) {
+  /* small phones: avatar only, so the logo and bell still fit on one row */
+  .topbar__profile {
+    padding-right: 4px;
+    font-size: 0;
+  }
+}
 
 
 /* ===== Sign in / sign up animations ===== */

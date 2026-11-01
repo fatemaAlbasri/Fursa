@@ -1,24 +1,36 @@
-import { Routes, Route, Navigate, Link } from 'react-router-dom'
-import SignIn from './shared/pages/SignIn.jsx'
-import Signup from './shared/pages/Signup.jsx'
-import Layout from './shared/components/Layout.jsx'
-import Landing from './shared/pages/Landing.jsx'
-import ForgotPassword from './shared/pages/ForgotPassword.jsx'
-import ChangePassword from './shared/pages/ChangePassword.jsx'
-import ResetPassword from './shared/pages/ResetPassword.jsx'
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import SignIn from './shared/pages/SignIn.jsx';
+import Signup from './shared/pages/Signup.jsx';
+import Layout from './shared/components/Layout.jsx';
+import Landing from './shared/pages/Landing.jsx';
+import ForgotPassword from './shared/pages/ForgotPassword.jsx';
+import ChangePassword from './shared/pages/ChangePassword.jsx';
+import ResetPassword from './shared/pages/ResetPassword.jsx';
 
+import CompanyLayout from './company/CompanyLayout.jsx';
+import PostJob from './company/pages/PostJob.jsx';
+import JobView from './company/pages/JobView.jsx';
+import RejectApplicants from './company/pages/RejectApplicants.jsx';
+import Applicants from './company/pages/Applicants.jsx';
+import CompanyHome from './company/pages/CompanyHome.jsx';
 
-import CompanyLayout from './company/CompanyLayout.jsx'
-import PostJob from './company/pages/PostJob.jsx'
-import JobView from './company/pages/JobView.jsx'
-import RejectApplicants from './company/pages/RejectApplicants.jsx'
-import Applicants from './company/pages/Applicants.jsx'
-import CompanyHome from './company/pages/CompanyHome.jsx'
+import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
+import JobDetails from './jobseeker/pages/JobDetails.jsx';
+import AllJobs from './jobseeker/pages/AllJobs.jsx';
+import Companies from './jobseeker/pages/Companies.jsx';
+import CompanyDetails from './jobseeker/pages/CompanyDetails.jsx';
+import UserInitials from './jobseeker/components/UserInitials.jsx';
+import { NavbarAccount } from './shared/components/Navbar.jsx';
+import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/components/icons.jsx';
 
+// Job seeker menu. `soon` = shown in the menu but not built yet, so it can't be clicked.
+const SEEKER_LINKS = [
+  { to: '/jobseeker/jobs', label: 'Jobs for you', icon: <HomeIcon /> },
+  { to: '/jobseeker/companies', label: 'Companies', icon: <BuildingIcon /> },
+  { label: 'AI CV Optimizer', icon: <SparkleIcon />, soon: true },
+  { label: 'My applications', icon: <FileIcon />, soon: true }
+];
 
-import JobsForYou from './jobseeker/pages/JobsForYou.jsx'
-import JobDetails from './jobseeker/pages/JobDetails.jsx'
-import UserInitials from './jobseeker/components/UserInitials.jsx'
 
 export default function App() {
   return (
@@ -72,18 +84,16 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 
-      {/* Job seeker pages: shared Navbar with only the pages that exist so far */}
-      <Route
-        element={
-          <Layout
-            links={[{ to: '/jobseeker/jobs', label: 'Jobs for you' }]}
-            right={<UserInitials />}
-          />
-        }
-      >
+      {/* Job seeker pages: shared Navbar (Jobs for you and Companies work so far) + bell / profile */}
+      <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} />} />}>
+
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
+        <Route path="/jobseeker/jobs/all" element={<AllJobs />} />
         {/* :id = the job's real id, e.g. /jobseeker/jobs/3 */}
         <Route path="/jobseeker/jobs/:id" element={<JobDetails />} />
+        <Route path="/jobseeker/companies" element={<Companies />} />
+        {/* :id = the company's real id, e.g. /jobseeker/companies/2 */}
+        <Route path="/jobseeker/companies/:id" element={<CompanyDetails />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
