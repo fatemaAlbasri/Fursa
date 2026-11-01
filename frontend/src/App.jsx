@@ -6,6 +6,14 @@ import Landing from './shared/pages/Landing.jsx';
 import ForgotPassword from './shared/pages/ForgotPassword.jsx';
 import ChangePassword from './shared/pages/ChangePassword.jsx';
 import ResetPassword from './shared/pages/ResetPassword.jsx';
+
+import CompanyLayout from './company/CompanyLayout.jsx';
+import PostJob from './company/pages/PostJob.jsx';
+import JobView from './company/pages/JobView.jsx';
+import RejectApplicants from './company/pages/RejectApplicants.jsx';
+import Applicants from './company/pages/Applicants.jsx';
+import CompanyHome from './company/pages/CompanyHome.jsx';
+
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
 import JobDetails from './jobseeker/pages/JobDetails.jsx';
 import AllJobs from './jobseeker/pages/AllJobs.jsx';
@@ -22,6 +30,7 @@ const SEEKER_LINKS = [
   { label: 'AI CV Optimizer', icon: <SparkleIcon />, soon: true },
   { label: 'My applications', icon: <FileIcon />, soon: true }
 ];
+
 
 export default function App() {
   return (
@@ -41,16 +50,43 @@ export default function App() {
       </Route>
       {/* Change password: same page for both roles, each with its own "Back to profile" link
           (temporary: points to the role's home until the profile pages exist) */}
-      <Route element={<Layout right={<Link to="/jobseeker" className="back-link">← Back to profile</Link>} />}>
-        <Route path="/jobseeker/change-password" element={<ChangePassword role="jobseeker" />} />
+      <Route
+        element={
+          <Layout
+            right={
+              <Link to="/jobseeker" className="back-link">
+                ← Back to profile
+              </Link>
+            }
+          />
+        }
+      >
+        <Route
+          path="/jobseeker/change-password"
+          element={<ChangePassword role="jobseeker" />}
+        />
       </Route>
-      <Route element={<Layout right={<Link to="/company" className="back-link">← Back to profile</Link>} />}>
-        <Route path="/company/change-password" element={<ChangePassword role="company" />} />
+      <Route
+        element={
+          <Layout
+            right={
+              <Link to="/company" className="back-link">
+                ← Back to profile
+              </Link>
+            }
+          />
+        }
+      >
+        <Route
+          path="/company/change-password"
+          element={<ChangePassword role="company" />}
+        />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* Job seeker pages: shared Navbar (Jobs for you and Companies work so far) + bell / profile */}
       <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} />} />}>
+
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
         <Route path="/jobseeker/jobs/all" element={<AllJobs />} />
         {/* :id = the job's real id, e.g. /jobseeker/jobs/3 */}
@@ -60,11 +96,20 @@ export default function App() {
         <Route path="/jobseeker/companies/:id" element={<CompanyDetails />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
-      <Route path="/jobseeker" element={<Navigate to="/jobseeker/jobs" replace />} />
+      <Route
+        path="/jobseeker"
+        element={<Navigate to="/jobseeker/jobs" replace />}
+      />
 
-      {/* edit routes after adding pages*/}
-      <Route path="/company" element={<h1>Company home</h1>} />
-
+      {/* Company (employer) pages — all share the employer top bar */}
+      <Route path="/company" element={<CompanyLayout />}>
+        <Route index element={<CompanyHome />} />
+        <Route path="post-job" element={<PostJob />} />
+        <Route path="jobs/:id" element={<JobView />} />
+        <Route path="jobs/:id/edit" element={<JobView startEditing />} />
+        <Route path="jobs/:id/reject" element={<RejectApplicants />} />
+        <Route path="applicants" element={<Applicants />} />
+      </Route>
     </Routes>
-  );
+  )
 }

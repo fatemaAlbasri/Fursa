@@ -1,0 +1,2 @@
+/* Company layout — the wrapper around every /company page */
+.company-page { min-height: 100vh; display: flex; flex-direction: column; }

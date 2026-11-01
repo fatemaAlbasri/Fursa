@@ -14,6 +14,12 @@ router.get('/mine', requireAuth, requireRole('employer'), JobController.getCompa
 // GET /api/jobs/mine/:id  (company) 
 router.get('/mine/:id', requireAuth, requireRole('employer'), JobController.getCompanyOneJob)
 
+// GET /api/jobs/mine/:id/applicants  (company)
+router.get('/mine/:id/applicants', requireAuth, requireRole('employer'), JobController.getApplicants)
+
+// PATCH /api/jobs/mine/:id/applicants  (company) → shortlist selected
+router.patch('/mine/:id/applicants', requireAuth, requireRole('employer'), JobController.updateApplicants)
+
 // GET /api/jobs/:id  (seeker) 
 router.get('/:id', requireAuth, requireRole('seeker'), JobController.getOneJob)
 
@@ -25,6 +31,9 @@ router.put('/mine/:id', requireAuth, requireRole('employer'), JobController.edit
 
 // DELETE /api/jobs/mine/:id  (company)
 router.delete('/mine/:id', requireAuth, requireRole('employer'), JobController.deleteJob)
+
+// PATCH /api/jobs/mine/:id/close  (company)
+router.patch('/mine/:id/close', requireAuth, requireRole('employer'), JobController.closeJob)
 
 
 

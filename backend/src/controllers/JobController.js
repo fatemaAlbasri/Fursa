@@ -17,10 +17,10 @@ const getJobs = async (req, res, next) => {
 }
 
 // GET /api/jobs/mine → view only their jobs (company)
-const getCompanyJobs = async (req, res, next) =>{
+const getCompanyJobs = async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      `SELECT j.*
+      `SELECT j.*, (SELECT COUNT(*)::int FROM applications a WHERE a.job_id = j.id) AS applicants
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
         WHERE c.user_id = $1
@@ -57,7 +57,7 @@ const parseJobId = (req) => {
 }
 
 // GET /api/jobs/:id → view one job (jobseeker)
-const getOneJob= async(req, res, next) => {
+const getOneJob = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
     if (!jobId) {
@@ -84,7 +84,7 @@ const getOneJob= async(req, res, next) => {
 }
 
 // GET /api/jobs/mine/:id → view one job (company)
-const getCompanyOneJob = async(req, res, next) =>{
+const getCompanyOneJob = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
     if (!jobId) {
@@ -102,13 +102,30 @@ const getCompanyOneJob = async(req, res, next) =>{
 
     const job = rows[0]
     delete job.jd_embedding
+    job.stats = await jobStats(jobId)
     res.json({ job })
   } catch (err) {
     next(err)
   }
 }
 
-const seekerJobInfo = async(seekerId, jobId) => {
+// Numbers for the stat boxes on the company "View job" page
+// applicants = everyone who applied, qualified = has every must-have (match_scores.is_qualified),
+// newCount = still 'applied' (not reviewed yet)
+const jobStats = async (jobId) => {
+  const { rows } = await db.query(
+    `SELECT COUNT(*)::int AS applicants,
+            COUNT(*) FILTER (WHERE ms.is_qualified)::int AS qualified,
+            COUNT(*) FILTER (WHERE a.status = 'applied')::int AS "newCount"
+       FROM applications a
+       LEFT JOIN match_scores ms ON ms.job_id = a.job_id AND ms.seeker_id = a.seeker_id
+      WHERE a.job_id = $1`,
+    [jobId]
+  )
+  return rows[0]
+}
+
+const seekerJobInfo = async (seekerId, jobId) => {
   const { rows } = await db.query(
     `SELECT sp.major, sp.years_experience,
             COALESCE((SELECT array_agg(skill_id) FROM seeker_skills WHERE seeker_id = $1), '{}') AS skill_ids,
@@ -122,7 +139,6 @@ const seekerJobInfo = async(seekerId, jobId) => {
   return rows[0] || null
 }
 
-
 // Checks the "Post a job" body (used by createJob and editJob)
 const readJobBody = (body) => {
   const errors = {}
@@ -135,27 +151,52 @@ const readJobBody = (body) => {
   const language = (body.language || '').trim() || null
   const { job_type, work_mode, deadline } = body
   const major_must_have = body.major_must_have === true
-  const salary = body.salary == null || body.salary === '' ? null : Number(body.salary)
-  const min_years = body.min_years == null || body.min_years === '' ? 0 : Number(body.min_years)
-  const max_years = body.max_years == null || body.max_years === '' ? null : Number(body.max_years)
+  const salary =
+    body.salary == null || body.salary === '' ? null : Number(body.salary)
+  const min_years =
+    body.min_years == null || body.min_years === '' ? 0 : Number(body.min_years)
+  const max_years =
+    body.max_years == null || body.max_years === ''
+      ? null
+      : Number(body.max_years)
   const status = body.status === 'draft' ? 'draft' : 'open'
+  const isDraft = status === 'draft'
 
   // errors
   if (!title) errors.title = 'Title is required'
   else if (title.length > 150) errors.title = 'Title is too long'
-  if (!description) errors.description = 'Description is required'
-  if (!location) errors.location = 'Location is required'
+  if (!isDraft) {
+    if (!description) errors.description = 'Description is required'
+    if (!location) errors.location = 'Location is required'
+  }
 
-  if (!['internship', 'full_time', 'part_time'].includes(job_type)) errors.job_type = 'Pick a job type'
-  if (!['onsite', 'remote', 'hybrid'].includes(work_mode)) errors.work_mode = 'Pick a work mode'
+  if (
+    (!isDraft || job_type) &&
+    !['internship', 'full_time', 'part_time'].includes(job_type)
+  )
+    errors.job_type = 'Pick a job type'
+  if (
+    (!isDraft || work_mode) &&
+    !['onsite', 'remote', 'hybrid'].includes(work_mode)
+  )
+    errors.work_mode = 'Pick a work mode'
 
   const today = new Date().toISOString().slice(0, 10)
-  if (!deadline || isNaN(new Date(deadline))) errors.deadline = 'Deadline is required'
-  else if (String(deadline).slice(0, 10) < today) errors.deadline = 'Deadline must be today or later'
+  if (!deadline) {
+    if (!isDraft) errors.deadline = 'Deadline is required'
+  } else if (isNaN(new Date(deadline)))
+    errors.deadline = 'Deadline is not a valid date'
+  else if (String(deadline).slice(0, 10) < today)
+    errors.deadline = 'Deadline must be today or later'
 
-  if (salary !== null && (isNaN(salary) || salary < 0)) errors.salary = 'Salary must be 0 or more'
-  if (!Number.isInteger(min_years) || min_years < 0) errors.min_years = 'Must be 0 or more'
-  if (max_years !== null && (!Number.isInteger(max_years) || max_years < min_years)) {
+  if (salary !== null && (isNaN(salary) || salary < 0))
+    errors.salary = 'Salary must be 0 or more'
+  if (!Number.isInteger(min_years) || min_years < 0)
+    errors.min_years = 'Must be 0 or more'
+  if (
+    max_years !== null &&
+    (!Number.isInteger(max_years) || max_years < min_years)
+  ) {
     errors.max_years = 'Must be at least the minimum years'
   }
 
@@ -167,11 +208,23 @@ const readJobBody = (body) => {
     seen.add(name.toLowerCase())
     skills.push({ name, is_required: skill.is_required === true })
   }
-  if (skills.length === 0) errors.skills = 'Add at least one skill'
+  if (!isDraft && skills.length === 0) errors.skills = 'Add at least one skill'
 
   const job = {
-    title, description, location, responsibilities, field, language, job_type, work_mode,
-    deadline, major_must_have, salary, min_years, max_years, status
+    title,
+    description: description || null,
+    location: location || null,
+    responsibilities,
+    field,
+    language,
+    job_type: job_type || null,
+    work_mode: work_mode || null,
+    deadline: deadline || null,
+    major_must_have,
+    salary,
+    min_years,
+    max_years,
+    status
   }
   return { job, skills, errors }
 }
@@ -188,7 +241,11 @@ const planLimitReached = async (client, companyId) => {
     [companyId]
   )
   const plan = rows[0]
-  if (plan && plan.max_active_jobs !== null && plan.active_jobs >= plan.max_active_jobs) {
+  if (
+    plan &&
+    plan.max_active_jobs !== null &&
+    plan.active_jobs >= plan.max_active_jobs
+  ) {
     return plan.max_active_jobs
   }
   return null
@@ -225,7 +282,9 @@ const loadJob = async (jobId) => {
 const createJob = async (req, res, next) => {
   const { job, skills, errors } = readJobBody(req.body || {})
   if (Object.keys(errors).length) {
-    return res.status(400).json({ error: 'Please fix the highlighted fields', fields: errors })
+    return res
+      .status(400)
+      .json({ error: 'Please fix the highlighted fields', fields: errors })
   }
 
   let client
@@ -261,9 +320,23 @@ const createJob = async (req, res, next) => {
                          language, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING id`,
-      [companyId, job.job_type, job.work_mode, job.title, job.description, job.responsibilities,
-       job.location, job.salary, job.deadline, job.field, job.major_must_have, job.min_years,
-       job.max_years, job.language, job.status]
+      [
+        companyId,
+        job.job_type,
+        job.work_mode,
+        job.title,
+        job.description,
+        job.responsibilities,
+        job.location,
+        job.salary,
+        job.deadline,
+        job.field,
+        job.major_must_have,
+        job.min_years,
+        job.max_years,
+        job.language,
+        job.status
+      ]
     )
     const jobId = rows[0].id
 
@@ -289,7 +362,9 @@ const editJob = async (req, res, next) => {
 
   const { job, skills, errors } = readJobBody(req.body || {})
   if (Object.keys(errors).length) {
-    return res.status(400).json({ error: 'Please fix the highlighted fields', fields: errors })
+    return res
+      .status(400)
+      .json({ error: 'Please fix the highlighted fields', fields: errors })
   }
 
   let client
@@ -316,7 +391,6 @@ const editJob = async (req, res, next) => {
     }
     const oldJob = found[0]
 
-    
     if (job.status === 'open' && oldJob.status !== 'open') {
       const max = await planLimitReached(client, oldJob.company_id)
       if (max !== null) {
@@ -331,9 +405,23 @@ const editJob = async (req, res, next) => {
               location = $7, salary = $8, deadline = $9, field = $10, major_must_have = $11,
               min_years = $12, max_years = $13, language = $14, status = $15
         WHERE id = $1`,
-      [jobId, job.job_type, job.work_mode, job.title, job.description, job.responsibilities,
-       job.location, job.salary, job.deadline, job.field, job.major_must_have,
-       job.min_years, job.max_years, job.language, job.status]
+      [
+        jobId,
+        job.job_type,
+        job.work_mode,
+        job.title,
+        job.description,
+        job.responsibilities,
+        job.location,
+        job.salary,
+        job.deadline,
+        job.field,
+        job.major_must_have,
+        job.min_years,
+        job.max_years,
+        job.language,
+        job.status
+      ]
     )
 
     await client.query(`DELETE FROM job_skills WHERE job_id = $1`, [jobId])
@@ -343,7 +431,9 @@ const editJob = async (req, res, next) => {
 
     await client.query('COMMIT')
 
-    res.json({ job: await loadJob(jobId) })
+    const updated = await loadJob(jobId)
+    updated.stats = await jobStats(jobId)
+    res.json({ job: updated })
   } catch (err) {
     await client.query('ROLLBACK')
     next(err)
@@ -352,7 +442,108 @@ const editJob = async (req, res, next) => {
   }
 }
 
-// DELETE /api/jobs/mine/:id → delete job (company) -not in frontend-
+// PATCH /api/jobs/mine/:id/close → close job (company)
+const closeJob = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) {
+      return res.status(400).json({ error: 'Invalid job id' })
+    }
+
+    const { rows } = await db.query(
+      `SELECT j.id, j.status
+         FROM jobs j
+         JOIN companies c ON c.id = j.company_id
+        WHERE j.id = $1 AND c.user_id = $2`,
+      [jobId, req.user.id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' })
+    }
+    if (rows[0].status === 'draft') {
+      return res
+        .status(409)
+        .json({ error: 'A draft cannot be closed. Delete it instead.' })
+    }
+    if (rows[0].status === 'closed') {
+      return res.status(409).json({ error: 'This job is already closed.' })
+    }
+
+    await db.query(`UPDATE jobs SET status = 'closed' WHERE id = $1`, [jobId])
+
+    const updated = await loadJob(jobId)
+    updated.stats = await jobStats(jobId)
+    res.json({ job: updated })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// GET /api/jobs/mine/:id/applicants → applicants of one job, best match first (company)
+const getApplicants = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) {
+      return res.status(400).json({ error: 'Invalid job id' })
+    }
+
+    const { rows } = await db.query(
+      `SELECT a.id, a.status, a.applied_at, u.first_name, u.last_name,
+              m.score, COALESCE(m.is_qualified, true) AS is_qualified,
+              COALESCE(m.breakdown->'missing', '[]') AS missing
+         FROM applications a
+         JOIN jobs j ON j.id = a.job_id
+         JOIN companies c ON c.id = j.company_id
+         JOIN users u ON u.id = a.seeker_id
+         LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+        WHERE a.job_id = $1 AND c.user_id = $2
+        ORDER BY m.score DESC NULLS LAST, a.applied_at`,
+      [jobId, req.user.id]
+    )
+    res.json({ applicants: rows })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// PATCH /api/jobs/mine/:id/applicants → shortlist the ticked applicants (company)
+// body: { ids: [1, 2], status: 'shortlisted' }
+const updateApplicants = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(Number).filter(Number.isInteger) : []
+    const { status } = req.body || {}
+    if (!jobId || ids.length === 0) {
+      return res.status(400).json({ error: 'Pick at least one applicant' })
+    }
+    if (status !== 'shortlisted') {
+      return res.status(400).json({ error: 'Invalid status' })
+    }
+
+    // Change the status and keep a history row for each changed application
+    const { rows } = await db.query(
+      `WITH old AS (
+         SELECT a.id, a.status
+           FROM applications a
+           JOIN jobs j ON j.id = a.job_id
+           JOIN companies c ON c.id = j.company_id
+          WHERE a.id = ANY($1::int[]) AND a.job_id = $2 AND c.user_id = $3 AND a.status <> $4
+       ),
+       changed AS (
+         UPDATE applications SET status = $4 WHERE id IN (SELECT id FROM old) RETURNING id
+       )
+       INSERT INTO application_history (application_id, changed_by, from_status, to_status)
+       SELECT id, $3, status, $4 FROM old
+       RETURNING application_id AS id`,
+      [ids, jobId, req.user.id, status]
+    )
+    res.json({ updated: rows.map((r) => r.id), status })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// DELETE /api/jobs/mine/:id → delete job (company)
 const deleteJob = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
@@ -372,14 +563,20 @@ const deleteJob = async (req, res, next) => {
     }
 
     if (rows[0].applicants > 0) {
-      return res.status(409).json({ error: 'This job has applicants. Close it instead of deleting it.' })
+      return res.status(409).json({
+        error: 'This job has applicants. Close it instead of deleting it.'
+      })
     }
 
     await db.query(`DELETE FROM jobs WHERE id = $1`, [jobId])
-    res.status(204).end()
+    res.json({ message: 'Job deleted successfully' })
   } catch (err) {
     next(err)
   }
 }
 
-module.exports = { getJobs, getCompanyJobs, getOneJob, getCompanyOneJob, createJob, editJob, deleteJob }
+ module.exports = {
+  getJobs, getCompanyJobs, getOneJob, getCompanyOneJob,
+  createJob, editJob, deleteJob,
+  closeJob, getApplicants, updateApplicants
+}

@@ -1,0 +1,96 @@
+/* Job form — shared by Post a job and Edit job.
+   Cards, fields, pills, the BHD box and buttons come from shared/styles/index.css. */
+.jf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); align-items: start; }
+/* stacked: Job details on top, Requirements under it, both full width */
+.jf-grid--stacked { grid-template-columns: 1fr; }
+.jf-grid--stacked .jf-skills { max-height: none; }
+/* Job type | Work mode side by side, label above the pills */
+.jf-grid--stacked .jf-choices { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.jf-grid--stacked .jf-choices .field { flex-direction: column; align-items: flex-start; justify-content: flex-start; }
+.jf-choices .choice-box__chips { gap: 6px; }
+.jf-choices .choice { padding: 7px 13px; }
+.jf-step { display: flex; align-items: center; gap: 9px; font-size: var(--section-size); font-weight: 700; margin: 0; }
+.jf-step span {
+  width: 24px; height: 24px; border-radius: 999px; background: var(--teal); color: var(--white);
+  font-size: 13px; display: grid; place-items: center;
+}
+.jf-note { margin-top: 4px; }
+.jf-note b { color: var(--teal); }
+.jf-choices { display: flex; flex-direction: column; gap: var(--gap); }
+.jf-choices .field { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+
+/* skills: one full-width row each — chip on the left, Must-have tick box + × on the right */
+.jf-skills { display: flex; flex-direction: column; gap: 6px; max-height: 130px; overflow-y: auto; padding-right: 2px; }
+.jf-skill {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%;
+  padding: 5px 8px 5px 10px; border: 1px solid var(--gray); border-radius: var(--radius-sm); background: var(--bg); min-height: 40px;
+}
+/* "+ Add skill from list" box: dashed teal border, light background */
+.field .jf-skill-add .skills__box { border: 1.5px dashed var(--accent); background: var(--light); }
+.field .jf-skill-add .skills__box input.skills__input::placeholder { color: var(--teal); opacity: 1; font-weight: 600; }
+.field .jf-skill-add .skills__box:focus-within { border-style: solid; border-color: var(--teal); }
+.jf-skill__right { display: flex; align-items: center; gap: 8px; }
+.jf-must { display: flex; align-items: center; gap: 7px; font-size: var(--label-size); font-weight: 600; cursor: pointer; }
+.field .jf-must input[type="checkbox"] {
+  width: 17px; height: 17px; padding: 0; margin: 0; flex: none; border-radius: 4px;
+  accent-color: var(--teal); cursor: pointer; box-shadow: none;
+}
+.jf-remove {
+  border: 0; background: none; color: var(--slate); font-size: 18px; line-height: 1; cursor: pointer;
+  width: 28px; height: 28px; border-radius: 6px;
+}
+.jf-remove:hover { background: var(--white); color: var(--navy); }
+
+.jf-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; }
+
+@media (max-width: 640px) {
+  .jf-grid--stacked .jf-choices { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .jf-grid { grid-template-columns: 1fr; }
+  .jf-skills { max-height: none; }
+}
+
+/* ===== Edit job look (edit prop) ===== */
+.jf-grid--edit .card { padding: 22px 24px; }
+.jf-grid--edit .jf-step { font-size: 17px; }
+.jf-grid--edit .jf-choices .field__label { margin-bottom: 2px; }
+.jf-grid--edit .jf-skills { gap: 8px; }
+.jf-grid--edit .jf-skill { min-height: 48px; padding: 6px 10px 6px 12px; }
+.jf-note .jf-note--navy { color: var(--navy); }
+/* Must-have as a toggle button: red when on */
+.jf-toggle {
+  font: inherit; font-size: var(--label-size); font-weight: 700; cursor: pointer;
+  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--white); color: var(--slate);
+}
+.jf-toggle:hover { border-color: var(--slate); }
+.jf-toggle--on { background: rgba(217, 45, 32, .08); border-color: rgba(217, 45, 32, .45); color: var(--error); }
+.jf-toggle--on:hover { border-color: var(--error); }
+/* Must-have checkbox under the Major box */
+.field .jf-check {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; cursor: pointer;
+  font-size: var(--label-size); font-weight: 700; color: var(--slate);
+}
+.field .jf-check input { width: auto; margin: 0; accent-color: var(--teal); cursor: pointer; }
+/* × in a small bordered square */
+.jf-remove--box { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--white); font-size: 16px; }
+.jf-remove--box:hover { background: var(--bg); }
+/* Cancel: white with a grey border */
+.btn.jf-cancel { background: var(--white); border-color: var(--line); color: var(--navy); padding: 12px 24px; }
+.btn.jf-cancel:hover { background: var(--bg); }
+.jf-grid--edit .btn--primary { padding: 12px 28px; }
+/* ---------- Save button while saving ---------- */
+.jf-submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.jf-submit:disabled { opacity: .85; cursor: progress; } /* stay readable, not faded like other disabled buttons */
+
+.jf-btn-spinner {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: var(--white);          /* white circle that turns, on the teal button */
+  animation: jf-spin .7s linear infinite;
+}
+@keyframes jf-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .jf-btn-spinner { animation-duration: 2s; }
+}

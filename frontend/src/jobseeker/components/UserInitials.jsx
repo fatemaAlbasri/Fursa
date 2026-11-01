@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../shared/api.js'
-import { userInitials } from '../utils/jobFormat.js'
+import { userInitials } from '../../shared/utils/jobFormat.js'
 
 // "FA" for the avatar circle in the shared Navbar (<NavbarAccount avatar={<UserInitials />} />).
 // The circle itself is styled by the Navbar (.topbar__avatar in index.css).
