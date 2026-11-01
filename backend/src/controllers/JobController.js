@@ -371,6 +371,41 @@ const editJob = async (req, res, next) => {
   }
 }
 
+// PATCH /api/jobs/mine/:id/close → close job (company)
+const closeJob = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) {
+      return res.status(400).json({ error: 'Invalid job id' })
+    }
+
+    const { rows } = await db.query(
+      `SELECT j.id, j.status
+         FROM jobs j
+         JOIN companies c ON c.id = j.company_id
+        WHERE j.id = $1 AND c.user_id = $2`,
+      [jobId, req.user.id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' })
+    }
+    if (rows[0].status === 'draft') {
+      return res.status(409).json({ error: 'A draft cannot be closed. Delete it instead.' })
+    }
+    if (rows[0].status === 'closed') {
+      return res.status(409).json({ error: 'This job is already closed.' })
+    }
+
+    await db.query(`UPDATE jobs SET status = 'closed' WHERE id = $1`, [jobId])
+
+    const updated = await loadJob(jobId)
+    updated.stats = await jobStats(jobId)
+    res.json({ job: updated })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // DELETE /api/jobs/mine/:id → delete job (company) 
 const deleteJob = async (req, res, next) => {
   try {
@@ -401,4 +436,4 @@ const deleteJob = async (req, res, next) => {
   }
 }
 
-module.exports = { getJobs, getCompanyJobs, getOneJob, getCompanyOneJob, createJob, editJob, deleteJob }
+module.exports = { getJobs, getCompanyJobs, getOneJob, getCompanyOneJob, createJob, editJob, deleteJob, closeJob }

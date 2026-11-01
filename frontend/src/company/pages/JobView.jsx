@@ -155,6 +155,7 @@ export default function JobView({ startEditing = false }) {
       .finally(() => setSaving(false))
   }
 
+  // Draft
   const publishDraft = () => {
     if (saving) return
     setSaving(true)
@@ -178,14 +179,28 @@ export default function JobView({ startEditing = false }) {
       .finally(() => setSaving(false))
   }
 
-  // "Close this job" in the Manage box
+  // Close job
   const closeJob = () => {
-    // TODO (backend): PATCH /api/company/jobs/:id  { status: 'closed' }
-    setJob({ ...job, status: 'closed' })
+    if (saving) return
+    setSaving(true)
+    api('/jobs/mine/' + id + '/close', { method: 'PATCH' })
+      .then((data) => {
+        setJob(data.job)
+        setNotice({
+          type: 'success',
+          text: 'Job closed. Job seekers can no longer apply.'
+        })
+      })
+      .catch((err) =>
+        setNotice({
+          type: 'error',
+          text: err.error || 'Something went wrong. Please try again.'
+        })
+      )
+      .finally(() => setSaving(false))
   }
 
-  // "Delete draft" in the Manage box
-  // DELETE /api/jobs/mine/:id
+  // Delete draft
   const deleteDraft = () => {
     setSaving(true)
     api('/jobs/mine/' + id, { method: 'DELETE' })
@@ -228,7 +243,7 @@ export default function JobView({ startEditing = false }) {
         </div>
       )}
 
-      {/* ---------- Header (navy band) ---------- */}
+      {/* ---------- Header ---------- */}
       <section className="jv-hero">
         <div className="jv-hero__text">
           <div className="jv-tags">
