@@ -11,6 +11,8 @@ import ResetPassword from './shared/pages/ResetPassword.jsx'
 import CompanyLayout from './company/CompanyLayout.jsx'
 import PostJob from './company/pages/PostJob.jsx'
 import JobView from './company/pages/JobView.jsx'
+import RejectApplicants from './company/pages/RejectApplicants.jsx'
+import Applicants from './company/pages/Applicants.jsx'
 import CompanyHome from './company/pages/CompanyHome.jsx'
 
 
@@ -95,8 +97,9 @@ export default function App() {
         <Route path="post-job" element={<PostJob />} />
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView startEditing />} />
+        <Route path="jobs/:id/reject" element={<RejectApplicants />} />
+        <Route path="applicants" element={<Applicants />} />
       </Route>
-      <Route path="/company" element={<h1>Company home</h1>} />
     </Routes>
   )
 }
