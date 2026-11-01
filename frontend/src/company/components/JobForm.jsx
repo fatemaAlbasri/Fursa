@@ -49,7 +49,6 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   const skills = form.skills;
 
   // ---------- Auto-scroll the skills list ----------
-  // When a skill is added, scroll the skills list down so the new row is visible.
   const skillList = useRef(null);
   const skillCount = useRef(skills.length);
   useEffect(() => {
@@ -61,21 +60,39 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
 
   // ---------- Update a field ----------
   const set = (key, value) => setForm({ ...form, [key]: value });
-  const change = (e) => set(e.target.name, e.target.value); // for normal inputs (uses the input's name)
+  const change = (e) => set(e.target.name, e.target.value); 
 
   // ---------- Skills ----------
-  // MultiSelect works with skill names; keep each skill's Must-have tick when the list changes.
-  // MultiSelect already blocks duplicates (any letter case).
   const setSkillNames = (names) =>
     set('skills', names.map((name) => skills.find((s) => s.name === name) || { name, must: false }));
-  // Turn Must-have on/off for one skill
   const toggleMust = (name) => set('skills', skills.map((s) => (s.name === name ? { ...s, must: !s.must } : s)));
-  // Remove one skill (the × button)
   const removeSkill = (name) => set('skills', skills.filter((s) => s.name !== name));
 
   // ---------- Check the form ----------
   // titleOnly = true → only the title is needed (used by "Save draft").
   // Returns true when there are no errors.
+
+    // error key → id of its input (top to bottom, so we scroll to the first one)
+  const FIELD_IDS = {
+    title: 'jf-title',
+    description: 'jf-desc',
+    deadline: 'jf-deadline',
+    salary: 'jf-salary',
+    major: 'jf-major',
+    language: 'jf-lang',
+    location: 'jf-loc',
+    skills: 'jf-skill',
+  };
+
+  // Scroll to the first field with an error and put the cursor in it
+  const goToFirstError = (errs) => {
+    const key = Object.keys(FIELD_IDS).find((k) => errs[k]);
+    const el = key && document.getElementById(FIELD_IDS[key]);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  };
+
   const validate = (titleOnly) => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Required';
@@ -95,6 +112,7 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     }
 
     setErrors(errs);
+    goToFirstError(errs);
     return Object.keys(errs).length === 0;
   };
 
