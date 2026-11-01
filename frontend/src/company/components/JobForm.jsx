@@ -18,7 +18,7 @@ function Field({ label, htmlFor, error, children }) {
 }
 
 // Only one pill can be on at a time.
-function ChooseOne({ id, label, options, value, onChange, hint = true }) {
+function ChooseOne({ id, label, options, value, onChange, hint = true , error}) {
   return (
     <div className="field">
       <span id={id} className="field__label">
@@ -37,6 +37,9 @@ function ChooseOne({ id, label, options, value, onChange, hint = true }) {
 })}
 
       </div>
+            
+      {error && <p className="field__error">{error}</p>}
+
     </div>
   );
 }
@@ -74,6 +77,8 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
 
     // error key → id of its input (top to bottom, so we scroll to the first one)
   const FIELD_IDS = {
+    jobType: 'lbl-type',
+    workMode: 'lbl-mode',
     title: 'jf-title',
     description: 'jf-desc',
     deadline: 'jf-deadline',
@@ -109,6 +114,10 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
       if (!form.language.trim()) errs.language = 'Required';
       if (!form.location.trim()) errs.location = 'Required';
       if (form.salary && Number.isNaN(Number(form.salary))) errs.salary = 'Numbers only';
+
+      if (!form.jobType) errs.jobType = 'Pick a job type';
+      if (!form.workMode) errs.workMode = 'Pick a work mode';
+
     }
 
     setErrors(errs);
@@ -199,9 +208,9 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
 
         <div className="jf-choices">
           <ChooseOne id="lbl-type" label="Job type" options={JOB_TYPES} hint={!edit}
-            value={form.jobType} onChange={(v) => set('jobType', v)} />
+            value={form.jobType} onChange={(v) => set('jobType', v)} error={errors.jobType}/>
           <ChooseOne id="lbl-mode" label="Work mode" options={WORK_MODES} hint={!edit}
-            value={form.workMode} onChange={(v) => set('workMode', v)} />
+            value={form.workMode} onChange={(v) => set('workMode', v)} error={errors.workMode} />
         </div>
 
         <Field label="Job title" htmlFor="jf-title" error={errors.title}>
