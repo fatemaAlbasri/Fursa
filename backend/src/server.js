@@ -3,6 +3,8 @@ require('dotenv').config()
 const app = require('./app')
 const db = require('./config/db')
 
+const autoCloseJobs = require('./services/autoCloseJobs')
+
 const PORT = process.env.PORT || 5000
 
 async function start() {
@@ -13,6 +15,10 @@ async function start() {
     console.error('Could not connect to PostgreSQL:', err.message)
     process.exit(1)
   }
+
+  // close expired jobs
+  autoCloseJobs()
+  setInterval(autoCloseJobs, 60 * 60 * 1000)
 
   app.listen(PORT, () => {
     console.log(`Fursa API running on http://localhost:${PORT}`)

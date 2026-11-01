@@ -1,0 +1,59 @@
+/* Message bar : green = success, red = error */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid;
+  font-size: 15px;
+  font-weight: 600;
+  animation: fade-in 0.2s ease both;
+}
+.notice--success {
+  background: rgba(18, 183, 106, 0.12);
+  border-color: rgba(18, 183, 106, 0.3);
+  color: #067647;
+}
+.notice--error {
+  background: #fdecea;
+  border-color: #f5c2bd;
+  color: var(--error);
+}
+
+.notice__icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--white);
+}
+.notice--success .notice__icon {
+  background: #067647;
+}
+.notice--error .notice__icon {
+  background: var(--error);
+}
+
+.notice__text {
+  flex: 1;
+}
+
+.notice__close {
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+}
+.notice__close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}

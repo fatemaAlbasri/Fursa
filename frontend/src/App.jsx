@@ -3,13 +3,17 @@ import SignIn from './shared/pages/SignIn.jsx'
 import Signup from './shared/pages/Signup.jsx'
 import Layout from './shared/components/Layout.jsx'
 import Landing from './shared/pages/Landing.jsx'
-import CompanyLayout from './company/CompanyLayout.jsx'
-import PostJob from './company/pages/PostJob.jsx'
-import JobView from './company/pages/JobView.jsx'
-
 import ForgotPassword from './shared/pages/ForgotPassword.jsx'
 import ChangePassword from './shared/pages/ChangePassword.jsx'
 import ResetPassword from './shared/pages/ResetPassword.jsx'
+
+
+import CompanyLayout from './company/CompanyLayout.jsx'
+import PostJob from './company/pages/PostJob.jsx'
+import JobView from './company/pages/JobView.jsx'
+import CompanyHome from './company/pages/CompanyHome.jsx'
+
+
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx'
 import JobDetails from './jobseeker/pages/JobDetails.jsx'
 import UserInitials from './jobseeker/components/UserInitials.jsx'
@@ -87,7 +91,7 @@ export default function App() {
 
       {/* Company (employer) pages — all share the employer top bar */}
       <Route path="/company" element={<CompanyLayout />}>
-        <Route index element={<Navigate to="post-job" replace />} />
+        <Route index element={<CompanyHome />} />
         <Route path="post-job" element={<PostJob />} />
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView startEditing />} />

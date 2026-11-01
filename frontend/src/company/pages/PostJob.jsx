@@ -1,46 +1,48 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import JobForm from '../components/JobForm.jsx';
+import { api } from '../../shared/api.js';
+import { toJobBody } from '../data/jobs.js';
+import Notice from '../../shared/components/Notice.jsx'
 
-// =====================================================================
-// "Post a job" page (/company/post-job).
-// The form itself is in components/JobForm.jsx — this page only decides
-// what happens when the employer clicks "Publish job" or "Save draft".
-// =====================================================================
 export default function PostJob() {
   const navigate = useNavigate();
+  const [saving, setSaving] = useState(false); 
+  const [notice, setNotice] = useState(null);
 
-  // Get the form ready to send: salary as a number (or null if empty) + the job status.
-  const toJob = (form, status) => ({ ...form, salary: form.salary ? Number(form.salary) : null, status });
-
-  // "Publish job" → save as active, then open the new job's page
-  const publish = (form) => {
-    const job = toJob(form, 'active');
-    // TODO (backend): POST /api/company/jobs  → returns the new job id
-    // Free plan: only 1 active job — the backend should refuse a 2nd and ask to upgrade.
-    console.log('Publish job', job);
-    const newId = 1; // demo id until the backend returns a real one
-    navigate(`/company/jobs/${newId}`, { state: { justPosted: true } }); // justPosted → shows the green banner
+  // POST /api/jobs → { job }  (then open the new job's page)
+  // Plan limit: the backend answers 403 with a message if the plan has no active jobs left.
+  const send = (form, status) => {
+    if (saving) return;
+    setSaving(true);
+    setNotice(null);
+    api('/jobs', { method: 'POST', body: toJobBody(form, status) })
+      .then((data) => {
+        const state = status === 'open' ? { justPosted: true } : { justSaved: true };
+        navigate(`/company/jobs/${data.job.id}`, { state }); 
+      })
+      .catch((err) => {
+        setNotice({ type: 'error', text: err.error || 'Could not save the job' });
+        setSaving(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+      });
   };
 
-  // "Save draft" → save as draft (only the title is required)
-  const saveDraft = (form) => {
-    const job = toJob(form, 'draft');
-    // TODO (backend): POST /api/company/jobs  { ...job, status: 'draft' }
-    console.log('Save draft', job);
-    alert('Draft saved (demo)');
-  };
+  const publish = (form) => send(form, 'open');
+  const saveDraft = (form) => send(form, 'draft');
 
   return (
     <main className="container container--form">
-      {/* page title */}
       <div className="page-head">
         <h1 className="title">Post a job or internship</h1>
         <p className="muted">Fursa will rank every applicant against these requirements.</p>
       </div>
 
-      {/* empty form (no "initial" → starts from EMPTY_JOB) */}
+      <Notice notice={notice} onClose={() => setNotice(null)} />
+
       <JobForm
         stacked
+        saving={saving}
         submitLabel="Publish job"
         onSubmit={publish}
         secondary={{ label: 'Save draft', onClick: saveDraft, checkTitleOnly: true }}

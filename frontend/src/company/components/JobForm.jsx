@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import MultiSelect from '../../shared/components/MultiSelect.jsx';
-import { JOB_TYPES, WORK_MODES, MAJORS, EXPERIENCE, LOCATIONS, LANGUAGES, EMPTY_JOB } from '../data/jobs.js';
+import { MAJORS, EXPERIENCE, LOCATIONS, LANGUAGES, EMPTY_JOB } from '../data/jobs.js';
+import { JOB_TYPES, WORK_MODES } from '../../shared/utils/jobFormat.js';
 import '../styles/JobForm.css';
 
-// =====================================================================
-// The job form — used by BOTH "Post a job" and "Edit job".
-// =====================================================================
+// job form 
 
-// One form field: label on top, the input, then a red error under it (if any).
+// to show errors
 function Field({ label, htmlFor, error, children }) {
   return (
     <div className="field">
@@ -18,47 +17,41 @@ function Field({ label, htmlFor, error, children }) {
   );
 }
 
-// "Choose one" pill buttons (used for Job type and Work mode).
 // Only one pill can be on at a time.
-function ChooseOne({ id, label, options, value, onChange, hint = true }) {
+function ChooseOne({ id, label, options, value, onChange, hint = true , error}) {
   return (
     <div className="field">
       <span id={id} className="field__label">
         {label} {hint && <span>(choose one)</span>}
       </span>
       <div role="radiogroup" aria-labelledby={id} className="choice-box__chips">
-        {options.map((opt) => {
-          const on = value === opt;
+        {Object.entries(options).map(([val, text]) => {
+          const on = value === val;
           return (
-            <button key={opt} type="button" role="radio" aria-checked={on}
-              className={on ? 'choice choice--on' : 'choice'} onClick={() => onChange(opt)}>
-              {on && <span className="choice__dot" aria-hidden="true" />}
-              {opt}
-            </button>
-          );
-        })}
+          <button key={val} type="button" role="radio" aria-checked={on}
+          className={on ? 'choice choice--on' : 'choice'} onClick={() => onChange(val)}>
+          {on && <span className="choice__dot" aria-hidden="true" />}
+      {text}
+    </button>
+  );
+})}
+
       </div>
+            
+      {error && <p className="field__error">{error}</p>}
+
     </div>
   );
 }
 
-/**
- * Props:
- *  initial      : the job to start with (empty for Post, the saved job for Edit)
- *  submitLabel  : text on the main button ("Publish job" / "Save changes")
- *  onSubmit(job): called after the form is checked
- *  secondary    : the other button { label, onClick(job), checkTitleOnly }
- *  stacked      : true = the two boxes go one under the other, full width (page scrolls)
- *  edit         : true = Edit job look (no step numbers, 3 fields per row)
- */
-export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false }) {
+
+export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false , saving=false}) {
   // ---------- Form state ----------
-  const [form, setForm] = useState({ ...EMPTY_JOB, ...initial }); // all field values
-  const [errors, setErrors] = useState({}); // e.g. { title: 'Required' }
+  const [form, setForm] = useState({ ...EMPTY_JOB, ...initial }); 
+  const [errors, setErrors] = useState({}); 
   const skills = form.skills;
 
   // ---------- Auto-scroll the skills list ----------
-  // When a skill is added, scroll the skills list down so the new row is visible.
   const skillList = useRef(null);
   const skillCount = useRef(skills.length);
   useEffect(() => {
@@ -70,21 +63,41 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
 
   // ---------- Update a field ----------
   const set = (key, value) => setForm({ ...form, [key]: value });
-  const change = (e) => set(e.target.name, e.target.value); // for normal inputs (uses the input's name)
+  const change = (e) => set(e.target.name, e.target.value); 
 
   // ---------- Skills ----------
-  // MultiSelect works with skill names; keep each skill's Must-have tick when the list changes.
-  // MultiSelect already blocks duplicates (any letter case).
   const setSkillNames = (names) =>
     set('skills', names.map((name) => skills.find((s) => s.name === name) || { name, must: false }));
-  // Turn Must-have on/off for one skill
   const toggleMust = (name) => set('skills', skills.map((s) => (s.name === name ? { ...s, must: !s.must } : s)));
-  // Remove one skill (the × button)
   const removeSkill = (name) => set('skills', skills.filter((s) => s.name !== name));
 
   // ---------- Check the form ----------
   // titleOnly = true → only the title is needed (used by "Save draft").
   // Returns true when there are no errors.
+
+    // error key → id of its input (top to bottom, so we scroll to the first one)
+  const FIELD_IDS = {
+    jobType: 'lbl-type',
+    workMode: 'lbl-mode',
+    title: 'jf-title',
+    description: 'jf-desc',
+    deadline: 'jf-deadline',
+    salary: 'jf-salary',
+    major: 'jf-major',
+    language: 'jf-lang',
+    location: 'jf-loc',
+    skills: 'jf-skill',
+  };
+
+  // Scroll to the first field with an error and put the cursor in it
+  const goToFirstError = (errs) => {
+    const key = Object.keys(FIELD_IDS).find((k) => errs[k]);
+    const el = key && document.getElementById(FIELD_IDS[key]);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  };
+
   const validate = (titleOnly) => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Required';
@@ -101,9 +114,14 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
       if (!form.language.trim()) errs.language = 'Required';
       if (!form.location.trim()) errs.location = 'Required';
       if (form.salary && Number.isNaN(Number(form.salary))) errs.salary = 'Numbers only';
+
+      if (!form.jobType) errs.jobType = 'Pick a job type';
+      if (!form.workMode) errs.workMode = 'Pick a work mode';
+
     }
 
     setErrors(errs);
+    goToFirstError(errs);
     return Object.keys(errs).length === 0;
   };
 
@@ -162,7 +180,6 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
   );
 
   const experience = (
-    /* default: "No experience" (the first option) */
     <Field label={edit ? 'Experience' : 'Experience range'} htmlFor="jf-exp">
       <select id="jf-exp" name="experience" value={form.experience} onChange={change}>
         {EXPERIENCE.map((x) => <option key={x}>{x}</option>)}
@@ -191,9 +208,9 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
 
         <div className="jf-choices">
           <ChooseOne id="lbl-type" label="Job type" options={JOB_TYPES} hint={!edit}
-            value={form.jobType} onChange={(v) => set('jobType', v)} />
+            value={form.jobType} onChange={(v) => set('jobType', v)} error={errors.jobType}/>
           <ChooseOne id="lbl-mode" label="Work mode" options={WORK_MODES} hint={!edit}
-            value={form.workMode} onChange={(v) => set('workMode', v)} />
+            value={form.workMode} onChange={(v) => set('workMode', v)} error={errors.workMode} />
         </div>
 
         <Field label="Job title" htmlFor="jf-title" error={errors.title}>
@@ -274,11 +291,15 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
       {/* =================== Buttons (under the boxes, on the right) =================== */}
       <div className="jf-actions">
         {secondary && (
-          <button type="button" className={edit ? 'btn jf-cancel' : 'btn btn--outline'} onClick={handleSecondary}>
-            {secondary.label}
+          <button type="button" className={edit ? 'btn jf-cancel' : 'btn btn--outline'}
+          onClick={handleSecondary} disabled={saving}>
+          {secondary.label}
           </button>
-        )}
-        <button type="submit" className="btn btn--primary">{submitLabel}</button>
+      )}
+        <button type="submit" className="btn btn--primary jf-submit"  disabled={saving} aria-busy={saving}>
+        {saving && <span className="jf-btn-spinner" aria-hidden="true" />}
+        {saving ? 'Saving…' : submitLabel}
+        </button>
       </div>
     </form>
   );
