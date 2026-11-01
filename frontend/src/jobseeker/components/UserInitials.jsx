@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../shared/api.js'
-import { userInitials } from '../utils/jobFormat.js'
+import { userInitials } from '../../shared/utils/jobFormat.js'
 
 // Round "FA" badge for the right side of the shared Navbar (passed as <Layout right={...} />).
 // Styled here because it is only this one small circle (brand colours from index.css).

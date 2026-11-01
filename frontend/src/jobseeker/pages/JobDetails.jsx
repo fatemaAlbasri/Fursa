@@ -9,7 +9,7 @@ import {
   daysLeftText,
   formatExperience,
   splitLines
-} from '../utils/jobFormat.js'
+} from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
 import '../styles/JobDetails.css'
 

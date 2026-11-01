@@ -9,7 +9,7 @@ import {
   daysLeft,
   daysLeftText,
   greeting
-} from '../utils/jobFormat.js'
+} from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
 import '../styles/JobsForYou.css'
 

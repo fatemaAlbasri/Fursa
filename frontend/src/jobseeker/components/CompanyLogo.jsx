@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { companyInitial } from '../utils/jobFormat.js'
+import { companyInitial } from '../../shared/utils/jobFormat.js'
 
 // Logos are saved as "/uploads/logo/..." on the backend server (not under /api)
 const SERVER = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')

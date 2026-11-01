@@ -79,3 +79,18 @@
 .btn.jf-cancel { background: var(--white); border-color: var(--line); color: var(--navy); padding: 12px 24px; }
 .btn.jf-cancel:hover { background: var(--bg); }
 .jf-grid--edit .btn--primary { padding: 12px 28px; }
+/* ---------- Save button while saving ---------- */
+.jf-submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.jf-submit:disabled { opacity: .85; cursor: progress; } /* stay readable, not faded like other disabled buttons */
+
+.jf-btn-spinner {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: var(--white);          /* white circle that turns, on the teal button */
+  animation: jf-spin .7s linear infinite;
+}
+@keyframes jf-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .jf-btn-spinner { animation-duration: 2s; }
+}
