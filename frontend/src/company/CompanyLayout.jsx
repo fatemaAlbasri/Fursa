@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import CompanyNavbar from './components/CompanyNavbar.jsx';
 import { api } from '../shared/api.js';
-import { companyInitial } from '../jobseeker/utils/jobFormat.js';
+import { companyInitial } from '../shared/utils/jobFormat.js';
 import './styles/CompanyLayout.css';
 
 // Every /company/... page = top bar + the page underneath.

@@ -1,4 +1,4 @@
-import { userInitials } from '../../jobseeker/utils/jobFormat.js';
+import { userInitials } from '../../shared/utils/jobFormat.js';
 
 // =====================================================================
 // Applicant data for the company (employer) pages.
