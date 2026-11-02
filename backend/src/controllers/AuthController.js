@@ -170,6 +170,8 @@ async function signup(req, res, next) {
     if (!clean(body.graduationStatus)) errors.graduationStatus = 'Required'
     skills = [...new Set(toList(body.skills).map(clean).filter(Boolean))]
     if (skills.length === 0) errors.skills = 'Pick at least one skill'
+    if (pickList(body.jobTypes, JOB_TYPES).length === 0) errors.jobTypes = 'Pick at least one job type'
+    if (pickList(body.workModes, WORK_MODES).length === 0) errors.workModes = 'Pick at least one work mode'
   }
 
   if (role === 'employer') {

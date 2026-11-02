@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Link, useNavigate,useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import MultiSelect from '../components/MultiSelect.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { api } from '../api.js'
@@ -19,7 +19,7 @@ const INDUSTRIES = [
   'Consulting',
   'Healthcare',
   'Retail',
-  'Government',
+  'Government'
 ]
 const LOCATIONS = [
   'Manama',
@@ -27,10 +27,18 @@ const LOCATIONS = [
   'Muharraq',
   'Riffa',
   'Isa Town',
-  'Hamad Town',
+  'Hamad Town'
 ]
-const JOB_TYPES = ['Full-time', 'Part-time', 'Internship']
-const WORK_MODES = ['On-site', 'Remote', 'Hybrid']
+const JOB_TYPES = [
+  { label: 'Full-time', value: 'full_time' },
+  { label: 'Part-time', value: 'part_time' },
+  { label: 'Internship', value: 'internship' }
+]
+const WORK_MODES = [
+  { label: 'On-site', value: 'onsite' },
+  { label: 'Remote', value: 'remote' },
+  { label: 'Hybrid', value: 'hybrid' }
+]
 
 const PLANS = [
   {
@@ -78,7 +86,6 @@ const PLANS = [
 const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v)
 const hasErrors = (errs) => Object.keys(errs).length > 0
 
-
 function Field({ label, error, hint, children }) {
   return (
     <div className="field">
@@ -92,35 +99,36 @@ function Field({ label, error, hint, children }) {
   )
 }
 
-// A row of buttons where only ONE can be on. Click the selected one again to clear it (optional).
-function ChoiceChips({ label, options, value, onChange }) {
-  const pick = (opt) => onChange(value === opt ? '' : opt)
+// A row of buttons where several can be on. Click a selected one again to remove it.
+function ChoiceChips({ label, options, value, onChange, error }) {
+  const toggle = (opt) =>
+    onChange(
+      value.includes(opt) ? value.filter((v) => v !== opt) : [...value, opt]
+    )
   return (
     <div className="choice-box">
       <p className="choice-box__label">
-        {label} <span className="choice-box__opt">(optional · choose one)</span>
+        {label} <span className="choice-box__opt">(choose one or more)</span>
       </p>
-      <div className="choice-box__chips" role="radiogroup" aria-label={label}>
+      <div className="choice-box__chips" role="group" aria-label={label}>
         {options.map((opt) => {
-          const on = value === opt
+          const on = value.includes(opt.value)
           return (
             <button
-              key={opt}
+              key={opt.value}
               type="button"
-              role="radio"
+              role="checkbox"
               className={on ? 'choice choice--on' : 'choice'}
               aria-checked={on}
-              onClick={() => pick(opt)}
+              onClick={() => toggle(opt.value)}
             >
               {on && <span className="choice__tick">✓</span>}
-              {opt}
+              {opt.label}
             </button>
           )
         })}
       </div>
-      <p className="hint">
-        Leave empty to see all jobs. You can change this later in your profile.
-      </p>
+      {error && <p className="field__error">{error}</p>}
     </div>
   )
 }
@@ -166,7 +174,6 @@ function TypeOrPick({ name, value, onChange, options, placeholder }) {
   )
 }
 
-
 function SignInLink({ role }) {
   const isCompany = role === 'company'
   return (
@@ -185,7 +192,9 @@ function SignInLink({ role }) {
       >
         {isCompany ? 'Looking for a job?' : 'Hiring for a company?'}{' '}
         <b>
-          {isCompany ? 'Create a job seeker account' : 'Create a company account'}
+          {isCompany
+            ? 'Create a job seeker account'
+            : 'Create a company account'}
         </b>
       </Link>
     </div>
@@ -289,14 +298,13 @@ function JobSeekerSignup() {
     graduationStatus: 'Graduated'
   })
   const [skills, setSkills] = useState([])
-  const [jobType, setJobType] = useState('')
-  const [workMode, setWorkMode] = useState('')
+  const [jobTypes, setJobTypes] = useState([])
+  const [workModes, setWorkModes] = useState([])
   const [cv, setCv] = useState(null)
   const [dragging, setDragging] = useState(false)
   const [errors, setErrors] = useState({})
   const fileInput = useRef(null)
   const navigate = useNavigate()
-
 
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -310,7 +318,7 @@ function JobSeekerSignup() {
     if (ok) setCv(file)
   }
 
-  const submit = async(e) => {
+  const submit = async (e) => {
     e.preventDefault()
     const errs = {}
     if (!form.firstName.trim()) errs.firstName = 'Required'
@@ -321,6 +329,9 @@ function JobSeekerSignup() {
       errs.phone = 'Enter 8 digits'
     if (!form.major.trim()) errs.major = 'Pick or type your major'
     if (skills.length === 0) errs.skills = 'Pick at least one skill'
+    if (jobTypes.length === 0) errs.jobTypes = 'Pick at least one job type'
+    if (workModes.length === 0) errs.workModes = 'Pick at least one work mode'
+
     setErrors(errs)
     if (hasErrors(errs)) return
 
@@ -329,24 +340,22 @@ function JobSeekerSignup() {
     Object.entries(form).forEach(([key, value]) => data.append(key, value))
     data.append('skills', JSON.stringify(skills))
     // the backend reads these as lists, so send the one choice as a list (empty = no preference)
-    data.append('jobTypes', JSON.stringify(jobType ? [jobType] : []))
-    data.append('workModes', JSON.stringify(workMode ? [workMode] : []))
+    data.append('jobTypes', JSON.stringify(jobTypes ? [jobTypes] : []))
+    data.append('workModes', JSON.stringify(workModes ? [workModes] : []))
     if (cv) data.append('cv', cv)
 
-
     try {
-          const { token } = await api('/auth/signup', {
-            method: 'POST',
-            body: data
-          })
-          localStorage.setItem('token', token)
-          navigate('/jobseeker')
-        } catch (err) {
-          setErrors(
-            err.fields || { email: err.error || 'Could not reach the server' }
-          )
-        }
-
+      const { token } = await api('/auth/signup', {
+        method: 'POST',
+        body: data
+      })
+      localStorage.setItem('token', token)
+      navigate('/jobseeker')
+    } catch (err) {
+      setErrors(
+        err.fields || { email: err.error || 'Could not reach the server' }
+      )
+    }
   }
 
   return (
@@ -429,20 +438,26 @@ function JobSeekerSignup() {
             error={errors.skills}
             hint="Pick from the list. We use these to show you jobs that match."
           >
-            <MultiSelect value={skills} onChange={setSkills} placeholder="Search skills ▾" />
+            <MultiSelect
+              value={skills}
+              onChange={setSkills}
+              placeholder="Search skills ▾"
+            />
           </Field>
 
           <ChoiceChips
             label="Job type"
             options={JOB_TYPES}
-            value={jobType}
-            onChange={setJobType}
+            value={jobTypes}
+            onChange={setJobTypes}
+            error={errors.jobTypes}
           />
           <ChoiceChips
             label="Work mode"
             options={WORK_MODES}
-            value={workMode}
-            onChange={setWorkMode}
+            value={workModes}
+            onChange={setWorkModes}
+            error={errors.workModes}
           />
 
           <Field
@@ -807,27 +822,28 @@ function CompanySignup() {
   }
 
   const finish = async () => {
-
     const data = new FormData()
     data.append('role', 'company')
     Object.entries(form).forEach(([key, value]) => data.append(key, value))
-    data.append('plan', plan) 
-    if (logo?.file) data.append('logo', logo.file) 
+    data.append('plan', plan)
+    if (logo?.file) data.append('logo', logo.file)
 
     try {
-          const { token } = await api('/auth/signup', {
-            method: 'POST',
-            body: data
-          })
-          localStorage.setItem('token', token)
-          navigate('/company')
-        } catch (err) {
-          const details = err.fields
-            ? Object.entries(err.fields).map(([field, msg]) => `${field}: ${msg}`).join('\n')
-            : ''
-          alert(details || err.error || 'Could not reach the server')
-          goToStep(1)
-        }
+      const { token } = await api('/auth/signup', {
+        method: 'POST',
+        body: data
+      })
+      localStorage.setItem('token', token)
+      navigate('/company')
+    } catch (err) {
+      const details = err.fields
+        ? Object.entries(err.fields)
+            .map(([field, msg]) => `${field}: ${msg}`)
+            .join('\n')
+        : ''
+      alert(details || err.error || 'Could not reach the server')
+      goToStep(1)
+    }
   }
 
   const right =
