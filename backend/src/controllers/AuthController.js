@@ -5,6 +5,7 @@ const { sendMail } = require('../config/mailer')
 const { signToken } = require('../middleware/auth')
 const { fileUrl, removeFiles } = require('../middleware/upload')
 const { saveParsedCv } = require('../services/cvParser')
+const { rescoreSeeker } = require('../services/matching')
 
 // The frontend says 'jobseeker' / 'company', the database says 'seeker' / 'employer'
 const ROLES = {
@@ -240,11 +241,16 @@ async function signup(req, res, next) {
           : false
     res.status(201).json(result)
 
-    // Read the CV after answering, so sign up doesn't wait for it
-    if (resumeId) {
-      saveParsedCv(resumeId, userId, req.files.cv[0].path).catch((err) =>
-        console.error('CV parsing after sign up failed:', err.message)
-      )
+    // Read the CV and score the seeker after answering, so sign up doesn't wait for it
+    if (role === 'seeker') {
+      const cvRead = resumeId
+        ? saveParsedCv(resumeId, userId, req.files.cv[0].path).catch((err) =>
+            console.error('CV parsing after sign up failed:', err.message)
+          )
+        : Promise.resolve()
+      cvRead
+        .then(() => rescoreSeeker(userId))
+        .catch((err) => console.error('Scoring after sign up failed:', err.message))
     }
   } catch (err) {
     await client.query('ROLLBACK')

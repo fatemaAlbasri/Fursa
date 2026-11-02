@@ -1,6 +1,7 @@
 const db = require('../config/db')
 const { fileUrl, removeFiles } = require('../middleware/upload')
-const { parseCv, saveParsedCv } = require('../services/cvParser')
+const { parseCv, saveParsedCv, saveCvEmbedding } = require('../services/cvParser')
+const { rescoreSeeker } = require('../services/matching')
 
 async function parse(req, res, next) {
   const file = req.file
@@ -56,7 +57,10 @@ async function upload(req, res, next) {
   } catch (err) {
     if (err.status !== 422) console.error('CV parsing failed:', err)
     warning = err.status === 422 ? err.message : "Your CV was saved, but we couldn't read its details."
+    // Don't keep scoring on the old CV
+    await saveCvEmbedding(req.user.id, null).catch((err) => console.error('Clearing CV embedding failed:', err.message))
   }
+  rescoreSeeker(req.user.id).catch((err) => console.error('Scoring failed:', err.message))
   res.status(201).json({ resume: await loadResume(req.user.id), parsed, ...(warning && { warning }) })
 }
 

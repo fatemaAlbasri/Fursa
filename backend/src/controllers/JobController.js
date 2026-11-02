@@ -1,4 +1,12 @@
 const db = require('../config/db')
+const { saveJobEmbedding, rescoreJob } = require('../services/matching')
+
+// Runs in the background: the job is still scored without the CV component if embedding fails
+const scoreOpenJob = (jobId) =>
+  saveJobEmbedding(jobId)
+    .catch((err) => console.error('Job embedding failed:', err.message))
+    .then(() => rescoreJob(jobId))
+    .catch((err) => console.error('Scoring failed:', err.message))
 
 // GET /api/jobs → view all jobs (jobseeker)
 const getJobs = async (req, res, next) => {
@@ -344,6 +352,8 @@ const createJob = async (req, res, next) => {
 
     await client.query('COMMIT')
 
+    if (job.status === 'open') scoreOpenJob(jobId)
+
     res.status(201).json({ job: await loadJob(jobId) })
   } catch (err) {
     await client.query('ROLLBACK')
@@ -430,6 +440,8 @@ const editJob = async (req, res, next) => {
     await client.query(`DELETE FROM match_scores WHERE job_id = $1`, [jobId])
 
     await client.query('COMMIT')
+
+    if (job.status === 'open') scoreOpenJob(jobId)
 
     const updated = await loadJob(jobId)
     updated.stats = await jobStats(jobId)
