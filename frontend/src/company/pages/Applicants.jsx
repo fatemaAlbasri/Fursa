@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../shared/api.js';
 import { toApplicant, countStats } from '../data/applicants.js';
+import StatusPill from '../../shared/components/StatusPill';
 import '../styles/Applicants.css';
 
 // =====================================================================
@@ -9,15 +10,6 @@ import '../styles/Applicants.css';
 // All applicants for one job, ranked by AI match score.
 // The employer picks a tab, ticks applicants, then shortlists or rejects them.
 // =====================================================================
-
-// ---------- Status pill colours ----------
-const STATUS_PILL = {
-  New: 'ap-pill--new',
-  Shortlisted: 'ap-pill--shortlisted',
-  Interview: 'ap-pill--interview',
-  Accepted: 'ap-pill--accepted',
-  Rejected: 'ap-pill--rejected',
-};
 
 // ---------- Tabs ----------
 // label(stats) → text on the tab · show(applicant) → is this applicant in the tab?
@@ -194,7 +186,7 @@ export default function Applicants() {
                 <span>{a.why}</span>
               </div>
               <ScoreRing score={a.score} />
-              <span className={`ap-pill ${STATUS_PILL[a.status]}`}>{a.status}</span>
+              <StatusPill status={a.status} />
               {/* TODO: applicant page (/company/applicants/:id) is not built yet */}
               <Link to={`/company/applicants/${a.id}`} className="ap-view">View applicant</Link>
             </div>
