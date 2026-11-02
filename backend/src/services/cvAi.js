@@ -1,6 +1,5 @@
 const { GoogleGenAI } = require('@google/genai')
 
-// Only used when GEMINI_API_KEY is set; otherwise cvParser uses the rule-based parser
 const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null
 const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest'
 
@@ -81,4 +80,15 @@ async function extractWithAi(text, options) {
   return JSON.parse(response.text)
 }
 
-module.exports = { extractWithAi, aiEnabled: () => ai !== null }
+// Turns text into a 1536-number vector, in the format pgvector reads
+async function embedText(text) {
+  const response = await ai.models.embedContent({
+    model: 'gemini-embedding-001',
+    contents: text,
+    config: { outputDimensionality: 1536 }
+  })
+  return JSON.stringify(response.embeddings[0].values)
+}
+
+
+module.exports = { extractWithAi, embedText, aiEnabled: () => ai !== null }

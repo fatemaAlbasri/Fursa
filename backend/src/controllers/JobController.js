@@ -1,20 +1,33 @@
 const db = require('../config/db')
+const { saveJobEmbedding, rescoreJob } = require('../services/matching')
+
+// Runs in the background: the job is still scored without the CV component if embedding fails
+const scoreOpenJob = (jobId) =>
+  saveJobEmbedding(jobId)
+    .catch((err) => console.error('Job embedding failed:', err.message))
+    .then(() => rescoreJob(jobId))
+    .catch((err) => console.error('Scoring failed:', err.message))
 
 // GET /api/jobs → view all jobs (jobseeker)
 const getJobs = async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo
+      `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo,
+              ms.score AS match_score
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
+         LEFT JOIN match_scores ms ON ms.job_id = j.id AND ms.seeker_id = $1
         WHERE j.status = 'open' AND j.deadline >= CURRENT_DATE
-        ORDER BY j.created_at DESC`
+        ORDER BY ms.score DESC NULLS LAST, j.created_at DESC`,
+      [req.user.id]
     )
+    rows.forEach((job) => delete job.jd_embedding)
     res.json({ jobs: rows })
   } catch (err) {
     next(err)
   }
 }
+
 
 // GET /api/jobs/mine → view only their jobs (company)
 const getCompanyJobs = async (req, res, next) => {
@@ -27,6 +40,7 @@ const getCompanyJobs = async (req, res, next) => {
         ORDER BY j.created_at DESC`,
       [req.user.id]
     )
+    rows.forEach((job) => delete job.jd_embedding)
     res.json({ jobs: rows })
   } catch (err) {
     next(err)
@@ -344,6 +358,8 @@ const createJob = async (req, res, next) => {
 
     await client.query('COMMIT')
 
+    if (job.status === 'open') scoreOpenJob(jobId)
+
     res.status(201).json({ job: await loadJob(jobId) })
   } catch (err) {
     await client.query('ROLLBACK')
@@ -430,6 +446,8 @@ const editJob = async (req, res, next) => {
     await client.query(`DELETE FROM match_scores WHERE job_id = $1`, [jobId])
 
     await client.query('COMMIT')
+
+    if (job.status === 'open') scoreOpenJob(jobId)
 
     const updated = await loadJob(jobId)
     updated.stats = await jobStats(jobId)

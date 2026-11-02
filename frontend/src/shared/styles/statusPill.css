@@ -1,0 +1,28 @@
+.status-pill {
+  min-width: 96px;
+  text-align: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.status-pill--new {
+  background: #eaf7f7;
+  color: #3e5468;
+}
+.status-pill--shortlisted {
+  background: #e0f2fe;
+  color: #075985;
+}
+.status-pill--interview {
+  background: #efebff;
+  color: #5235d6;
+}
+.status-pill--accepted {
+  background: #e3f8ef;
+  color: #067647;
+}
+.status-pill--rejected {
+  background: #fdecea;
+  color: #b42318;
+}

@@ -3,7 +3,7 @@ const path = require('path')
 const { PDFParse } = require('pdf-parse')
 const WordExtractor = require('word-extractor')
 const db = require('../config/db')
-const { extractWithAi, aiEnabled } = require('./cvAi')
+const { extractWithAi, embedText, aiEnabled } = require('./cvAi')
 
 // Same options as the dropdowns on the sign up page, so the form can be pre-filled
 const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting']
@@ -22,9 +22,8 @@ const SPOKEN_LANGUAGES = [
   'Malayalam', 'Tamil', 'Tagalog', 'Filipino', 'Chinese', 'Mandarin', 'Turkish', 'Bengali'
 ]
 
-// ---------------------------------------------------------------------
-// 1. File → plain text
-// ---------------------------------------------------------------------
+
+// File → plain text
 async function extractText(filePath) {
   const ext = path.extname(filePath).toLowerCase()
   let text = ''
@@ -46,11 +45,9 @@ async function extractText(filePath) {
     .trim()
 }
 
-// ---------------------------------------------------------------------
-// 2. Rule-based parser (used when there is no API key or the AI call fails)
-// ---------------------------------------------------------------------
+
+// Rule-based parser (used when there is no API key or the AI call fails)
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-// \b doesn't work next to symbols ("C#", "Node.js"), so check the characters around the word
 const hasWord = (text, word) =>
   new RegExp(`(^|[^A-Za-z0-9])${escapeRegex(word)}(?=$|[^A-Za-z0-9#+])`, 'i').test(text)
 
@@ -110,26 +107,22 @@ function parseWithRules(text, knownSkills) {
     major: findMajor(text),
     graduationStatus: findGraduationStatus(text),
     yearsExperience: findYears(text),
-    // English/Arabic are in the skills list too (they're skills in the seed data)
     skills: knownSkills.filter((skill) => hasWord(text, skill)),
     languages: SPOKEN_LANGUAGES.filter((lang) => hasWord(text, lang)),
     experience: []
   }
 }
 
-// ---------------------------------------------------------------------
-// 3. Parse a CV file: AI first, rules as fallback
-// ---------------------------------------------------------------------
+
+// Parse a CV file: AI first, rules as fallback
 async function knownSkillNames() {
   const { rows } = await db.query('SELECT name FROM skills ORDER BY name')
   return [...new Set([...rows.map((r) => r.name), ...KNOWN_SKILLS])]
 }
 
-// Cleans whatever the parser returned so the frontend always gets the same shape
 function normalize(info, knownSkills) {
   const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null)
   const list = (v) => [...new Set((Array.isArray(v) ? v : []).map(str).filter(Boolean))]
-  // Use the skills table spelling when only the case differs ("node.js" → "Node.js")
   const canonical = new Map(knownSkills.map((s) => [s.toLowerCase(), s]))
   const phone = str(info.phone)?.replace(/\D/g, '').replace(/^(00)?973/, '')
   const years = Number(info.yearsExperience)
@@ -154,7 +147,6 @@ function normalize(info, knownSkills) {
 }
 
 // Returns { text, info, source } where source is 'ai' or 'rules'.
-// Throws an error with status 422 if no text could be read (e.g. a scanned image PDF).
 async function parseCv(filePath) {
   let text
   try {
@@ -189,9 +181,8 @@ async function parseCv(filePath) {
   return { text, info: normalize(parseWithRules(text, knownSkills), knownSkills), source: 'rules' }
 }
 
-// ---------------------------------------------------------------------
-// 4. Save the parsed CV on a resume row (and years of experience on the profile)
-// ---------------------------------------------------------------------
+
+// Save the parsed CV on a resume row (and years of experience on the profile)
 const experienceText = (experience) =>
   experience
     .map((e) => {
@@ -199,6 +190,19 @@ const experienceText = (experience) =>
       return [e.title, e.company && `at ${e.company}`, dates && `(${dates})`].filter(Boolean).join(' ')
     })
     .join('\n') || null
+
+// If the embedding fails, the old CV's vector is cleared so the CV component is excluded
+async function saveCvEmbedding(seekerId, text) {
+  let vector = null
+  if (text && aiEnabled()) {
+    try {
+      vector = await embedText(text)
+    } catch (err) {
+      console.error('CV embedding failed:', err.message)
+    }
+  }
+  await db.query('UPDATE seeker_profiles SET cv_embedding = $1::vector WHERE user_id = $2', [vector, seekerId])
+}
 
 async function saveParsedCv(resumeId, seekerId, filePath) {
   const { text, info } = await parseCv(filePath)
@@ -213,7 +217,8 @@ async function saveParsedCv(resumeId, seekerId, filePath) {
       [info.yearsExperience, seekerId]
     )
   }
+  await saveCvEmbedding(seekerId, text)
   return info
 }
 
-module.exports = { parseCv, saveParsedCv }
+module.exports = { parseCv, saveParsedCv, saveCvEmbedding}
