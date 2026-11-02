@@ -12,17 +12,22 @@ const scoreOpenJob = (jobId) =>
 const getJobs = async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo
+      `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo,
+              ms.score AS match_score
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
+         LEFT JOIN match_scores ms ON ms.job_id = j.id AND ms.seeker_id = $1
         WHERE j.status = 'open' AND j.deadline >= CURRENT_DATE
-        ORDER BY j.created_at DESC`
+        ORDER BY ms.score DESC NULLS LAST, j.created_at DESC`,
+      [req.user.id]
     )
+    rows.forEach((job) => delete job.jd_embedding)
     res.json({ jobs: rows })
   } catch (err) {
     next(err)
   }
 }
+
 
 // GET /api/jobs/mine → view only their jobs (company)
 const getCompanyJobs = async (req, res, next) => {
@@ -35,6 +40,7 @@ const getCompanyJobs = async (req, res, next) => {
         ORDER BY j.created_at DESC`,
       [req.user.id]
     )
+    rows.forEach((job) => delete job.jd_embedding)
     res.json({ jobs: rows })
   } catch (err) {
     next(err)
