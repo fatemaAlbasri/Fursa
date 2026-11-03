@@ -135,7 +135,7 @@ The PDF routes need the token too, so fetch them as a blob rather than using a p
   "suggestions": [
     { "id": 6, "section": "summary", "beforeText": "IT graduate looking for a job.", "locked": false,
       "afterText": "...", "reason": "...", "points": 7, "isFreePreview": true, "status": "pending" },
-    { "id": 7, "section": "projects", "beforeText": "...", "locked": true, "hint": "..." }
+    { "id": 7, "section": "projects", "beforeText": "...", "locked": true }
   ],
   // not unlocked yet:
   "reportPrice": { "subtotalBhd": 2, "vatBhd": 0.2, "totalBhd": 2.2 },
@@ -145,6 +145,9 @@ The PDF routes need the token too, so fetch them as a blob rather than using a p
   "payment": { "paidAt": "...", "subtotalBhd": 2, "vatBhd": 0.2, "totalBhd": 2.2, "isSimulated": true }
 }
 ```
+
+Uploading a CV with exactly the same text keeps its review, with the same score, accepted suggestions and payment.
+Any change to the text gets a new review, which is unlocked separately.
 
 `section` is `summary`, `projects`, `skills`, `education` or `layout`. For `layout`, `beforeText` and `afterText`
 are the section headings joined with ` > `. An empty `beforeText` means the section is new (summary or skills only).

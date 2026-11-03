@@ -45,7 +45,7 @@ async function loadSuggestions(reviewId) {
 // The rewrites are what the report sells, so locked ones never leave the server
 function formatSuggestion(s, isAdvanced) {
   const summary = { id: s.id, section: s.section, beforeText: s.before_text }
-  if (!isAdvanced && !s.is_free_preview) return { ...summary, locked: true, hint: s.reason }
+  if (!isAdvanced && !s.is_free_preview) return { ...summary, locked: true }
   return {
     ...summary,
     locked: false,
@@ -107,6 +107,21 @@ async function getReview(req, res, next) {
   }
 }
 
+// The same CV uploaded again keeps its review, so its score doesn't change and it isn't paid for twice
+async function reuseReview(resume, seekerId) {
+  const { rowCount } = await db.query(
+    `UPDATE cv_reviews SET resume_id = $1
+      WHERE id = (SELECT rv.id
+                    FROM cv_reviews rv
+                    JOIN resumes r ON r.id = rv.resume_id
+                   WHERE r.seeker_id = $2 AND r.parsed_text = $3 AND r.id <> $1
+                   ORDER BY rv.is_advanced DESC, rv.created_at DESC, rv.id DESC
+                   LIMIT 1)`,
+    [resume.id, seekerId, resume.parsed_text]
+  )
+  return rowCount > 0
+}
+
 async function createReview(req, res, next) {
   let client
   try {
@@ -119,6 +134,8 @@ async function createReview(req, res, next) {
     // A CV file never changes, so one review per CV (and paying again is never needed)
     const existing = await reviewResponse(resume)
     if (existing) return res.json({ review: existing })
+
+    if (await reuseReview(resume, req.user.id)) return res.json({ review: await reviewResponse(resume) })
 
     if (!aiEnabled()) return res.status(503).json({ error: 'The AI CV Optimizer is not available right now' })
 

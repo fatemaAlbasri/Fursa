@@ -151,10 +151,12 @@ suggestions: at most 8, the changes that would help this person most. Each one:
   Leave it empty only for a summary or skills section the CV doesn't have, written purely from facts elsewhere in the CV.
 - after: the rewrite, ready to paste into the CV, in the same language as the CV. Same facts, clearer wording. No first person ("I"). No placeholders such as [company].
   It may spell out an abbreviation the CV uses (JS to JavaScript), but must not turn a general word into a specific one (not "databases" to "PostgreSQL").
+  after replaces before and nothing else; the text around it stays. Read it in place: it must fit the sentences next to it and not repeat them. To rewrite a whole summary, before must be the whole summary.
 - reason: one sentence under 20 words, written to the job seeker, saying why this change helps. Don't quote the new wording.
 - points: how many points this change adds, from 1 up to what the section is missing. Points for a section must not add up to more than its maximum minus its score.
 
-For section "layout": at most one suggestion, and only to change the order of the sections.
+For section "layout": at most one suggestion, and only to change the order of the sections. Make none if the order is already sensible.
+Real experience, including internships, stays above education, even for a recent graduate. Education goes first only if they have little or no experience.
 before is the CV's section headings in their current order, and after is the same headings in the better order, both copied exactly and joined with " > ". Include every heading.
 
 comparison: true if the CV already does this, false if not.
