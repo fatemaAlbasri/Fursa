@@ -205,7 +205,8 @@ async function saveCvEmbedding(seekerId, text) {
 }
 
 async function saveParsedCv(resumeId, seekerId, filePath) {
-  const { text, info } = await parseCv(filePath)
+  const { text, info, source } = await parseCv(filePath)
+  console.log(`CV ${resumeId} parsed with: ${source}`)
   await db.query(
     `UPDATE resumes SET parsed_text = $1, parsed_experience = $2, parsed_languages = $3 WHERE id = $4`,
     [text, experienceText(info.experience), info.languages.join(', ') || null, resumeId]
@@ -218,7 +219,7 @@ async function saveParsedCv(resumeId, seekerId, filePath) {
     )
   }
   await saveCvEmbedding(seekerId, text)
-  return info
+  return { info, source }
 }
 
-module.exports = { parseCv, saveParsedCv, saveCvEmbedding}
+module.exports = { parseCv, saveParsedCv, saveCvEmbedding, knownSkillNames, hasWord, escapeRegex }
