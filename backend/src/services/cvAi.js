@@ -143,7 +143,7 @@ suggestions: at most 10. Each one:
   Leave it empty only for a summary or skills section the CV doesn't have, written purely from facts elsewhere in the CV. If a line already does that job, such as "I want any job", replace that line instead of adding a new section beside it.
 - after: the rewrite, ready to paste into the CV, in the same language as the CV. Same facts, clearer wording. No first person ("I"). No placeholders such as [company].
   It may spell out an abbreviation the CV uses (JS to JavaScript), but must not turn a general word into a specific one (not "databases" to "PostgreSQL").
-  Keep what the CV says about the person: don't call a graduate a student, or a student a graduate.
+  Keep what the CV says about the person: don't call a graduate a student, or a student a graduate. If they helped with something, keep that they helped ("Helped configure" stays "Helped configure").
   A line about what they did starts with a past-tense verb such as Built, Developed, Designed, Created, Implemented or Wrote.
   after replaces before and nothing else; the text around it stays. Read it in place: it must fit the sentences next to it and not repeat them. To rewrite a whole summary, before must be the whole summary.
 - reason: one sentence under 20 words, written to the job seeker, saying why this change helps. Don't quote the new wording.

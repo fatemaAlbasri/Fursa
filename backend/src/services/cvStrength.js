@@ -19,7 +19,9 @@ const HEADINGS = {
 const headingText = (line) => line.trim().replace(/:$/, '').trim().toLowerCase()
 const headingType = (line) =>
   Object.keys(HEADINGS).find((type) => HEADINGS[type].includes(headingText(line))) || null
-const isHeading = (line) => headingType(line) !== null
+// A heading the rules don't know, such as TIMELINE: a short line in capitals
+const looksLikeHeading = (line) => /^[A-Z][A-Z &/]{5,29}:?$/.test(line.trim()) && line.trim().split(/\s+/).length <= 3
+const isHeading = (line) => headingType(line) !== null || looksLikeHeading(line)
 
 // Short forms that mean the same skill
 const SAME_SKILL = {
@@ -36,27 +38,49 @@ const SHORT_FORMS = new Set(Object.values(SAME_SKILL).flat())
 
 const VAGUE_SUMMARY = /(looking for|seeking)\s+(a |an )?(job|work|position|opportunit)|hard.?working|highly motivated|team player|fast learner/i
 const FIELD_WORDS = /\b(computer science|information (systems|technology)|computer engineering|software|business|accounting|finance|marketing|engineering|graduate|student)\b/i
-const ACTION_VERB = /^(built|developed|designed|implemented|created|wrote|led|managed|improved|fixed|used|tested|deployed|analy[sz]ed|automated|maintained|delivered|organi[sz]ed|prepared|supported|launched|reduced|increased|integrated|configured|researched)\b/i
+const ACTION_VERB = /^(built|developed|designed|implemented|created|wrote|led|managed|improved|fixed|used|tested|deployed|analy[sz]ed|automated|maintained|delivered|organi[sz]ed|prepared|supported|launched|reduced|increased|integrated|configured|researched|resolved|inspected|installed|repaired|troubleshot|monitored|documented|coordinated|trained|presented|conducted)\b/i
+const EDUCATION_LINE = /\b(bsc|b\.sc|msc|m\.sc|mba|phd|bachelor|master|diploma|university|college|polytechnic)\b|^study\b/i
+const EXPERIENCE_LINE = /\b(intern|internship|assistant|developer|engineer|technician|officer|analyst|consultant|accountant|cashier|supervisor|part-time|full-time)\b/i
 const BULLET = /^[•\-*–▪·]\s*/
 const DEGREE = /\b(bsc|b\.sc|ba|msc|m\.sc|mba|phd|bachelor|master|diploma|degree)\b/i
 const YEAR = /\b(19|20)\d{2}\b/
 const COURSES = /\b(courses|coursework|modules)\b/i
 const DATE = /\b(19|20)\d{2}([-/]\d{1,2})?\b|\b\d{1,2}[-/](19|20)\d{2}\b/g
 
+// What a line is about when its heading doesn't say, so a TIMELINE section still counts as experience and education.
+// The top of the CV is only read for education: a job title there is what they want, not what they have done
+function lineType(line, underUnknownHeading) {
+  if (line.includes('@') || /^i\b/i.test(line)) return null
+  if (EDUCATION_LINE.test(line)) return 'education'
+  if (underUnknownHeading && EXPERIENCE_LINE.test(line)) return 'projects'
+  return null
+}
+
 function splitSections(text) {
   const sections = { summary: [], projects: [], skills: [], education: [], low: [], other: [] }
   const order = []
+  let hasExperience = false
   let current = null
-  for (const line of text.split('\n').map((l) => l.trim()).filter(Boolean)) {
-    const type = headingType(line)
-    if (type) {
-      current = type
-      order.push({ type, text: headingText(line) })
+  let lastGuess = null
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
+  lines.forEach((line, i) => {
+    const known = headingType(line)
+    if (known || (i > 0 && looksLikeHeading(line))) {
+      current = known
+      lastGuess = null
+      order.push({ type: known || 'unknown', text: headingText(line) })
+      if (known === 'projects' && isExperienceHeading({ type: known, text: headingText(line) })) hasExperience = true
     } else if (current) {
       sections[current].push(line)
+    } else if (i > 0) {
+      // A bullet belongs with the line above it
+      const underUnknownHeading = order.length > 0
+      lastGuess = BULLET.test(line) ? lastGuess : lineType(line, underUnknownHeading)
+      if (lastGuess) sections[lastGuess].push(line)
+      if (lastGuess === 'projects') hasExperience = true
     }
-  }
-  return { sections, order }
+  })
+  return { sections, order, hasExperience }
 }
 
 function scoreSummary(lines, knownSkills) {
@@ -116,8 +140,8 @@ const skillItems = (lines) =>
 function isBadlyWritten(item, knownSkills) {
   const lower = item.toLowerCase()
   if (SHORT_FORMS.has(lower)) return true
-  const known = knownSkills.find((s) => s.toLowerCase() === lower)
-  return known !== undefined && known !== item
+  // Lower case only ("react"): "Customer service" is a fine way to write "Customer Service"
+  return item === lower && knownSkills.some((s) => s.toLowerCase() === lower && s !== item)
 }
 
 function scoreSkills(lines, knownSkills) {
@@ -156,9 +180,9 @@ function scoreLayout(order, sections, onePage) {
 
 // Returns { total, scores, comparison }. The two comparison items that need the original file are added by the caller
 function scoreCv(text, { knownSkills, onePage }) {
-  const { sections, order } = splitSections(text)
+  const { sections, order, hasExperience } = splitSections(text)
   const summary = scoreSummary(sections.summary, knownSkills)
-  const projects = scoreProjects(sections.projects, knownSkills, order.some(isExperienceHeading))
+  const projects = scoreProjects(sections.projects, knownSkills, hasExperience)
   const skills = scoreSkills(sections.skills, knownSkills)
   const education = scoreEducation(sections.education, text)
   const layout = scoreLayout(order, sections, onePage)
@@ -226,7 +250,7 @@ function findIssues(text, { knownSkills }) {
 
 // What only the job seeker can add, because rewording can't invent it. The points come from the same rules as the score
 function findMissing(text, { knownSkills, onePage, hasLink }) {
-  const { sections, order } = splitSections(text)
+  const { sections, order, hasExperience } = splitSections(text)
   const missing = []
   const add = (section, advice, points) => missing.push({ section, advice, points })
 
@@ -239,7 +263,7 @@ function findMissing(text, { knownSkills, onePage, hasLink }) {
     if (tools < 3) add('projects', 'Name the tools you used in your projects and work.', tools >= 1 ? 4 : 7)
     if (results < 2) add('projects', 'Add numbers that show your results, such as how many people used your work.', results === 1 ? 5 : 10)
   }
-  if (!order.some(isExperienceHeading)) {
+  if (!hasExperience) {
     add('projects', 'If you have done an internship, part-time or volunteer work, add it under an Experience heading.', 8)
   }
 

@@ -104,6 +104,8 @@ function findAddedFact(after, section, cvText, knownSkills) {
 }
 
 const drop = (s, why) => console.warn(`CV suggestion dropped (${s.section}): ${why}`)
+const HELPING = /\b(helped|assisted|supported|contributed)\b/i
+const LINE_BULLET = /^[•\-*–▪·]\s*/
 
 // Keeps only suggestions we can stand behind
 function checkSuggestions(aiSuggestions, cvText, knownSkills) {
@@ -112,7 +114,7 @@ function checkSuggestions(aiSuggestions, cvText, knownSkills) {
 
   const ranked = [...aiSuggestions].sort((a, b) => SECTIONS.indexOf(a.section) - SECTIONS.indexOf(b.section))
   for (const s of ranked) {
-    const after = (s.after || '').trim()
+    let after = (s.after || '').trim()
     const reason = (s.reason || '').trim()
     let before = (s.before || '').trim()
     if (!after || !reason) { drop(s, 'empty'); continue }
@@ -123,6 +125,8 @@ function checkSuggestions(aiSuggestions, cvText, knownSkills) {
     } else {
       const added = findAddedFact(after, s.section, cvText, knownSkills)
       if (added) { drop(s, `adds "${added}", which is not in the CV`); continue }
+      // "Helped configure routers" can't become "Configured routers": that claims more than they did
+      if (HELPING.test(before) && !HELPING.test(after)) { drop(s, 'makes helping sound like doing it alone'); continue }
 
       if (before) {
         const found = findInCv(cvText, before)
@@ -131,6 +135,9 @@ function checkSuggestions(aiSuggestions, cvText, knownSkills) {
         if (found.text.toLowerCase() === after.toLowerCase()) { drop(s, 'changes nothing'); continue }
         taken.push(found)
         before = found.text // exact wording, so the frontend can highlight it
+        // Keep the line's bullet, which Gemini often leaves out
+        const bullet = before.match(LINE_BULLET)
+        if (bullet && !LINE_BULLET.test(after)) after = bullet[0] + after
       } else if (!['summary', 'skills'].includes(s.section) || kept.some((k) => k.section === s.section && !k.before)) {
         drop(s, 'nothing to replace')
         continue
@@ -213,7 +220,7 @@ function moveSections(text, before, after) {
 function addSection(text, title, body) {
   if (title === 'Skills') return `${text}\n\n${title}\n${body}`
   const lines = text.split('\n')
-  const first = lines.findIndex(isHeading)
+  const first = lines.findIndex((line, i) => i > 0 && isHeading(line))
   if (first === -1) return `${text}\n\n${title}\n${body}`
   return [...lines.slice(0, first), title, body, '', ...lines.slice(first)].join('\n')
 }
