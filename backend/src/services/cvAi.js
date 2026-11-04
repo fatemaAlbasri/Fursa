@@ -79,7 +79,10 @@ async function generateJson(contents, systemInstruction, responseJsonSchema, ext
 
 // Returns the extracted profile, or throws (cvParser then falls back to rules)
 const extractWithAi = (text, options) =>
-  generateJson(prompt(text, options), SYSTEM, schema(options.majors, options.statuses))
+  generateJson(prompt(text, options), SYSTEM, schema(options.majors, options.statuses),{
+    temperature: 0,
+    httpOptions: { timeout: 45000 }
+  })
 
 
 // AI CV Optimizer: Gemini only writes the suggestions; the score comes from the rules in cvStrength.js
@@ -113,10 +116,19 @@ Never add a skill, tool, employer, job title, course, date, number, result or ac
 If a section needs something the CV doesn't contain, don't invent it: make no suggestion for it.
 
 Your feedback must be about this person's CV. Refer to what they actually wrote; advice that would fit any CV is useless.
-Don't suggest changes for their own sake: a section that is already good gets no suggestion.`
+Don't suggest changes for their own sake: a line that is already good gets no suggestion.`
 
-function reviewPrompt(text, { major, today }) {
+function reviewPrompt(text, { major, today, issues }) {
+  const problems = issues.length
+    ? `Our checks found these problems. Write one suggestion for each, unless fixing it would need facts the CV doesn't contain:
+${issues.map((i) => `- ${i.section}: ${i.problem}`).join('\n')}
+
+Then add a suggestion for any other line that is vague about what they did, or badly worded.`
+    : 'Our checks found no problems. Only suggest a rewrite for a line that is vague about what they did, or badly worded.'
+
   return `Today is ${today}. The job seeker's field is ${major}. Review the CV below.
+
+${problems}
 
 A good CV has:
 - summary: short and specific, says what they studied and what they do, not vague ("looking for a job").
@@ -125,12 +137,14 @@ A good CV has:
 - education: degree, university, year, and relevant courses if they have little experience.
 - layout: clear headings, summary first, then their strongest sections.
 
-suggestions: at most 8, the changes that would help this person most. Each one:
+suggestions: at most 10. Each one:
 - section: which section it belongs to. Work experience goes under "projects".
 - before: copied word for word from the CV, the shortest full sentence or line that needs changing. Copy spelling and punctuation exactly.
-  Leave it empty only for a summary or skills section the CV doesn't have, written purely from facts elsewhere in the CV.
+  Leave it empty only for a summary or skills section the CV doesn't have, written purely from facts elsewhere in the CV. If a line already does that job, such as "I want any job", replace that line instead of adding a new section beside it.
 - after: the rewrite, ready to paste into the CV, in the same language as the CV. Same facts, clearer wording. No first person ("I"). No placeholders such as [company].
   It may spell out an abbreviation the CV uses (JS to JavaScript), but must not turn a general word into a specific one (not "databases" to "PostgreSQL").
+  Keep what the CV says about the person: don't call a graduate a student, or a student a graduate.
+  A line about what they did starts with a past-tense verb such as Built, Developed, Designed, Created, Implemented or Wrote.
   after replaces before and nothing else; the text around it stays. Read it in place: it must fit the sentences next to it and not repeat them. To rewrite a whole summary, before must be the whole summary.
 - reason: one sentence under 20 words, written to the job seeker, saying why this change helps. Don't quote the new wording.
 

@@ -1,6 +1,6 @@
 const db = require('../config/db')
 const { aiEnabled } = require('../services/cvAi')
-const { reviewCv, applySuggestions, cleanCvText, COMPARISON_LABELS } = require('../services/cvOptimizer')
+const { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS } = require('../services/cvOptimizer')
 const { renderCv, renderReport } = require('../services/cvPdf')
 
 // Advanced CV report (simulated payment). VAT is 10%, the same as plan payments
@@ -56,7 +56,7 @@ function formatSuggestion(s, isAdvanced) {
   }
 }
 
-function formatReview(review, suggestions, resume) {
+function formatReview(review, suggestions, resume, missing) {
   const isAdvanced = review.is_advanced
   return {
     id: review.id,
@@ -67,6 +67,7 @@ function formatReview(review, suggestions, resume) {
     improvementsFound: suggestions.length,
     isAdvanced,
     suggestions: suggestions.map((s) => formatSuggestion(s, isAdvanced)),
+    missing, // free: the weakest CVs have the least to reword, so this is their main feedback
     createdAt: review.created_at,
     ...(isAdvanced
       ? {
@@ -95,7 +96,7 @@ function formatReview(review, suggestions, resume) {
 async function reviewResponse(resume) {
   const review = await loadReview(resume.id)
   if (!review) return null
-  return formatReview(review, await loadSuggestions(review.id), resume)
+  return formatReview(review, await loadSuggestions(review.id), resume, await missingContent(resume.parsed_text))
 }
 
 async function getReview(req, res, next) {
@@ -292,6 +293,7 @@ async function downloadReport(req, res, next) {
     const buffer = await renderReport({
       review,
       suggestions: await loadSuggestions(review.id),
+      missing: await missingContent(resume.parsed_text),
       major: resume.major,
       fileName: resume.file_name
     })

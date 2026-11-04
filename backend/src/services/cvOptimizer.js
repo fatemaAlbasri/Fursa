@@ -1,6 +1,6 @@
 const { reviewCvWithAi } = require('./cvAi')
 const { knownSkillNames, hasWord, escapeRegex } = require('./cvParser')
-const { scoreCv, isHeading, SECTION_MAX, SAME_SKILL } = require('./cvStrength')
+const { scoreCv, findIssues, findMissing, isHeading, headingType, SECTION_MAX, SAME_SKILL } = require('./cvStrength')
 
 const SECTIONS = Object.keys(SECTION_MAX)
 const LAYOUT_SEPARATOR = /\s*(?:>|→|\n)\s*/
@@ -75,8 +75,15 @@ function findAddedFact(after, section, cvText, knownSkills) {
     )
   }
 
-  const number = (after.match(/\d+(?:[.,]\d+)*/g) || []).find((n) => !hasWord(cvText, n))
+  // Compared as whole numbers, so 300+ in the CV counts as 300 but 30 doesn't
+  const findNumbers = (value) => value.match(/\d+(?:[.,]\d+)*/g) || []
+  const cvNumbers = new Set(findNumbers(cvText))
+  const number = findNumbers(after).find((n) => !cvNumbers.has(n))
   if (number) return number
+
+  // Student or graduate has to match what the CV says, though "finished university" can become graduate
+  if (hasWord(after, 'student') && !hasWord(cvText, 'student')) return 'student'
+  if (hasWord(after, 'graduate') && hasWord(cvText, 'student') && !hasWord(cvText, 'graduate')) return 'graduate'
 
   const skill = knownSkills.find((s) => hasWord(after, s) && !skillIsInCv(s))
   if (skill) return skill
@@ -88,7 +95,8 @@ function findAddedFact(after, section, cvText, knownSkills) {
     // A skills list is only names, so every word has to come from the CV
     if (section === 'skills' && !/^(and|courses|skills)$/i.test(word)) return word
     // Elsewhere, look for names: a capital mid-sentence, or an odd one anywhere (AWS, GraphQL)
-    const startsSentence = index === 0 || /[.:!?·•\n(]\s*$/.test(after.slice(0, index))
+    const before = after.slice(0, index)
+    const startsSentence = index === 0 || /[.:!?·•\n(]\s*$/.test(before) || /(^|\n)\s*[-–*▪]\s*$/.test(before)
     const oddCapitals = /[A-Z0-9]/.test(word.slice(1))
     if (oddCapitals || (/^[A-Z]/.test(word) && !startsSentence)) return word
   }
@@ -157,18 +165,27 @@ function addPoints(suggestions, text, startScore, scoreOptions) {
 async function reviewCv(rawText, { major }) {
   const text = cleanCvText(rawText)
   const knownSkills = await knownSkillNames()
-  const ai = await reviewCvWithAi(text, { major, today: new Date().toISOString().slice(0, 10) })
-
-  const aiSuggestions = Array.isArray(ai.suggestions) ? ai.suggestions.filter((s) => SECTIONS.includes(s?.section)) : []
-  const checked = checkSuggestions(aiSuggestions, text, knownSkills)
-
-  // It had things to say but none were safe to show: try again rather than say the CV is perfect
-  if (aiSuggestions.length && !checked.length) throw new Error('Every suggestion failed the checks')
-
   const onePage = isOnePage(rawText)
   const scoreOptions = { knownSkills, onePage }
+  const issues = findIssues(text, scoreOptions)
+  const aiOptions = { major, issues, today: new Date().toISOString().slice(0, 10) }
+
+  // When there are problems to fix but none came back, ask once more
+  let aiSuggestions = []
+  let checked = []
+  for (let attempt = 0; attempt < 2 && !checked.length; attempt++) {
+    const ai = await reviewCvWithAi(text, aiOptions)
+    aiSuggestions = Array.isArray(ai.suggestions) ? ai.suggestions.filter((s) => SECTIONS.includes(s?.section)) : []
+    checked = checkSuggestions(aiSuggestions, text, knownSkills)
+    if (!issues.length && !aiSuggestions.length) break
+  }
+
+  // Never save a review that wrongly says the CV has nothing to improve
+  if ((issues.length || aiSuggestions.length) && !checked.length) throw new Error('No usable suggestions came back')
+
   const current = scoreCv(text, scoreOptions)
   const suggestions = addPoints(checked, text, current.total, scoreOptions)
+  console.log(`CV review: ${issues.length} problems found, ${aiSuggestions.length} suggestions written, ${suggestions.length} kept`)
   return {
     strength: current.total,
     potential: current.total + suggestions.reduce((sum, s) => sum + s.points, 0),
@@ -213,10 +230,23 @@ function applySuggestions(rawText, suggestions) {
       continue
     }
     const found = findInCv(text, s.before_text)
-    if (found) text = text.slice(0, found.start) + s.after_text + text.slice(found.end)
+    if (!found) continue
+    // A line that becomes the summary needs a heading if the CV has none
+    const needsHeading = s.section === 'summary' && !text.split('\n').some((line) => headingType(line) === 'summary')
+    text = text.slice(0, found.start) + (needsHeading ? 'Summary\n' : '') + s.after_text + text.slice(found.end)
   }
   const layout = accepted.find((s) => s.section === 'layout')
   return layout ? moveSections(text, layout.before_text, layout.after_text) : text
 }
 
-module.exports = { reviewCv, applySuggestions, cleanCvText, COMPARISON_LABELS }
+// What the seeker has to add themselves. Worked out from the CV each time, so it needs no AI and isn't saved
+async function missingContent(rawText) {
+  const text = cleanCvText(rawText)
+  return findMissing(text, {
+    knownSkills: await knownSkillNames(),
+    onePage: isOnePage(rawText),
+    hasLink: hasWorkLink(text)
+  })
+}
+
+module.exports = { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS }

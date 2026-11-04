@@ -138,6 +138,7 @@ The PDF routes need the token too, so fetch them as a blob rather than using a p
     { "id": 7, "section": "projects", "beforeText": "...", "locked": true }
   ],
   // not unlocked yet:
+  "missing": [{ "section": "skills", "advice": "Add a Skills section ...", "points": 20 }], // free; what only the seeker can add, biggest first
   "canUnlock": true,                // false if there is nothing locked, so hide the unlock button (unlock returns 409)
   "reportPrice": { "subtotalBhd": 2, "vatBhd": 0.2, "totalBhd": 2.2 },
   // unlocked instead:

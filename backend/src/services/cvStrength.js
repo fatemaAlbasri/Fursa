@@ -74,19 +74,26 @@ function scoreSummary(lines, knownSkills) {
 
 const isExperienceHeading = (h) => h.type === 'projects' && /experience|employment|work|intern/.test(h.text)
 
+// Bullet points if it has them; otherwise the longer lines that aren't job titles with dates
+function projectEntries(lines) {
+  const bullets = lines.filter((l) => BULLET.test(l))
+  return bullets.length ? bullets : lines.filter((l) => l.split(/\s+/).length >= 6 && !YEAR.test(l))
+}
+const startsWithVerb = (line) => ACTION_VERB.test(line.replace(BULLET, ''))
+
+// Numbers that show a result (20+ shops), not dates (2025, 2025-06)
+const countResults = (text) => (text.replace(DATE, ' ').match(/\d+(?:[.,]\d+)?/g) || []).length
+
 function scoreProjects(lines, knownSkills, hasExperience) {
   if (!lines.length) return { score: 0, met: false }
   const text = lines.join(' ')
   const tools = knownSkills.filter((s) => hasWord(text, s)).length
 
-  // Bullet points if it has them; otherwise the longer lines that aren't job titles with dates
-  const bullets = lines.filter((l) => BULLET.test(l))
-  const entries = bullets.length ? bullets : lines.filter((l) => l.split(/\s+/).length >= 6 && !YEAR.test(l))
-  const withVerb = entries.filter((l) => ACTION_VERB.test(l.replace(BULLET, ''))).length
+  const entries = projectEntries(lines)
+  const withVerb = entries.filter(startsWithVerb).length
   const verbShare = entries.length ? withVerb / entries.length : 0
 
-  // Numbers that show a result (20+ shops), not dates (2025, 2025-06)
-  const results = (text.replace(DATE, ' ').match(/\d+(?:[.,]\d+)?/g) || []).length
+  const results = countResults(text)
 
   return {
     score:
@@ -99,19 +106,24 @@ function scoreProjects(lines, knownSkills, hasExperience) {
   }
 }
 
-function scoreSkills(lines, knownSkills) {
-  if (!lines.length) return { score: 0, met: false }
-  const items = lines
+const skillItems = (lines) =>
+  lines
     .join(',')
     .split(/[,·•|;\n]/)
     .map((s) => s.trim())
     .filter(Boolean)
-  const spelling = new Map(knownSkills.map((s) => [s.toLowerCase(), s]))
-  const fullNames = items.every((item) => {
-    const lower = item.toLowerCase()
-    if (SHORT_FORMS.has(lower)) return false
-    return !spelling.has(lower) || spelling.get(lower) === item
-  })
+
+function isBadlyWritten(item, knownSkills) {
+  const lower = item.toLowerCase()
+  if (SHORT_FORMS.has(lower)) return true
+  const known = knownSkills.find((s) => s.toLowerCase() === lower)
+  return known !== undefined && known !== item
+}
+
+function scoreSkills(lines, knownSkills) {
+  if (!lines.length) return { score: 0, met: false }
+  const items = skillItems(lines)
+  const fullNames = !items.some((item) => isBadlyWritten(item, knownSkills))
   return {
     score: 3 + (items.length >= 8 ? 10 : items.length >= 5 ? 7 : items.length >= 3 ? 3 : 0) + (fullNames ? 7 : 0),
     met: fullNames
@@ -170,4 +182,94 @@ function scoreCv(text, { knownSkills, onePage }) {
   }
 }
 
-module.exports = { scoreCv, isHeading, SECTION_MAX, SAME_SKILL }
+// The problems in this CV that rewording can fix. Gemini is told to fix each one, so the feedback
+// doesn't depend on what it happens to notice. Missing facts (courses, results) aren't listed: they can't be reworded in
+function findIssues(text, { knownSkills }) {
+  const { sections, order } = splitSections(text)
+  const issues = []
+  const add = (section, problem) => issues.push({ section, problem })
+
+  const summary = sections.summary.join(' ')
+  const toolsUsed = knownSkills.filter((s) => hasWord(sections.projects.join(' '), s))
+  if (!summary) {
+    add('summary', "The CV has no summary section. Write one from its facts. If a line already says what they do or want, use that line as before; otherwise leave before empty.")
+  } else {
+    const words = summary.split(/\s+/).length
+    if (VAGUE_SUMMARY.test(summary)) add('summary', `The summary is vague: "${summary}"`)
+    else if (words < 10) add('summary', `The summary is too short to say anything specific: "${summary}"`)
+    else if (toolsUsed.length && !knownSkills.some((s) => hasWord(summary, s))) {
+      add('summary', `The summary names no tools, though the CV mentions ${toolsUsed.join(', ')}: "${summary}"`)
+    }
+  }
+
+  for (const line of projectEntries(sections.projects)) {
+    if (!startsWithVerb(line)) add('projects', `This line doesn't start with a strong verb: "${line}"`)
+  }
+
+  const skillsText = sections.skills.join(' ')
+  const notListed = toolsUsed.filter((s) => !hasWord(skillsText, s) && !isListedShort(s, skillsText))
+  if (!sections.skills.length) {
+    if (toolsUsed.length) add('skills', `The CV has no skills section, though it mentions ${toolsUsed.join(', ')}. Write one, with before left empty.`)
+  } else {
+    const badlyWritten = skillItems(sections.skills).filter((item) => isBadlyWritten(item, knownSkills))
+    if (badlyWritten.length) add('skills', `These skills need their full, standard names: ${badlyWritten.join(', ')}`)
+    if (notListed.length) add('skills', `The CV mentions these tools but its skills section doesn't list them: ${notListed.join(', ')}`)
+  }
+
+  const experience = order.findIndex(isExperienceHeading)
+  const education = order.findIndex((h) => h.type === 'education')
+  const summaryAt = order.findIndex((h) => h.type === 'summary')
+  if (summaryAt > 0) add('layout', 'The summary should be the first section.')
+  if (experience !== -1 && education !== -1 && experience > education) add('layout', 'Experience should be above education.')
+  return issues
+}
+
+// What only the job seeker can add, because rewording can't invent it. The points come from the same rules as the score
+function findMissing(text, { knownSkills, onePage, hasLink }) {
+  const { sections, order } = splitSections(text)
+  const missing = []
+  const add = (section, advice, points) => missing.push({ section, advice, points })
+
+  if (!sections.projects.length) {
+    add('projects', 'Add your projects or coursework: what you built, the tools you used and the result.', 32)
+  } else {
+    const projects = sections.projects.join(' ')
+    const tools = knownSkills.filter((s) => hasWord(projects, s)).length
+    const results = countResults(projects)
+    if (tools < 3) add('projects', 'Name the tools you used in your projects and work.', tools >= 1 ? 4 : 7)
+    if (results < 2) add('projects', 'Add numbers that show your results, such as how many people used your work.', results === 1 ? 5 : 10)
+  }
+  if (!order.some(isExperienceHeading)) {
+    add('projects', 'If you have done an internship, part-time or volunteer work, add it under an Experience heading.', 8)
+  }
+
+  if (!sections.skills.length) {
+    add('skills', 'Add a Skills section listing the tools and skills you really have, with their full names.', 20)
+  } else {
+    const count = skillItems(sections.skills).length
+    if (count < 8) add('skills', 'List more of the skills you really have. Eight or more gets full marks.', count >= 5 ? 3 : count >= 3 ? 7 : 10)
+  }
+
+  if (!sections.education.length) {
+    add('education', 'Add an Education section with your degree, university, graduation year and relevant courses.', 15)
+  } else {
+    const education = sections.education.join(' ')
+    if (!DEGREE.test(education)) add('education', 'Write your degree under Education, such as BSc Computer Science.', 3)
+    if (!YEAR.test(education)) add('education', 'Write your graduation year, or expected year, under Education.', 3)
+    if (!COURSES.test(text)) add('education', 'List the relevant courses you have taken under Education.', 6)
+  }
+
+  if (order.length < 3) add('layout', 'Use clear section headings, such as Summary, Experience, Projects, Skills and Education.', 3)
+  if (!onePage) add('layout', 'Shorten your CV to one page.', 3)
+  if (sections.low.length) add('layout', 'Remove sections that employers don\'t need, such as hobbies and references.', 1)
+  if (!hasLink) add('projects', 'If you have a GitHub or portfolio, add a link to it.', 0)
+
+  return missing.sort((a, b) => b.points - a.points)
+}
+
+// "JS" in the skills list counts as listing JavaScript
+function isListedShort(skill, skillsText) {
+  return (SAME_SKILL[skill.toLowerCase()] || []).some((short) => hasWord(skillsText, short))
+}
+
+module.exports = { scoreCv, findIssues, findMissing, isHeading, headingType, SECTION_MAX, SAME_SKILL }

@@ -73,7 +73,7 @@ async function renderCv(text) {
 const SECTION_TITLES = { summary: 'Summary', projects: 'Projects', skills: 'Skills', education: 'Education', layout: 'Layout' }
 
 // The advanced report: score, every suggestion, and the comparison
-async function renderReport({ review, suggestions, major, fileName }) {
+async function renderReport({ review, suggestions, missing, major, fileName }) {
   const all = [fileName, major, ...suggestions.flatMap((s) => [s.before_text, s.after_text, s.reason || ''])].join('\n')
   assertPrintable(all)
 
@@ -100,6 +100,17 @@ async function renderReport({ review, suggestions, major, fileName }) {
       doc.moveDown(0.2)
       doc.font('Helvetica-Oblique').fontSize(9).fillColor(GREY).text(`Why: ${printable(s.reason || '')}`)
       doc.moveDown(0.8)
+    }
+
+    if (missing.length) {
+      sectionTitle(doc, 'What only you can add')
+      doc.font('Helvetica').fontSize(9).fillColor(GREY).text('We never add facts for you. Add these if they are true for you.')
+      doc.moveDown(0.4)
+      for (const m of missing) {
+        const points = m.points ? `  (up to +${m.points} points)` : ''
+        doc.font('Helvetica').fontSize(10).fillColor(INK).text(`${SECTION_TITLES[m.section]}: ${m.advice}${points}`)
+        doc.moveDown(0.2)
+      }
     }
 
     sectionTitle(doc, `How your CV compares with strong ${printable(major)} CVs`)
