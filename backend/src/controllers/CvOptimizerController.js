@@ -7,7 +7,6 @@ const { renderCv, renderReport } = require('../services/cvPdf')
 const REPORT_PRICE = { subtotal: 2, vat: 0.2, total: 2.2 }
 const PAYMENT_METHODS = ['card', 'benefitpay']
 const SUGGESTION_STATUSES = ['pending', 'accepted', 'dismissed']
-
 async function loadCurrentResume(seekerId) {
   const { rows } = await db.query(
     `SELECT r.id, r.file_name, r.parsed_text, r.uploaded_at, sp.major
@@ -85,7 +84,11 @@ function formatReview(review, suggestions, resume) {
             isSimulated: true
           }
         }
-      : { reportPrice: { subtotalBhd: REPORT_PRICE.subtotal, vatBhd: REPORT_PRICE.vat, totalBhd: REPORT_PRICE.total } })
+      : {
+          // false when the free suggestion is the only one: there is nothing to pay for
+          canUnlock: suggestions.some((s) => !s.is_free_preview),
+          reportPrice: { subtotalBhd: REPORT_PRICE.subtotal, vatBhd: REPORT_PRICE.vat, totalBhd: REPORT_PRICE.total }
+        })
   }
 }
 

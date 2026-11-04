@@ -1,5 +1,6 @@
 const PDFDocument = require('pdfkit')
-const { ANY_HEADING, COMPARISON_LABELS } = require('./cvOptimizer')
+const { COMPARISON_LABELS } = require('./cvOptimizer')
+const { isHeading } = require('./cvStrength')
 
 const TEAL = '#0f766e'
 const GREY = '#64748b'
@@ -58,7 +59,7 @@ async function renderCv(text) {
     doc.font('Helvetica-Bold').fontSize(18).fillColor(INK).text(name)
     doc.moveDown(0.3)
     for (const line of lines) {
-      if (ANY_HEADING.test(line.trim())) {
+      if (isHeading(line)) {
         sectionTitle(doc, line.trim().replace(/:$/, ''))
       } else if (!line.trim()) {
         doc.moveDown(0.4)
@@ -89,7 +90,7 @@ async function renderReport({ review, suggestions, major, fileName }) {
     for (const s of suggestions) {
       if (doc.y > doc.page.height - 170) doc.addPage()
       doc.font('Helvetica-Bold').fontSize(10.5).fillColor(TEAL)
-        .text(`${SECTION_TITLES[s.section]}  (+${s.points} points)`)
+        .text(SECTION_TITLES[s.section] + (s.points ? `  (+${s.points} points)` : ''))
       doc.moveDown(0.2)
       doc.font('Helvetica-Bold').fontSize(9).fillColor('#b91c1c').text('Before')
       doc.font('Helvetica').fontSize(10).fillColor(INK).text(printable(s.before_text) || 'Not in your CV yet')

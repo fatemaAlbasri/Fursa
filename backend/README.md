@@ -138,6 +138,7 @@ The PDF routes need the token too, so fetch them as a blob rather than using a p
     { "id": 7, "section": "projects", "beforeText": "...", "locked": true }
   ],
   // not unlocked yet:
+  "canUnlock": true,                // false if there is nothing locked, so hide the unlock button (unlock returns 409)
   "reportPrice": { "subtotalBhd": 2, "vatBhd": 0.2, "totalBhd": 2.2 },
   // unlocked instead:
   "potentialScore": 88,
@@ -152,9 +153,11 @@ Any change to the text gets a new review, which is unlocked separately.
 `section` is `summary`, `projects`, `skills`, `education` or `layout`. For `layout`, `beforeText` and `afterText`
 are the section headings joined with ` > `. An empty `beforeText` means the section is new (summary or skills only).
 
-**Scoring:** Gemini marks each section against a fixed guide (summary 20, projects 25, skills 20, education 15, layout 20)
-and the backend adds them up. A suggestion's points can't exceed what its section is missing, and
-`potentialScore` is the score plus all the points, so it never passes 100.
+**Scoring:** `services/cvStrength.js` works out the score with fixed rules (summary 15, projects 40, skills 20, education 15,
+layout 10), so the same text always gets the same score. Gemini only writes the suggestions. A suggestion's points are what
+it adds to the score once applied, and `potentialScore` is the score with all of them applied. A suggestion that lowers the
+score is dropped; a rewording the rules can't see stays with `points: 0`, so hide "+0" in the UI.
+The rules read English headings, so a CV with other headings (or in Arabic) scores lower than it should.
 
 **Only real facts:** `services/cvOptimizer.js` checks every rewrite and drops it if it adds a number, a known skill or a
 name that isn't in the CV, or if its `beforeText` isn't in the CV. Spelling out a short form (JS to JavaScript) is allowed.

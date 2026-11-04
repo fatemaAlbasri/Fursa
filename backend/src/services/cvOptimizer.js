@@ -1,5 +1,6 @@
-const { reviewCvWithAi, SECTION_MAX } = require('./cvAi')
+const { reviewCvWithAi } = require('./cvAi')
 const { knownSkillNames, hasWord, escapeRegex } = require('./cvParser')
+const { scoreCv, isHeading, SECTION_MAX, SAME_SKILL } = require('./cvStrength')
 
 const SECTIONS = Object.keys(SECTION_MAX)
 const LAYOUT_SEPARATOR = /\s*(?:>|→|\n)\s*/
@@ -11,18 +12,6 @@ const COMPARISON_LABELS = {
   portfolio_link: 'A link to your work (GitHub or portfolio), if you have one',
   relevant_courses: 'Relevant courses listed under Education',
   one_page: 'One page, clear headings'
-}
-
-// Short forms that mean the same skill, so spelling one out doesn't count as adding it
-const SAME_SKILL = {
-  javascript: ['js', 'es6'],
-  typescript: ['ts'],
-  react: ['reactjs', 'react.js'],
-  'node.js': ['node', 'nodejs'],
-  postgresql: ['postgres'],
-  'c#': ['csharp'],
-  'machine learning': ['ml'],
-  'ui/ux design': ['ui/ux', 'ux', 'ui']
 }
 
 // pdf-parse leaves page markers like "-- 1 of 2 --" in parsed_text
@@ -92,7 +81,8 @@ function findAddedFact(after, section, cvText, knownSkills) {
   const skill = knownSkills.find((s) => hasWord(after, s) && !skillIsInCv(s))
   if (skill) return skill
 
-  const words = [...after.matchAll(/[A-Za-z][A-Za-z0-9+#]*(?:[./-][A-Za-z0-9+#]+)*/g)]
+  // Hyphens split words, so "JavaScript-based" is checked as "JavaScript" and "based"
+  const words = [...after.matchAll(/[A-Za-z][A-Za-z0-9+#]*(?:[./][A-Za-z0-9+#]+)*/g)]
   for (const { 0: word, index } of words) {
     if (isInCv(word)) continue
     // A skills list is only names, so every word has to come from the CV
@@ -105,16 +95,14 @@ function findAddedFact(after, section, cvText, knownSkills) {
   return null
 }
 
-// Keeps only suggestions we can stand behind and works out the points they are worth
-function checkSuggestions(aiSuggestions, scores, cvText, knownSkills) {
-  const taken = []
-  const pointsLeft = Object.fromEntries(SECTIONS.map((s) => [s, SECTION_MAX[s] - scores[s]]))
-  const kept = []
-  const drop = (s, why) => console.warn(`CV suggestion dropped (${s.section}): ${why}`)
+const drop = (s, why) => console.warn(`CV suggestion dropped (${s.section}): ${why}`)
 
-  const ranked = [...aiSuggestions].sort(
-    (a, b) => SECTIONS.indexOf(a.section) - SECTIONS.indexOf(b.section) || b.points - a.points
-  )
+// Keeps only suggestions we can stand behind
+function checkSuggestions(aiSuggestions, cvText, knownSkills) {
+  const taken = []
+  const kept = []
+
+  const ranked = [...aiSuggestions].sort((a, b) => SECTIONS.indexOf(a.section) - SECTIONS.indexOf(b.section))
   for (const s of ranked) {
     const after = (s.after || '').trim()
     const reason = (s.reason || '').trim()
@@ -141,41 +129,51 @@ function checkSuggestions(aiSuggestions, scores, cvText, knownSkills) {
       }
     }
 
-    const points = Math.min(Math.round(Number(s.points)) || 0, pointsLeft[s.section])
-    if (points < 1) { drop(s, 'worth no points'); continue }
-    pointsLeft[s.section] -= points
-    kept.push({ section: s.section, before, after, reason, points })
+    kept.push({ section: s.section, before, after, reason })
   }
   return kept
 }
 
-// Reviews a CV: AI writes the feedback, then the score and points are checked and worked out here
+// A suggestion is worth what it adds to the score once applied. One that lowers the score is dropped.
+// A rewording the rules can't see is worth 0 points, but is still useful, so it stays
+function addPoints(suggestions, text, startScore, scoreOptions) {
+  const applied = []
+  const kept = []
+  let score = startScore
+  for (const s of suggestions) {
+    const row = { section: s.section, before_text: s.before, after_text: s.after, status: 'accepted' }
+    const next = scoreCv(applySuggestions(text, [...applied, row]), scoreOptions).total
+    if (next < score) { drop(s, `lowers the score from ${score} to ${next}`); continue }
+    // The rules decide what a good order is, so a reorder that adds nothing is only a matter of taste
+    if (s.section === 'layout' && next === score) { drop(s, 'reorder adds nothing'); continue }
+    applied.push(row)
+    kept.push({ ...s, points: next - score })
+    score = next
+  }
+  return kept
+}
+
+// Reviews a CV: AI writes the feedback; the checks and the score are done here
 async function reviewCv(rawText, { major }) {
   const text = cleanCvText(rawText)
+  const knownSkills = await knownSkillNames()
   const ai = await reviewCvWithAi(text, { major, today: new Date().toISOString().slice(0, 10) })
 
-  const scores = Object.fromEntries(
-    SECTIONS.map((s) => [s, Math.max(0, Math.min(SECTION_MAX[s], Math.round(Number(ai.scores?.[s])) || 0))])
-  )
   const aiSuggestions = Array.isArray(ai.suggestions) ? ai.suggestions.filter((s) => SECTIONS.includes(s?.section)) : []
-  const suggestions = checkSuggestions(aiSuggestions, scores, text, await knownSkillNames())
+  const checked = checkSuggestions(aiSuggestions, text, knownSkills)
 
   // It had things to say but none were safe to show: try again rather than say the CV is perfect
-  if (aiSuggestions.length && !suggestions.length) throw new Error('Every suggestion failed the checks')
+  if (aiSuggestions.length && !checked.length) throw new Error('Every suggestion failed the checks')
 
-  const strength = SECTIONS.reduce((sum, s) => sum + scores[s], 0)
+  const onePage = isOnePage(rawText)
+  const scoreOptions = { knownSkills, onePage }
+  const current = scoreCv(text, scoreOptions)
+  const suggestions = addPoints(checked, text, current.total, scoreOptions)
   return {
-    strength,
-    potential: strength + suggestions.reduce((sum, s) => sum + s.points, 0),
+    strength: current.total,
+    potential: current.total + suggestions.reduce((sum, s) => sum + s.points, 0),
     suggestions,
-    comparison: {
-      short_summary: ai.comparison?.short_summary === true,
-      projects_with_tools: ai.comparison?.projects_with_tools === true,
-      full_skill_names: ai.comparison?.full_skill_names === true,
-      portfolio_link: hasWorkLink(text),
-      relevant_courses: ai.comparison?.relevant_courses === true,
-      one_page: isOnePage(rawText)
-    }
+    comparison: { ...current.comparison, portfolio_link: hasWorkLink(text), one_page: onePage }
   }
 }
 
@@ -194,13 +192,11 @@ function moveSections(text, before, after) {
   return [top, ...moved].filter(Boolean).join('\n\n')
 }
 
-const ANY_HEADING = /^(summary|profile|about me|objective|education|experience|work experience|projects?|skills|technical skills|languages|certificates|certifications|courses|hobbies|interests|references)\s*:?$/i
-
 // A new section goes before the first heading, or at the end if there are none
 function addSection(text, title, body) {
   if (title === 'Skills') return `${text}\n\n${title}\n${body}`
   const lines = text.split('\n')
-  const first = lines.findIndex((line) => ANY_HEADING.test(line.trim()))
+  const first = lines.findIndex(isHeading)
   if (first === -1) return `${text}\n\n${title}\n${body}`
   return [...lines.slice(0, first), title, body, '', ...lines.slice(first)].join('\n')
 }
@@ -223,4 +219,4 @@ function applySuggestions(rawText, suggestions) {
   return layout ? moveSections(text, layout.before_text, layout.after_text) : text
 }
 
-module.exports = { reviewCv, applySuggestions, cleanCvText, COMPARISON_LABELS, ANY_HEADING }
+module.exports = { reviewCv, applySuggestions, cleanCvText, COMPARISON_LABELS }
