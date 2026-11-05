@@ -13,6 +13,7 @@ const HEADINGS = {
   skills: ['skills', 'technical skills', 'key skills', 'core skills', 'tools', 'technologies'],
   education: ['education', 'academic background', 'qualifications'],
   low: ['hobbies', 'interests', 'references'],
+  certifications:  ['certificates', 'certifications'],
   other: ['languages', 'certificates', 'certifications', 'courses', 'relevant courses', 'activities', 'volunteering', 'awards']
 }
 
@@ -38,7 +39,7 @@ const SHORT_FORMS = new Set(Object.values(SAME_SKILL).flat())
 
 const VAGUE_SUMMARY = /(looking for|seeking)\s+(a |an )?(job|work|position|opportunit)|hard.?working|highly motivated|team player|fast learner/i
 const FIELD_WORDS = /\b(computer science|information (systems|technology)|computer engineering|software|business|accounting|finance|marketing|engineering|graduate|student)\b/i
-const ACTION_VERB = /^(built|developed|designed|implemented|created|wrote|led|managed|improved|fixed|used|tested|deployed|analy[sz]ed|automated|maintained|delivered|organi[sz]ed|prepared|supported|launched|reduced|increased|integrated|configured|researched|resolved|inspected|installed|repaired|troubleshot|monitored|documented|coordinated|trained|presented|conducted)\b/i
+const ACTION_VERB = /^(built|developed|designed|implemented|created|wrote|led|managed|improved|fixed|used|tested|deployed|analy[sz]ed|automated|maintained|delivered|organi[sz]ed|prepared|supported|launched|reduced|increased|integrated|configured|researched|resolved|inspected|installed|repaired|troubleshot|monitored|documented|coordinated|trained|presented|conducted|documented|coordinated|contributed|trained|presented)\b/i
 const EDUCATION_LINE = /\b(bsc|b\.sc|msc|m\.sc|mba|phd|bachelor|master|diploma|university|college|polytechnic)\b|^study\b/i
 const EXPERIENCE_LINE = /\b(intern|internship|assistant|developer|engineer|technician|officer|analyst|consultant|accountant|cashier|supervisor|part-time|full-time)\b/i
 const BULLET = /^[•\-*–▪·]\s*/
@@ -57,7 +58,7 @@ function lineType(line, underUnknownHeading) {
 }
 
 function splitSections(text) {
-  const sections = { summary: [], projects: [], skills: [], education: [], low: [], other: [] }
+  const sections = { summary: [], projects: [], skills: [], education: [], low: [], other: [] ,  certifications: []}
   const order = []
   let hasExperience = false
   let current = null
@@ -117,15 +118,12 @@ function scoreProjects(lines, knownSkills, hasExperience) {
   const withVerb = entries.filter(startsWithVerb).length
   const verbShare = entries.length ? withVerb / entries.length : 0
 
-  const results = countResults(text)
-
   return {
     score:
       5 +
       (hasExperience ? 8 : 0) +
-      (tools >= 3 ? 7 : tools >= 1 ? 3 : 0) +
-      Math.round(verbShare * 10) +
-      (results >= 2 ? 10 : results === 1 ? 5 : 0),
+      (tools >= 1 ? 7 :  0) +
+      Math.round(verbShare * 20),
     met: tools >= 1
   }
 }
@@ -149,7 +147,7 @@ function scoreSkills(lines, knownSkills) {
   const items = skillItems(lines)
   const fullNames = !items.some((item) => isBadlyWritten(item, knownSkills))
   return {
-    score: 3 + (items.length >= 8 ? 10 : items.length >= 5 ? 7 : items.length >= 3 ? 3 : 0) + (fullNames ? 7 : 0),
+    score: 13 + (fullNames ? 7 : 0),
     met: fullNames
   }
 }
@@ -260,7 +258,7 @@ function findMissing(text, { knownSkills, onePage, hasLink }) {
     const projects = sections.projects.join(' ')
     const tools = knownSkills.filter((s) => hasWord(projects, s)).length
     const results = countResults(projects)
-    if (tools < 3) add('projects', 'Name the tools you used in your projects and work.', tools >= 1 ? 4 : 7)
+    if (tools === 0)   add('projects', 'Mention a tool you actually used, if relevant.', 7)
     if (results < 2) add('projects', 'Add numbers that show your results, such as how many people used your work.', results === 1 ? 5 : 10)
   }
   if (!hasExperience) {
@@ -271,7 +269,7 @@ function findMissing(text, { knownSkills, onePage, hasLink }) {
     add('skills', 'Add a Skills section listing the tools and skills you really have, with their full names.', 20)
   } else {
     const count = skillItems(sections.skills).length
-    if (count < 8) add('skills', 'List more of the skills you really have. Eight or more gets full marks.', count >= 5 ? 3 : count >= 3 ? 7 : 10)
+    if (count < 8) add('skills', 'Add other relevant skills you genuinely have, if any.', 0)  
   }
 
   if (!sections.education.length) {
@@ -281,6 +279,13 @@ function findMissing(text, { knownSkills, onePage, hasLink }) {
     if (!DEGREE.test(education)) add('education', 'Write your degree under Education, such as BSc Computer Science.', 3)
     if (!YEAR.test(education)) add('education', 'Write your graduation year, or expected year, under Education.', 3)
     if (!COURSES.test(text)) add('education', 'List the relevant courses you have taken under Education.', 6)
+  }
+
+  if (sections.certifications.length) {add(
+    'certifications',
+    'Check that each certification includes its issuing organization and date, if available.',
+    0
+  )
   }
 
   if (order.length < 3) add('layout', 'Use clear section headings, such as Summary, Experience, Projects, Skills and Education.', 3)
