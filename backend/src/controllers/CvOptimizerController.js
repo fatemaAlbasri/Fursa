@@ -5,7 +5,7 @@ const { renderCv, renderReport } = require('../services/cvPdf')
 
 // Advanced CV report (simulated payment). VAT is 10%, the same as plan payments
 const REPORT_PRICE = { subtotal: 2, vat: 0.2, total: 2.2 }
-const PAYMENT_METHODS = ['card', 'benefitpay']
+const PAYMENT_METHODS = ['card']
 const SUGGESTION_STATUSES = ['pending', 'accepted', 'dismissed']
 async function loadCurrentResume(seekerId) {
   const { rows } = await db.query(
@@ -200,7 +200,7 @@ async function createReview(req, res, next) {
 async function unlock(req, res, next) {
   const { method } = req.body || {}
   if (!PAYMENT_METHODS.includes(method)) {
-    return res.status(400).json({ error: 'Please choose how to pay', fields: { method: 'Must be card or benefitpay' } })
+    return res.status(400).json({ error: 'Please choose how to pay', fields: { method: 'Must be card' } })
   }
 
   let client
