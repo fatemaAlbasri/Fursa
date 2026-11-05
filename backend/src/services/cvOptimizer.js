@@ -246,6 +246,15 @@ function applySuggestions(rawText, suggestions) {
   return layout ? moveSections(text, layout.before_text, layout.after_text) : text
 }
 
+async function scoreAcceptedSuggestions(rawText, suggestions) {
+  const text = applySuggestions(rawText, suggestions)
+
+  return scoreCv(text, {
+    knownSkills: await knownSkillNames(),
+    onePage: isOnePage(rawText)
+  }).total
+}
+
 // What the seeker has to add themselves. Worked out from the CV each time, so it needs no AI and isn't saved
 async function missingContent(rawText) {
   const text = cleanCvText(rawText)
@@ -256,4 +265,4 @@ async function missingContent(rawText) {
   })
 }
 
-module.exports = { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS }
+module.exports = { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions }

@@ -1,6 +1,6 @@
 const db = require('../config/db')
 const { aiEnabled } = require('../services/cvAi')
-const { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS } = require('../services/cvOptimizer')
+const { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions } = require('../services/cvOptimizer')
 const { renderCv, renderReport } = require('../services/cvPdf')
 
 // Advanced CV report (simulated payment). VAT is 10%, the same as plan payments
@@ -56,7 +56,7 @@ function formatSuggestion(s, isAdvanced) {
   }
 }
 
-function formatReview(review, suggestions, resume, missing) {
+function formatReview(review, suggestions, resume, missing, currentScore) {
   const isAdvanced = review.is_advanced
   return {
     id: review.id,
@@ -67,8 +67,9 @@ function formatReview(review, suggestions, resume, missing) {
     improvementsFound: suggestions.length,
     isAdvanced,
     suggestions: suggestions.map((s) => formatSuggestion(s, isAdvanced)),
-    missing, // free: the weakest CVs have the least to reword, so this is their main feedback
+    missing, 
     createdAt: review.created_at,
+    currentScore,
     ...(isAdvanced
       ? {
           potentialScore: review.potential_score,
@@ -96,7 +97,16 @@ function formatReview(review, suggestions, resume, missing) {
 async function reviewResponse(resume) {
   const review = await loadReview(resume.id)
   if (!review) return null
-  return formatReview(review, await loadSuggestions(review.id), resume, await missingContent(resume.parsed_text))
+  const suggestions = await loadSuggestions(review.id)
+  const currentScore = await scoreAcceptedSuggestions(resume.parsed_text, suggestions)
+
+  return formatReview(
+    review,
+    suggestions,
+    resume,
+    await missingContent(resume.parsed_text),
+    currentScore
+  )
 }
 
 async function getReview(req, res, next) {
@@ -241,7 +251,7 @@ async function updateSuggestion(req, res, next) {
   }
   try {
     const { rows } = await db.query(
-      `SELECT s.is_free_preview, rv.is_advanced
+      `SELECT s.is_free_preview, rv.is_advanced, rv.id AS review_id, r.parsed_text
          FROM cv_suggestions s
          JOIN cv_reviews rv ON rv.id = s.review_id
          JOIN resumes r ON r.id = rv.resume_id
@@ -258,11 +268,20 @@ async function updateSuggestion(req, res, next) {
        RETURNING id, section, before_text, after_text, reason, points, is_free_preview, status`,
       [status, req.params.id]
     )
-    res.json({ suggestion: formatSuggestion(updated[0], true) })
+    const currentScore = await scoreAcceptedSuggestions(
+      rows[0].parsed_text,
+      await loadSuggestions(rows[0].review_id)
+    )
+    res.json({
+      suggestion: formatSuggestion(updated[0], true),
+      currentScore
+    })
   } catch (err) {
     next(err)
   }
 }
+
+
 
 function sendPdf(res, buffer, fileName) {
   res.set('Content-Type', 'application/pdf')
