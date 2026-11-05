@@ -29,9 +29,9 @@ function printable(text) {
     .join('')
 }
 
-function toBuffer(draw) {
+function toBuffer(draw, options = {}) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 50 })
+    const doc = new PDFDocument({ size: 'A4', margin: 50, ...options })
     const chunks = []
     doc.on('data', (chunk) => chunks.push(chunk))
     doc.on('end', () => resolve(Buffer.concat(chunks)))
@@ -39,15 +39,6 @@ function toBuffer(draw) {
     draw(doc)
     doc.end()
   })
-}
-
-function sectionTitle(doc, title, color = TEAL) {
-  doc.moveDown(0.8)
-  if (doc.y > doc.page.height - 100) doc.addPage()
-  doc.font('Helvetica-Bold').fontSize(12).fillColor(color).text(title)
-  const { left, right } = doc.page.margins
-  doc.moveTo(left, doc.y + 2).lineTo(doc.page.width - right, doc.y + 2).strokeColor('#cbd5e1').stroke()
-  doc.moveDown(0.5)
 }
 
 // Improved CV look: black text, grey rules under headings, blue links
@@ -248,59 +239,192 @@ async function renderCv(text) {
 
 const SECTION_TITLES = { summary: 'Summary', projects: 'Projects', skills: 'Skills', education: 'Education', layout: 'Layout' }
 
-// The advanced report: score, every suggestion, and the comparison
+// Report colours: each meaning has a strong colour for text and a pale one for backgrounds
+const RED = { text: '#b91c1c', bg: '#fef2f2' }
+const GREEN = { text: '#15803d', bg: '#f0fdf4' }
+const AMBER = { text: '#b45309', bg: '#fffbeb' }
+const SLATE = { text: '#475569', bg: '#f1f5f9' }
+const TEAL_BG = '#f0fdfa'
+const STATUS = {
+  accepted: { label: 'ACCEPTED', ...GREEN },
+  dismissed: { label: 'DISMISSED', ...SLATE },
+  pending: { label: 'NOT DECIDED YET', ...AMBER }
+}
+
+const sectionName = (key) => SECTION_TITLES[key] || (key ? key[0].toUpperCase() + key.slice(1) : 'General')
+const scoreColour = (score) => (score >= 75 ? GREEN.text : score >= 50 ? AMBER.text : RED.text)
+
+// Small rounded label, returns its width
+function pill(doc, text, x, y, { text: color, bg }) {
+  doc.font('Helvetica-Bold').fontSize(7.5)
+  const w = doc.widthOfString(text) + 12
+  doc.roundedRect(x, y, w, 14, 7).fill(bg)
+  doc.fillColor(color).text(text, x + 6, y + 4, { lineBreak: false })
+  return w
+}
+
+// Numbered section heading with a short explanation under it
+function reportHeading(doc, number, title, note) {
+  doc.moveDown(1.2)
+  if (doc.y > doc.page.height - 160) doc.addPage()
+  const { left } = doc.page.margins
+  const y = doc.y
+  doc.circle(left + 9, y + 8, 9).fill(TEAL)
+  doc.font('Helvetica-Bold').fontSize(10).fillColor('#ffffff').text(String(number), left, y + 3.5, { width: 18, align: 'center' })
+  doc.font('Helvetica-Bold').fontSize(14).fillColor(INK).text(title, left + 26, y + 1)
+  if (note) doc.font('Helvetica').fontSize(9).fillColor(GREY).text(note, left + 26, doc.y + 2)
+  doc.y += 10
+}
+
+// Score card: big number, label and a bar out of 100
+function scoreCard(doc, { x, y, w, label, score }) {
+  const h = 78
+  doc.roundedRect(x, y, w, h, 8).fill(SLATE.bg)
+  doc.font('Helvetica').fontSize(9).fillColor(GREY).text(label, x + 14, y + 12, { width: w - 28 })
+  doc.font('Helvetica-Bold').fontSize(26).fillColor(scoreColour(score)).text(String(score), x + 14, y + 26, { continued: true })
+    .fontSize(11).fillColor(GREY).text(' / 100')
+  const barW = w - 28
+  doc.roundedRect(x + 14, y + h - 16, barW, 6, 3).fill('#e2e8f0')
+  doc.roundedRect(x + 14, y + h - 16, Math.max(6, (barW * Math.min(score, 100)) / 100), 6, 3).fill(scoreColour(score))
+}
+
+// Pale box with a coloured bar on the left: a label and the text
+function textBox(doc, { x, y, w, label, text, colour, italic = false }) {
+  const textW = w - 26
+  doc.font(italic ? 'Helvetica-Oblique' : 'Helvetica').fontSize(10)
+  const h = doc.heightOfString(text, { width: textW, lineGap: 1.5 }) + 30
+  doc.rect(x, y, w, h).fill(colour.bg)
+  doc.rect(x, y, 3, h).fill(colour.text)
+  doc.font('Helvetica-Bold').fontSize(7.5).fillColor(colour.text).text(label, x + 13, y + 9, { characterSpacing: 0.6 })
+  doc.font(italic ? 'Helvetica-Oblique' : 'Helvetica').fontSize(10).fillColor(INK)
+    .text(text, x + 13, y + 21, { width: textW, lineGap: 1.5 })
+  return h
+}
+
+function boxHeight(doc, text, w, italic = false) {
+  doc.font(italic ? 'Helvetica-Oblique' : 'Helvetica').fontSize(10)
+  return doc.heightOfString(text, { width: w - 26, lineGap: 1.5 }) + 30
+}
+
+// The advanced report: score, every suggestion, what to add, and the comparison
 async function renderReport({ review, suggestions, missing, major, fileName }) {
   const all = [fileName, major, ...suggestions.flatMap((s) => [s.before_text, s.after_text, s.reason || ''])].join('\n')
   assertPrintable(all)
+  const field = printable(major || 'your field')
+  const comparison = Object.entries(COMPARISON_LABELS).map(([key, label]) => ({ label, met: review.comparison?.[key] === true }))
+  const metCount = comparison.filter((c) => c.met).length
+  const gain = Math.max(0, review.potential_score - review.strength_score)
 
   return toBuffer((doc) => {
-    doc.font('Helvetica-Bold').fontSize(20).fillColor(TEAL).text('Your advanced CV report')
-    doc.font('Helvetica').fontSize(10).fillColor(GREY).text(printable(fileName))
-    doc.moveDown(0.8)
-    doc.font('Helvetica-Bold').fontSize(13).fillColor(INK)
-      .text(`CV strength: ${review.strength_score} / 100 now, ${review.potential_score} / 100 after all changes`)
-    doc.font('Helvetica').fontSize(10).fillColor(GREY)
-      .text('Every suggestion uses only what is already in your CV.')
+    const { left } = doc.page.margins
+    const width = doc.page.width - left - doc.page.margins.right
 
-    sectionTitle(doc, 'Section-by-section rewrite')
-    for (const s of suggestions) {
-      if (doc.y > doc.page.height - 170) doc.addPage()
-      doc.font('Helvetica-Bold').fontSize(10.5).fillColor(TEAL)
-        .text(SECTION_TITLES[s.section] + (s.points ? `  (+${s.points} points)` : ''))
-      doc.moveDown(0.2)
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#b91c1c').text('Before')
-      doc.font('Helvetica').fontSize(10).fillColor(INK).text(printable(s.before_text) || 'Not in your CV yet')
-      doc.moveDown(0.2)
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#15803d').text('After')
-      doc.font('Helvetica').fontSize(10).fillColor(INK).text(printable(s.after_text))
-      doc.moveDown(0.2)
-      doc.font('Helvetica-Oblique').fontSize(9).fillColor(GREY).text(`Why: ${printable(s.reason || '')}`)
-      doc.moveDown(0.8)
-    }
+    // Title band
+    doc.rect(0, 0, doc.page.width, 92).fill(TEAL)
+    doc.font('Helvetica-Bold').fontSize(22).fillColor('#ffffff').text('Advanced CV Report', left, 30)
+    doc.font('Helvetica').fontSize(10).fillColor('#ccfbf1')
+      .text(`${printable(fileName)}   |   ${field}   |   ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`, left, 58, { width })
+    doc.y = 120
 
+    // Scores
+    const cardW = (width - 16) / 2
+    const cardsY = doc.y
+    scoreCard(doc, { x: left, y: cardsY, w: cardW, label: 'Your CV strength now', score: review.strength_score })
+    scoreCard(doc, { x: left + cardW + 16, y: cardsY, w: cardW, label: 'After all the changes below', score: review.potential_score })
+    doc.y = cardsY + 92
+
+    // At a glance
+    const glance = [
+      `${suggestions.length} rewrite${suggestions.length === 1 ? '' : 's'} ready to use${gain ? ` (up to +${gain} points)` : ''}`,
+      `${missing.length} thing${missing.length === 1 ? '' : 's'} only you can add`,
+      `${metCount} of ${comparison.length} things strong ${field} CVs usually have`
+    ]
+    const glanceY = doc.y
+    const glanceH = 20 + glance.length * 16
+    doc.roundedRect(left, glanceY, width, glanceH, 8).fill(TEAL_BG)
+    glance.forEach((line, i) => {
+      const ly = glanceY + 12 + i * 16
+      doc.circle(left + 18, ly + 5, 2.5).fill(TEAL)
+      doc.font('Helvetica').fontSize(10).fillColor(INK).text(line, left + 28, ly, { width: width - 40 })
+    })
+    doc.y = glanceY + glanceH
+    doc.font('Helvetica-Oblique').fontSize(8.5).fillColor(GREY)
+      .text('Every suggestion uses only what is already in your CV. We never add facts for you.', left, doc.y + 8, { width })
+
+    // 1. Rewrites
+    reportHeading(doc, 1, 'Section-by-section rewrite', 'Replace the "Before" text in your CV with the "After" text.')
+    suggestions.forEach((s, i) => {
+      const before = printable(s.before_text || '') || 'Not in your CV yet'
+      const after = printable(s.after_text || '')
+      const why = printable(s.reason || '')
+      const cardH = 26 + boxHeight(doc, before, width) + 6 + boxHeight(doc, after, width) + (why ? 6 + boxHeight(doc, why, width, true) : 0)
+      if (doc.y + cardH > doc.page.height - doc.page.margins.bottom && cardH < doc.page.height - 120) doc.addPage()
+
+      let y = doc.y
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(TEAL).text(`${i + 1}. ${sectionName(s.section)}`, left, y + 2, { lineBreak: false })
+      let px = left + doc.widthOfString(`${i + 1}. ${sectionName(s.section)}`) + 10
+      if (s.points) px += pill(doc, `+${s.points} POINTS`, px, y + 1, GREEN) + 6
+      const status = STATUS[s.status]
+      if (status) {
+        doc.font('Helvetica-Bold').fontSize(7.5)
+        pill(doc, status.label, left + width - doc.widthOfString(status.label) - 12, y + 1, status)
+      }
+      y += 24
+      y += textBox(doc, { x: left, y, w: width, label: 'BEFORE', text: before, colour: RED }) + 6
+      y += textBox(doc, { x: left, y, w: width, label: 'AFTER', text: after, colour: GREEN })
+      if (why) y += 6
+      if (why) y += textBox(doc, { x: left, y, w: width, label: 'WHY THIS IS BETTER', text: why, colour: SLATE, italic: true })
+      doc.y = y + 18
+    })
+    if (!suggestions.length) doc.font('Helvetica').fontSize(10).fillColor(GREY).text('No rewrites needed.', left)
+
+    // 2. Missing content
     if (missing.length) {
-      sectionTitle(doc, 'What only you can add')
-      doc.font('Helvetica').fontSize(9).fillColor(GREY).text('We never add facts for you. Add these if they are true for you.')
-      doc.moveDown(0.4)
+      reportHeading(doc, 2, 'What only you can add', 'Add these to your CV only if they are true for you.')
       for (const m of missing) {
-        const points = m.points ? `  (up to +${m.points} points)` : ''
-        doc.font('Helvetica').fontSize(10).fillColor(INK).text(`${SECTION_TITLES[m.section]}: ${m.advice}${points}`)
-        doc.moveDown(0.2)
+        const advice = printable(m.advice || '')
+        doc.font('Helvetica').fontSize(10)
+        const h = Math.max(32, doc.heightOfString(advice, { width: width - 150 }) + 22)
+        if (doc.y + h > doc.page.height - doc.page.margins.bottom) doc.addPage()
+        const y = doc.y
+        doc.roundedRect(left, y, width, h, 6).fill(AMBER.bg)
+        doc.rect(left + 12, y + 11, 10, 10).lineWidth(1.2).strokeColor(AMBER.text).stroke()
+        doc.font('Helvetica-Bold').fontSize(8).fillColor(AMBER.text).text(sectionName(m.section).toUpperCase(), left + 32, y + 8)
+        doc.font('Helvetica').fontSize(10).fillColor(INK).text(advice, left + 32, doc.y + 2, { width: width - 150 })
+        if (m.points) pill(doc, `UP TO +${m.points} POINTS`, left + width - 100, y + 9, GREEN)
+        doc.y = y + h + 6
       }
     }
 
-    sectionTitle(doc, `How your CV compares with strong ${printable(major)} CVs`)
-    doc.font('Helvetica').fontSize(9).fillColor(GREY)
-      .text('What strong entry-level CVs usually include, and whether yours does.')
-    doc.moveDown(0.4)
-    for (const [key, label] of Object.entries(COMPARISON_LABELS)) {
-      const met = review.comparison?.[key] === true
-      doc.font('Helvetica-Bold').fontSize(10).fillColor(met ? '#15803d' : '#b45309')
-        .text(met ? 'Yes  ' : 'Not yet  ', { continued: true })
-        .font('Helvetica').fillColor(INK).text(label)
-      doc.moveDown(0.2)
+    // 3. Comparison
+    reportHeading(doc, missing.length ? 3 : 2, `How your CV compares with strong ${field} CVs`,
+      `What strong entry-level CVs usually include. Yours has ${metCount} of ${comparison.length}.`)
+    comparison.forEach(({ label, met }, i) => {
+      if (doc.y + 26 > doc.page.height - doc.page.margins.bottom) doc.addPage()
+      const y = doc.y
+      if (i % 2 === 0) doc.rect(left, y, width, 26).fill('#f8fafc')
+      const mark = met ? GREEN : AMBER
+      doc.circle(left + 14, y + 13, 6).fill(mark.text)
+      if (met) doc.moveTo(left + 11, y + 13).lineTo(left + 13.5, y + 15.5).lineTo(left + 17.5, y + 10.5).lineWidth(1.5).strokeColor('#ffffff').stroke()
+      else doc.moveTo(left + 11, y + 13).lineTo(left + 17, y + 13).lineWidth(1.5).strokeColor('#ffffff').stroke()
+      doc.font('Helvetica').fontSize(10).fillColor(INK).text(label, left + 30, y + 8, { width: width - 120, lineBreak: false })
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(mark.text).text(met ? 'Yes' : 'Not yet', left + width - 70, y + 8.5, { width: 60, align: 'right' })
+      doc.y = y + 26
+    })
+
+    // Page numbers
+    const range = doc.bufferedPageRange()
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i)
+      const bottom = doc.page.margins.bottom
+      doc.page.margins.bottom = 0
+      doc.moveTo(left, doc.page.height - 36).lineTo(left + width, doc.page.height - 36).lineWidth(0.5).strokeColor('#e2e8f0').stroke()
+      doc.font('Helvetica').fontSize(8).fillColor(GREY)
+        .text('Fursa - Advanced CV Report', left, doc.page.height - 28, { lineBreak: false })
+        .text(`Page ${i + 1} of ${range.count}`, left, doc.page.height - 28, { width, align: 'right', lineBreak: false })
+      doc.page.margins.bottom = bottom
     }
-  })
+  }, { bufferPages: true })
 }
 
 module.exports = { renderCv, renderReport }
