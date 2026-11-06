@@ -12,6 +12,9 @@ jest.mock('../services/cvOptimizer', () => ({
   reviewCv: jest.fn(),
   applySuggestions: jest.fn(),
   missingContent: jest.fn(),
+  scoreAcceptedSuggestions: jest.fn().mockResolvedValue(70),
+  afterAllChanges: jest.fn().mockResolvedValue({ missing: [{ section: 'education', advice: 'Add courses', points: 6 }], comparison: {} }),
+  reachableScore: jest.fn((potential, missing) => Math.min(100, potential + missing.reduce((sum, m) => sum + m.points, 0))),
   cleanCvText: jest.fn((text) => text),
   COMPARISON_LABELS: {
     short_summary: 'Short summary',
@@ -105,6 +108,7 @@ describe('CvOptimizerController - getReview', () => {
     const review = {
       id: 20,
       strength_score: 70,
+      potential_score: 80,
       is_advanced: false,
       created_at: new Date()
     }
@@ -125,7 +129,10 @@ describe('CvOptimizerController - getReview', () => {
           id: 20,
           strengthScore: 70,
           isAdvanced: false,
-          suggestions: []
+          suggestions: [],
+          // Shown before paying, so the user knows what the rewrites can and can't do
+          potentialScore: 80,
+          reachableScore: 86
         })
       })
     )
