@@ -37,9 +37,10 @@ const SAME_SKILL = {
 }
 const SHORT_FORMS = new Set(Object.values(SAME_SKILL).flat())
 
-const VAGUE_SUMMARY = /(looking for|seeking)\s+(a |an )?(job|work|position|opportunit)|hard.?working|highly motivated|team player|fast learner/i
+// Up to two words may sit in between: "seeking a full-time opportunity", "looking for an entry-level role"
+const VAGUE_SUMMARY = /(looking for|seeking)\s+(a |an )?([\w-]+\s+){0,2}(job|work|position|opportunit|role|career|employment)\w*|hard.?working|highly motivated|team player|fast learner/i
 const FIELD_WORDS = /\b(computer science|information (systems|technology)|computer engineering|software|business|accounting|finance|marketing|engineering|graduate|student)\b/i
-const ACTION_VERB = /^(built|developed|designed|implemented|created|wrote|led|managed|improved|fixed|used|tested|deployed|analy[sz]ed|automated|maintained|delivered|organi[sz]ed|prepared|supported|launched|reduced|increased|integrated|configured|researched|resolved|inspected|installed|repaired|troubleshot|monitored|documented|coordinated|trained|presented|conducted|documented|coordinated|contributed|trained|presented)\b/i
+const ACTION_VERB = /^(built|developed|designed|implemented|created|wrote|led|managed|improved|fixed|used|tested|deployed|analy[sz]ed|automated|maintained|delivered|organi[sz]ed|prepared|supported|launched|reduced|increased|integrated|configured|researched|resolved|inspected|installed|repaired|troubleshot|monitored|documented|coordinated|trained|presented|conducted|contributed|completed|executed|achieved|collaborated|optimi[sz]ed|enhanced|established|programmed|engineered|performed|handled|applied|produced|generated|streamlined|migrated|refactored|modeled|evaluated|utili[sz]ed|participated)\b/i
 const EDUCATION_LINE = /\b(bsc|b\.sc|msc|m\.sc|mba|phd|bachelor|master|diploma|university|college|polytechnic)\b|^study\b/i
 const EXPERIENCE_LINE = /\b(intern|internship|assistant|developer|engineer|technician|officer|analyst|consultant|accountant|cashier|supervisor|part-time|full-time)\b/i
 const BULLET = /^[•\-*–▪·]\s*/
@@ -118,12 +119,16 @@ function scoreProjects(lines, knownSkills, hasExperience) {
   const withVerb = entries.filter(startsWithVerb).length
   const verbShare = entries.length ? withVerb / entries.length : 0
 
+  // Numbers that show results only the job seeker can add, so rewording alone can't fill the whole section
+  const results = countResults(text)
+
   return {
     score:
       5 +
       (hasExperience ? 8 : 0) +
-      (tools >= 1 ? 7 :  0) +
-      Math.round(verbShare * 20),
+      (tools >= 1 ? 7 : 0) +
+      Math.round(verbShare * 10) +
+      (results >= 2 ? 10 : results === 1 ? 5 : 0),
     met: tools >= 1
   }
 }
@@ -213,15 +218,22 @@ function findIssues(text, { knownSkills }) {
 
   const summary = sections.summary.join(' ')
   const toolsUsed = knownSkills.filter((s) => hasWord(sections.projects.join(' '), s))
+  // The summary may name any tool the CV already lists, in projects or in skills
+  const summaryTools = knownSkills.filter((s) => hasWord(`${sections.projects.join(' ')} ${sections.skills.join(' ')}`, s))
   if (!summary) {
     add('summary', "The CV has no summary section. Write one from its facts. If a line already says what they do or want, use that line as before; otherwise leave before empty.")
   } else {
     const words = summary.split(/\s+/).length
-    if (VAGUE_SUMMARY.test(summary)) add('summary', `The summary is vague: "${summary}"`)
-    else if (words < 10) add('summary', `The summary is too short to say anything specific: "${summary}"`)
-    else if (toolsUsed.length && !knownSkills.some((s) => hasWord(summary, s))) {
-      add('summary', `The summary names no tools, though the CV mentions ${toolsUsed.join(', ')}: "${summary}"`)
+    // One issue with every problem, so the summary gets one rewrite that fixes them all
+    const problems = []
+    const vague = summary.match(VAGUE_SUMMARY)
+    // Named exactly, or the AI keeps the phrase and only adds to it
+    if (vague) problems.push(`it is vague: remove "${vague[0]}" and say what they studied and can do instead`)
+    else if (words < 10) problems.push('it is too short to say anything specific')
+    if (summaryTools.length && !knownSkills.some((s) => hasWord(summary, s))) {
+      problems.push(`it names no tools, though the CV mentions ${summaryTools.join(', ')}`)
     }
+    if (problems.length) add('summary', `The summary needs fixing: ${problems.join('; ')}: "${summary}"`)
   }
 
   for (const line of projectEntries(sections.projects)) {

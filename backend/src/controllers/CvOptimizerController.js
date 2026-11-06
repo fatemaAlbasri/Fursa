@@ -1,6 +1,6 @@
 const db = require('../config/db')
 const { aiEnabled } = require('../services/cvAi')
-const { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions } = require('../services/cvOptimizer')
+const { reviewCv, applySuggestions, missingContent, afterAllChanges, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions } = require('../services/cvOptimizer')
 const { renderCv, renderReport } = require('../services/cvPdf')
 
 // Advanced CV report (simulated payment). VAT is 10%, the same as plan payments
@@ -309,10 +309,13 @@ async function downloadReport(req, res, next) {
     if (!review) return res.status(404).json({ error: 'Your CV has not been reviewed yet' })
     if (!review.is_advanced) return res.status(403).json({ error: 'Unlock the advanced report to download it' })
 
+    const suggestions = await loadSuggestions(review.id)
+    // Shown beside the "after all changes" score, so worked out on the CV with every suggestion used
+    const after = await afterAllChanges(resume.parsed_text, suggestions)
     const buffer = await renderReport({
-      review,
-      suggestions: await loadSuggestions(review.id),
-      missing: await missingContent(resume.parsed_text),
+      review: { ...review, comparison: after.comparison },
+      suggestions,
+      missing: after.missing,
       major: resume.major,
       fileName: resume.file_name
     })

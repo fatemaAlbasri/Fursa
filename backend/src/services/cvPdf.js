@@ -182,7 +182,9 @@ async function renderCv(text) {
 
     // Wrapped lines of a bullet keep the bullet's indent until a blank line or heading
     let indent = 0
-    for (const line of lines.slice(headerEnd)) {
+    const content = lines.slice(headerEnd)
+    for (let i = 0; i < content.length; i++) {
+      const line = content[i]
       if (sectionHeading(line)) {
         indent = 0
         cvHeading(doc, line.replace(/:$/, ''))
@@ -229,6 +231,10 @@ async function renderCv(text) {
         doc.y = Math.max(endY, y + doc.currentLineHeight(true))
       } else if (SUB_LABEL.test(body) && !bullet && !number) {
         writeRuns(doc, [{ text: body, underline: true }], { x, y, width })
+      } else if (!bullet && !number && !indent && ITEM_BULLET.test(content[i + 1] || '') &&
+        body.split(/\s+/).length <= 10 && !/[.:]$/.test(body)) {
+        // A short line right above bullets is a job or project title ("Software Development Intern")
+        writeRuns(doc, [{ text: body, bold: true }], { x, y, width })
       } else {
         writeRuns(doc, labelled(body), { x, y, width, align: indent ? 'left' : 'justify' })
       }
@@ -337,7 +343,7 @@ async function renderReport({ review, suggestions, missing, major, fileName }) {
     const glance = [
       `${suggestions.length} rewrite${suggestions.length === 1 ? '' : 's'} ready to use${gain ? ` (up to +${gain} points)` : ''}`,
       `${missing.length} thing${missing.length === 1 ? '' : 's'} only you can add`,
-      `${metCount} of ${comparison.length} things strong ${field} CVs usually have`
+      `${metCount} of ${comparison.length} things strong ${field} CVs usually have, after the changes`
     ]
     const glanceY = doc.y
     const glanceH = 20 + glance.length * 16
@@ -380,7 +386,7 @@ async function renderReport({ review, suggestions, missing, major, fileName }) {
 
     // 2. Missing content
     if (missing.length) {
-      reportHeading(doc, 2, 'What only you can add', 'Add these to your CV only if they are true for you.')
+      reportHeading(doc, 2, 'What only you can add', 'Still missing after the changes above. Add these only if they are true for you.')
       for (const m of missing) {
         const advice = printable(m.advice || '')
         doc.font('Helvetica').fontSize(10)
@@ -398,7 +404,7 @@ async function renderReport({ review, suggestions, missing, major, fileName }) {
 
     // 3. Comparison
     reportHeading(doc, missing.length ? 3 : 2, `How your CV compares with strong ${field} CVs`,
-      `What strong entry-level CVs usually include. Yours has ${metCount} of ${comparison.length}.`)
+      `What strong entry-level CVs usually include. After the changes above, yours has ${metCount} of ${comparison.length}.`)
     comparison.forEach(({ label, met }, i) => {
       if (doc.y + 26 > doc.page.height - doc.page.margins.bottom) doc.addPage()
       const y = doc.y

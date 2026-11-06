@@ -60,10 +60,17 @@ function validLayout(text, before, after) {
 
 // Returns what the rewrite claims that the CV doesn't say, or null if it's all in the CV.
 // The AI is told never to add anything; this makes sure of it.
-function findAddedFact(after, section, cvText, knownSkills) {
-  const skillIsInCv = (skill) => {
+function findAddedFact(after, section, cvText, knownSkills, before = '') {
+  const skillIsIn = (text, skill) => {
     const shortForms = SAME_SKILL[skill.toLowerCase()] || []
-    return [skill, ...shortForms].some((name) => hasWord(cvText, name))
+    return [skill, ...shortForms].some((name) => hasWord(text, name))
+  }
+  const skillIsInCv = (skill) => skillIsIn(cvText, skill)
+
+  // A project line may only name the tools it already names: the skills list doesn't say where each tool was used
+  if (section === 'projects') {
+    const claimed = knownSkills.find((s) => hasWord(after, s) && !skillIsIn(before, s))
+    if (claimed) return claimed
   }
   // A short form in the rewrite is the same skill as its full name in the CV
   const isInCv = (word) => {
@@ -123,7 +130,7 @@ function checkSuggestions(aiSuggestions, cvText, knownSkills) {
       if (kept.some((k) => k.section === 'layout')) { drop(s, 'second layout change'); continue }
       if (!validLayout(cvText, before, after)) { drop(s, 'not a reorder of the CV headings'); continue }
     } else {
-      const added = findAddedFact(after, s.section, cvText, knownSkills)
+      const added = findAddedFact(after, s.section, cvText, knownSkills, before)
       if (added) { drop(s, `adds "${added}", which is not in the CV`); continue }
       // "Helped configure routers" can't become "Configured routers": that claims more than they did
       if (HELPING.test(before) && !HELPING.test(after)) { drop(s, 'makes helping sound like doing it alone'); continue }
@@ -205,15 +212,22 @@ function moveSections(text, before, after) {
   const lines = text.split('\n')
   const key = (line) => line.trim().replace(/:$/, '').toLowerCase()
   const from = splitLayout(before).map((h) => h.toLowerCase())
-  const starts = lines.map((line, i) => (from.includes(key(line)) ? i : -1)).filter((i) => i !== -1)
-  if (starts.length !== from.length) return text
+  // Every section ends at the next heading, so moving two of them doesn't drag the sections after them along
+  const starts = lines
+    .map((line, i) => (i > 0 && (isHeading(line) || from.includes(key(line))) ? i : -1))
+    .filter((i) => i !== -1)
+  const sections = starts.map((start, i) => lines.slice(start, starts[i + 1]).join('\n').trim())
+  const headingOf = (section) => key(section.split('\n')[0])
+  const listed = sections.filter((s) => from.includes(headingOf(s)))
+  if (listed.length !== from.length) return text
 
-  const blocks = new Map(
-    starts.map((start, i) => [key(lines[start]), lines.slice(start, starts[i + 1]).join('\n').trim()])
-  )
+  // The listed sections swap places in the new order; the others stay where they are
+  const byHeading = new Map(listed.map((s) => [headingOf(s), s]))
+  const order = splitLayout(after).map((h) => byHeading.get(h.toLowerCase()))
+  let next = 0
+  const reordered = sections.map((s) => (from.includes(headingOf(s)) ? order[next++] : s))
   const top = lines.slice(0, starts[0]).join('\n').trim()
-  const moved = splitLayout(after).map((h) => blocks.get(h.toLowerCase()))
-  return [top, ...moved].filter(Boolean).join('\n\n')
+  return [top, ...reordered].filter(Boolean).join('\n\n')
 }
 
 // A new section goes before the first heading, or at the end if there are none
@@ -265,4 +279,17 @@ async function missingContent(rawText) {
   })
 }
 
-module.exports = { reviewCv, applySuggestions, missingContent, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions }
+// The CV once every suggestion is used: what is still missing and how it compares.
+// The report shows these next to the "after all changes" score, so they must not ask for what a rewrite already adds
+async function afterAllChanges(rawText, suggestions) {
+  const text = applySuggestions(rawText, suggestions.map((s) => ({ ...s, status: 'accepted' })))
+  const knownSkills = await knownSkillNames()
+  const onePage = isOnePage(rawText)
+  const hasLink = hasWorkLink(text)
+  return {
+    missing: findMissing(text, { knownSkills, onePage, hasLink }),
+    comparison: { ...scoreCv(text, { knownSkills, onePage }).comparison, portfolio_link: hasLink, one_page: onePage }
+  }
+}
+
+module.exports = { reviewCv, applySuggestions, missingContent, afterAllChanges, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions }
