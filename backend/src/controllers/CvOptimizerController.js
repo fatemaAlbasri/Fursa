@@ -1,6 +1,6 @@
 const db = require('../config/db')
 const { aiEnabled } = require('../services/cvAi')
-const { reviewCv, applySuggestions, missingContent, afterAllChanges, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions } = require('../services/cvOptimizer')
+const { reviewCv, applySuggestions, missingContent, afterAllChanges, reachableScore, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions } = require('../services/cvOptimizer')
 const { renderCv, renderReport } = require('../services/cvPdf')
 
 // Advanced CV report (simulated payment). VAT is 10%, the same as plan payments
@@ -56,7 +56,7 @@ function formatSuggestion(s, isAdvanced) {
   }
 }
 
-function formatReview(review, suggestions, resume, missing, currentScore) {
+function formatReview(review, suggestions, resume, missing, currentScore, reachable) {
   const isAdvanced = review.is_advanced
   return {
     id: review.id,
@@ -67,12 +67,15 @@ function formatReview(review, suggestions, resume, missing, currentScore) {
     improvementsFound: suggestions.length,
     isAdvanced,
     suggestions: suggestions.map((s) => formatSuggestion(s, isAdvanced)),
-    missing, 
+    missing,
     createdAt: review.created_at,
     currentScore,
+    // Shown before paying too, so nobody pays expecting more than the rewrites can give.
+    // potentialScore: after every rewrite. reachableScore: after the rewrites and everything in "missing"
+    potentialScore: review.potential_score,
+    reachableScore: reachable,
     ...(isAdvanced
       ? {
-          potentialScore: review.potential_score,
           comparison: Object.entries(COMPARISON_LABELS).map(([key, label]) => ({
             key,
             label,
@@ -99,13 +102,15 @@ async function reviewResponse(resume) {
   if (!review) return null
   const suggestions = await loadSuggestions(review.id)
   const currentScore = await scoreAcceptedSuggestions(resume.parsed_text, suggestions)
+  const after = await afterAllChanges(resume.parsed_text, suggestions)
 
   return formatReview(
     review,
     suggestions,
     resume,
     await missingContent(resume.parsed_text),
-    currentScore
+    currentScore,
+    reachableScore(review.potential_score, after.missing)
   )
 }
 
@@ -316,6 +321,7 @@ async function downloadReport(req, res, next) {
       review: { ...review, comparison: after.comparison },
       suggestions,
       missing: after.missing,
+      reachable: reachableScore(review.potential_score, after.missing),
       major: resume.major,
       fileName: resume.file_name
     })

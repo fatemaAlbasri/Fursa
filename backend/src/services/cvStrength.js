@@ -37,8 +37,8 @@ const SAME_SKILL = {
 }
 const SHORT_FORMS = new Set(Object.values(SAME_SKILL).flat())
 
-// Up to two words may sit in between: "seeking a full-time opportunity", "looking for an entry-level role"
-const VAGUE_SUMMARY = /(looking for|seeking)\s+(a |an )?([\w-]+\s+){0,2}(job|work|position|opportunit|role|career|employment)\w*|hard.?working|highly motivated|team player|fast learner/i
+// Up to two words may sit in between: "seeking a full-time opportunity", "looking for an entry-level role", "I need a job"
+const VAGUE_SUMMARY = /(looking for|seeking|need|want)\s+(a |an )?([\w-]+\s+){0,2}(job|position|opportunit|role|career|employment)\w*|(looking for|seeking)\s+(a |an )?([\w-]+\s+){0,2}work\b|hard.?working|highly motivated|team player|fast learner/i
 const FIELD_WORDS = /\b(computer science|information (systems|technology)|computer engineering|software|business|accounting|finance|marketing|engineering|graduate|student)\b/i
 const ACTION_VERB = /^(built|developed|designed|implemented|created|wrote|led|managed|improved|fixed|used|tested|deployed|analy[sz]ed|automated|maintained|delivered|organi[sz]ed|prepared|supported|launched|reduced|increased|integrated|configured|researched|resolved|inspected|installed|repaired|troubleshot|monitored|documented|coordinated|trained|presented|conducted|contributed|completed|executed|achieved|collaborated|optimi[sz]ed|enhanced|established|programmed|engineered|performed|handled|applied|produced|generated|streamlined|migrated|refactored|modeled|evaluated|utili[sz]ed|participated)\b/i
 const EDUCATION_LINE = /\b(bsc|b\.sc|msc|m\.sc|mba|phd|bachelor|master|diploma|university|college|polytechnic)\b|^study\b/i
@@ -147,13 +147,25 @@ function isBadlyWritten(item, knownSkills) {
   return item === lower && knownSkills.some((s) => s.toLowerCase() === lower && s !== item)
 }
 
+// Words that say nothing about what someone can do. Anything else counts as a real skill,
+// even if it isn't in our skills table ("Figma", "Financial Analysis")
+const GENERIC_SKILLS = new Set([
+  'programming', 'coding', 'computers', 'computer', 'computer skills', 'computing', 'technology', 'technologies',
+  'it', 'it skills', 'software', 'internet', 'technical skills', 'skills', 'hard working', 'hardworking',
+  'fast learner', 'team player', 'microsoft', 'office'
+])
+const isGenericSkill = (item) => GENERIC_SKILLS.has(item.toLowerCase().replace(/[.:]+$/, '').trim())
+const REAL_SKILLS_FOR_FULL_POINTS = 4
+
 function scoreSkills(lines, knownSkills) {
   if (!lines.length) return { score: 0, met: false }
   const items = skillItems(lines)
   const fullNames = !items.some((item) => isBadlyWritten(item, knownSkills))
+  const real = items.filter((item) => !isGenericSkill(item)).length
   return {
-    score: 13 + (fullNames ? 7 : 0),
-    met: fullNames
+    // 5 for having the section, up to 8 for real skills (2 each), 7 for full names
+    score: 5 + Math.min(8, real * 2) + (fullNames ? 7 : 0),
+    met: fullNames && real >= REAL_SKILLS_FOR_FULL_POINTS
   }
 }
 
@@ -209,6 +221,22 @@ function scoreCv(text, { knownSkills, onePage }) {
   }
 }
 
+// The text under each summary heading, one string per heading
+function summaryParts(text) {
+  const parts = []
+  let current = null
+  text.split('\n').map((l) => l.trim()).filter(Boolean).forEach((line, i) => {
+    const type = headingType(line)
+    if (type || (i > 0 && looksLikeHeading(line))) {
+      current = type === 'summary' ? [] : null
+      if (current) parts.push(current)
+    } else if (current) {
+      current.push(line)
+    }
+  })
+  return parts.map((lines) => lines.join(' ')).filter(Boolean)
+}
+
 // The problems in this CV that rewording can fix. Gemini is told to fix each one, so the feedback
 // doesn't depend on what it happens to notice. Missing facts (courses, results) aren't listed: they can't be reworded in
 function findIssues(text, { knownSkills }) {
@@ -223,17 +251,23 @@ function findIssues(text, { knownSkills }) {
   if (!summary) {
     add('summary', "The CV has no summary section. Write one from its facts. If a line already says what they do or want, use that line as before; otherwise leave before empty.")
   } else {
-    const words = summary.split(/\s+/).length
-    // One issue with every problem, so the summary gets one rewrite that fixes them all
-    const problems = []
-    const vague = summary.match(VAGUE_SUMMARY)
-    // Named exactly, or the AI keeps the phrase and only adds to it
-    if (vague) problems.push(`it is vague: remove "${vague[0]}" and say what they studied and can do instead`)
-    else if (words < 10) problems.push('it is too short to say anything specific')
-    if (summaryTools.length && !knownSkills.some((s) => hasWord(summary, s))) {
-      problems.push(`it names no tools, though the CV mentions ${summaryTools.join(', ')}`)
-    }
-    if (problems.length) add('summary', `The summary needs fixing: ${problems.join('; ')}: "${summary}"`)
+    // A CV can have its summary under two headings (ABOUT ME and OBJECTIVE). Each part is quoted on its own,
+    // because before has to be copied from one place in the CV
+    const parts = summaryParts(text)
+    const noTools = summaryTools.length && !knownSkills.some((s) => hasWord(summary, s))
+    parts.forEach((part, i) => {
+      // One issue per part with every problem, so each part gets one rewrite that fixes them all
+      const problems = []
+      const vague = part.match(VAGUE_SUMMARY)
+      // Named exactly, or the AI keeps the phrase and only adds to it
+      if (vague) problems.push(`it is vague: remove "${vague[0]}" and say what they studied and can do instead`)
+      else if (parts.length === 1 && part.split(/\s+/).length < 10) problems.push('it is too short to say anything specific')
+      if (i === 0 && noTools) problems.push(`it names no tools, though the CV mentions ${summaryTools.join(', ')}`)
+      if (problems.length) {
+        const which = parts.length > 1 ? 'This part of the summary' : 'The summary'
+        add('summary', `${which} needs fixing: ${problems.join('; ')}. Use exactly this text as before: "${part}"`)
+      }
+    })
   }
 
   for (const line of projectEntries(sections.projects)) {
@@ -264,6 +298,23 @@ function findMissing(text, { knownSkills, onePage, hasLink }) {
   const missing = []
   const add = (section, advice, points) => missing.push({ section, advice, points })
 
+  // What the rewrites couldn't fix in the summary, so no summary points go missing without a reason
+  if (!sections.summary.length) {
+    add('summary', 'Add a short summary at the top: what you studied and the tools you really use.', SECTION_MAX.summary)
+  } else {
+    const summary = scoreSummary(sections.summary, knownSkills)
+    if (summary.score < SECTION_MAX.summary) {
+      const summaryText = sections.summary.join(' ')
+      const words = summaryText.split(/\s+/).length
+      const tips = []
+      if (VAGUE_SUMMARY.test(summaryText)) tips.push('remove phrases like "looking for a job"')
+      if (words < 10 || words > 60) tips.push('keep it between 10 and 60 words')
+      if (!knownSkills.some((s) => hasWord(summaryText, s))) tips.push('name a tool or technical skill you really use')
+      if (!FIELD_WORDS.test(summaryText)) tips.push('say what you studied')
+      add('summary', `In your summary, ${tips.join(', ') || 'say what you studied and the tools you use'}.`, SECTION_MAX.summary - summary.score)
+    }
+  }
+
   if (!sections.projects.length) {
     add('projects', 'Add your projects or coursework: what you built, the tools you used and the result.', 32)
   } else {
@@ -280,8 +331,17 @@ function findMissing(text, { knownSkills, onePage, hasLink }) {
   if (!sections.skills.length) {
     add('skills', 'Add a Skills section listing the tools and skills you really have, with their full names.', 20)
   } else {
-    const count = skillItems(sections.skills).length
-    if (count < 8) add('skills', 'Add other relevant skills you genuinely have, if any.', 0)  
+    const items = skillItems(sections.skills)
+    const generic = items.filter(isGenericSkill)
+    const real = items.length - generic.length
+    if (real < REAL_SKILLS_FOR_FULL_POINTS) {
+      const advice = generic.length
+        ? `Replace general words like "${generic[0]}" with the real tools and skills you know, such as software, languages or methods you use in your field.`
+        : 'Add other real tools and skills you know, such as software, languages or methods you use in your field.'
+      add('skills', advice, 8 - real * 2)
+    } else if (items.length < 8) {
+      add('skills', 'Add other relevant skills you genuinely have, if any.', 0)
+    }
   }
 
   if (!sections.education.length) {

@@ -8,7 +8,7 @@ const LAYOUT_SEPARATOR = /\s*(?:>|→|\n)\s*/
 const COMPARISON_LABELS = {
   short_summary: 'A short, specific summary',
   projects_with_tools: 'Projects with the tools used',
-  full_skill_names: 'Skills written in full names',
+  full_skill_names: 'Real skills, written in full names',
   portfolio_link: 'A link to your work (GitHub or portfolio), if you have one',
   relevant_courses: 'Relevant courses listed under Education',
   one_page: 'One page, clear headings'
@@ -292,4 +292,8 @@ async function afterAllChanges(rawText, suggestions) {
   }
 }
 
-module.exports = { reviewCv, applySuggestions, missingContent, afterAllChanges, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions }
+// The score the CV can reach: every rewrite, plus everything only the job seeker can add
+const reachableScore = (potential, missingAfter) =>
+  Math.min(100, potential + missingAfter.reduce((sum, m) => sum + (m.points || 0), 0))
+
+module.exports = { reviewCv, applySuggestions, missingContent, afterAllChanges, reachableScore, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions }

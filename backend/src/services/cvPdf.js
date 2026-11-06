@@ -313,7 +313,7 @@ function boxHeight(doc, text, w, italic = false) {
 }
 
 // The advanced report: score, every suggestion, what to add, and the comparison
-async function renderReport({ review, suggestions, missing, major, fileName }) {
+async function renderReport({ review, suggestions, missing, reachable = review.potential_score, major, fileName }) {
   const all = [fileName, major, ...suggestions.flatMap((s) => [s.before_text, s.after_text, s.reason || ''])].join('\n')
   assertPrintable(all)
   const field = printable(major || 'your field')
@@ -332,17 +332,24 @@ async function renderReport({ review, suggestions, missing, major, fileName }) {
       .text(`${printable(fileName)}   |   ${field}   |   ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`, left, 58, { width })
     doc.y = 120
 
-    // Scores
-    const cardW = (width - 16) / 2
+    // Scores: now -> after the rewrites -> what they can reach by adding what's missing.
+    // The third card shows the rewrites are a first step, not the ceiling
+    const cards = [
+      { label: 'Your CV strength now', score: review.strength_score },
+      { label: 'After the rewrites below', score: review.potential_score },
+      ...(reachable > review.potential_score ? [{ label: "Up to, if you add what's missing", score: reachable }] : [])
+    ]
+    const gap = 12
+    const cardW = (width - gap * (cards.length - 1)) / cards.length
     const cardsY = doc.y
-    scoreCard(doc, { x: left, y: cardsY, w: cardW, label: 'Your CV strength now', score: review.strength_score })
-    scoreCard(doc, { x: left + cardW + 16, y: cardsY, w: cardW, label: 'After all the changes below', score: review.potential_score })
+    cards.forEach((card, i) => scoreCard(doc, { x: left + i * (cardW + gap), y: cardsY, w: cardW, ...card }))
     doc.y = cardsY + 92
 
     // At a glance
+    const extra = Math.max(0, reachable - review.potential_score)
     const glance = [
       `${suggestions.length} rewrite${suggestions.length === 1 ? '' : 's'} ready to use${gain ? ` (up to +${gain} points)` : ''}`,
-      `${missing.length} thing${missing.length === 1 ? '' : 's'} only you can add`,
+      `${missing.length} thing${missing.length === 1 ? '' : 's'} only you can add${extra ? ` (up to +${extra} more points)` : ''}`,
       `${metCount} of ${comparison.length} things strong ${field} CVs usually have, after the changes`
     ]
     const glanceY = doc.y
@@ -400,6 +407,19 @@ async function renderReport({ review, suggestions, missing, major, fileName }) {
         if (m.points) pill(doc, `UP TO +${m.points} POINTS`, left + width - 100, y + 9, GREEN)
         doc.y = y + h + 6
       }
+
+      // Next step: the missing items only count once they're in the CV and it's uploaded again
+      const note = `Add the items above that are true for you, then upload your CV again to get your new score${extra ? ` (up to ${reachable} / 100)` : ''}.`
+      doc.font('Helvetica').fontSize(10)
+      const h = doc.heightOfString(note, { width: width - 32 }) + 34
+      if (doc.y + 6 + h > doc.page.height - doc.page.margins.bottom) doc.addPage()
+      else doc.y += 6
+      const y = doc.y
+      doc.roundedRect(left, y, width, h, 8).fill(TEAL_BG)
+      doc.rect(left, y, 3, h).fill(TEAL)
+      doc.font('Helvetica-Bold').fontSize(8).fillColor(TEAL).text('NEXT STEP', left + 16, y + 10, { characterSpacing: 0.6 })
+      doc.font('Helvetica').fontSize(10).fillColor(INK).text(note, left + 16, y + 23, { width: width - 32 })
+      doc.y = y + h
     }
 
     // 3. Comparison

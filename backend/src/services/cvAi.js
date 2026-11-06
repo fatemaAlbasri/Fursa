@@ -147,7 +147,7 @@ suggestions: at most 10. Each one:
   Keep what the CV says about the person: don't call a graduate a student, or a student a graduate. If they helped with something, keep that they helped ("Helped configure" stays "Helped configure").
   A line about what they did starts with a past-tense verb such as Built, Developed, Designed, Created, Implemented or Wrote.
   The verb and its object must say no more than the line does. Don't invent what was made or how much: "Worked with programming technologies" may become "Used programming technologies", not "Developed applications using programming technologies"; "Gained experience in software development" may become "Contributed to software development", not "Built software". If the line names no product, task or result, don't add one.
-  after replaces before and nothing else; the text around it stays. Read it in place: it must fit the sentences next to it and not repeat them. To rewrite a whole summary, before must be the whole summary.
+  after replaces before and nothing else; the text around it stays. Read it in place: it must fit the sentences next to it and not repeat them. To rewrite a whole summary, before must be the whole summary. When a problem above says which text to use as before, copy exactly that text: a summary split over two headings is rewritten one part at a time.
 - reason: one sentence under 20 words, written to the job seeker, saying why this change helps. Don't quote the new wording.
 
 For section "layout": at most one suggestion, and only to change the order of the sections. Make none if the order is already sensible.
