@@ -37,6 +37,22 @@ export const BellIcon = () => (
   <Icon><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></Icon>
 );
 
+export const LockIcon = () => (
+  <Icon><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></Icon>
+);
+
+export const DownloadIcon = () => (
+  <Icon><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></Icon>
+);
+
+export const UploadIcon = () => (
+  <Icon><path d="M12 15V4" /><path d="m7 9 5-5 5 5" /><path d="M5 20h14" /></Icon>
+);
+
+export const CheckIcon = () => (
+  <Icon><path d="m5 12.5 4.5 4.5L19 7.5" /></Icon>
+);
+
 export const GridIcon = () => (
   <Icon>
     <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
