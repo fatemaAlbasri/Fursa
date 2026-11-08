@@ -103,12 +103,15 @@ async function reviewResponse(resume) {
   const suggestions = await loadSuggestions(review.id)
   const currentScore = await scoreAcceptedSuggestions(resume.parsed_text, suggestions)
   const after = await afterAllChanges(resume.parsed_text, suggestions)
+  // Paid users see every rewrite, so "what only you can add" and the comparison are what's left after them,
+  // the same as the PDF report. Free users can't use the rewrites, so they see their CV as it is
+  const advanced = review.is_advanced
 
   return formatReview(
-    review,
+    advanced ? { ...review, comparison: after.comparison } : review,
     suggestions,
     resume,
-    await missingContent(resume.parsed_text),
+    advanced ? after.missing : await missingContent(resume.parsed_text),
     currentScore,
     reachableScore(review.potential_score, after.missing)
   )
