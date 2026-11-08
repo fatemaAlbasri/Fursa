@@ -94,11 +94,9 @@ function StandOut({ company, skills }) {
           </>
         )}
       </p>
-      {/* The AI CV Optimizer isn't built yet → the button stays disabled */}
-      <button type="button" className="btn btn--block" disabled title="Coming soon">
+      <Link to="/jobseeker/cv-optimizer" className="btn btn--primary btn--block">
         Improve my CV with AI
-      </button>
-      <p className="co-tip__text">The AI CV Optimizer is coming soon.</p>
+      </Link>
     </section>
   )
 }
