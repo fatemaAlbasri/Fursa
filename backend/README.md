@@ -78,7 +78,7 @@ router.post('/', requireAuth, requireRole('employer'), handler); // req.user = {
 | Method | URL | Body | Returns |
 |---|---|---|---|
 | POST | `/api/cv/parse` | FormData `cv` (no login, max 10 tries/hour per IP) | `{ cv, source }`; the file is **not** kept |
-| POST | `/api/cv` | FormData `cv` + Bearer token (seeker) | `201 { resume, parsed, warning? }`; becomes the current CV |
+| POST | `/api/cv` | FormData `cv` + Bearer token (seeker) | `201 { resume, parsed, source, warning? }`; becomes the current CV (`source` is `null` if the CV couldn't be read) |
 | GET | `/api/cv` | Bearer token (seeker) | `{ resume }` (`404` if none) |
 
 `cv` looks like this (any field can be `null` / `[]` if the CV doesn't say):
@@ -105,6 +105,67 @@ with the answer. Sign up then sends the CV as usual; the backend reads it again 
 **AI:** add `GEMINI_API_KEY=...` to `.env` to use Gemini (more accurate). `GEMINI_MODEL` is optional
 (default `gemini-flash-latest`). Without a key (or if the AI call fails) a rule-based parser is used,
 so it still works locally.
+
+## AI CV Optimizer API
+
+All routes need a Bearer token (seeker) and work on the seeker's current CV.
+
+| Method | URL | Body | Returns |
+|---|---|---|---|
+| GET | `/api/cv/optimizer` | | `{ review, canReview }`; `review` is `null` until reviewed, `canReview` is `false` if the CV has no readable text |
+| POST | `/api/cv/optimizer` | | `201 { review }`, or `200` if this CV was already reviewed (max 10 tries/hour per IP). Can take up to about 2 minutes, so show a loading state |
+| POST | `/api/cv/optimizer/unlock` | `{ method }` (`card` / `benefitpay`) | `{ review }` with everything unlocked. Simulated; paying twice charges once |
+| PATCH | `/api/cv/optimizer/suggestions/:id` | `{ status }` (`accepted` / `dismissed` / `pending`) | `{ suggestion }`; a locked one returns `403` |
+| GET | `/api/cv/optimizer/improved-cv` | | PDF of the CV with the accepted suggestions |
+| GET | `/api/cv/optimizer/report` | | PDF of the full report; `403` until unlocked |
+
+The PDF routes need the token too, so fetch them as a blob rather than using a plain link.
+
+`review` looks like this:
+
+```jsonc
+{
+  "id": 2,
+  "resume": { "id": 3, "fileName": "my_cv.pdf", "uploadedAt": "..." },
+  "cvText": "Sara Ali\n...",        // for the "Your CV" panel; beforeText is copied from it exactly, so it can be highlighted
+  "major": "Computer Science",
+  "strengthScore": 72,
+  "improvementsFound": 5,
+  "isAdvanced": false,
+  "suggestions": [
+    { "id": 6, "section": "summary", "beforeText": "IT graduate looking for a job.", "locked": false,
+      "afterText": "...", "reason": "...", "points": 7, "isFreePreview": true, "status": "pending" },
+    { "id": 7, "section": "projects", "beforeText": "...", "locked": true }
+  ],
+  // not unlocked yet:
+  "missing": [{ "section": "skills", "advice": "Add a Skills section ...", "points": 20 }], // free; what only the seeker can add, biggest first
+  "canUnlock": true,                // false if there is nothing locked, so hide the unlock button (unlock returns 409)
+  "reportPrice": { "subtotalBhd": 2, "vatBhd": 0.2, "totalBhd": 2.2 },
+  // unlocked instead:
+  "potentialScore": 88,
+  "comparison": [{ "key": "short_summary", "label": "A short, specific summary", "met": true }],
+  "payment": { "paidAt": "...", "subtotalBhd": 2, "vatBhd": 0.2, "totalBhd": 2.2, "isSimulated": true }
+}
+```
+
+Uploading a CV with exactly the same text keeps its review, with the same score, accepted suggestions and payment.
+Any change to the text gets a new review, which is unlocked separately.
+
+`section` is `summary`, `projects`, `skills`, `education` or `layout`. For `layout`, `beforeText` and `afterText`
+are the section headings joined with ` > `. An empty `beforeText` means the section is new (summary or skills only).
+
+**Scoring:** `services/cvStrength.js` works out the score with fixed rules (summary 15, projects 40, skills 20, education 15,
+layout 10), so the same text always gets the same score. Gemini only writes the suggestions. A suggestion's points are what
+it adds to the score once applied, and `potentialScore` is the score with all of them applied. A suggestion that lowers the
+score is dropped; a rewording the rules can't see stays with `points: 0`, so hide "+0" in the UI.
+The rules read English headings, so a CV with other headings (or in Arabic) scores lower than it should.
+
+**Only real facts:** `services/cvOptimizer.js` checks every rewrite and drops it if it adds a number, a known skill or a
+name that isn't in the CV, or if its `beforeText` isn't in the CV. Spelling out a short form (JS to JavaScript) is allowed.
+
+**Errors:** no `GEMINI_API_KEY` returns `503`. If Gemini fails after retrying (`GEMINI_FALLBACK_MODEL` is the last try,
+default `gemini-flash-lite-latest`) it returns `502` and nothing is saved, so the seeker can try again.
+PDF downloads return `422` for CVs with Arabic text, because the built-in PDF fonts only have Western letters.
 
 ## Notes
 

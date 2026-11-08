@@ -51,9 +51,12 @@ async function upload(req, res, next) {
 
   // The CV is saved even if it can't be read; parsed stays null in that case
   let parsed = null
+  let source = null
   let warning
   try {
-    parsed = await saveParsedCv(resumeId, req.user.id, file.path)
+    const result = await saveParsedCv(resumeId, req.user.id, file.path)
+    parsed = result.info
+    source = result.source
   } catch (err) {
     if (err.status !== 422) console.error('CV parsing failed:', err)
     warning = err.status === 422 ? err.message : "Your CV was saved, but we couldn't read its details."
@@ -61,7 +64,7 @@ async function upload(req, res, next) {
     await saveCvEmbedding(req.user.id, null).catch((err) => console.error('Clearing CV embedding failed:', err.message))
   }
   rescoreSeeker(req.user.id).catch((err) => console.error('Scoring failed:', err.message))
-  res.status(201).json({ resume: await loadResume(req.user.id), parsed, ...(warning && { warning }) })
+  res.status(201).json({ resume: await loadResume(req.user.id), parsed, source, ...(warning && { warning }) })
 }
 
 // The seeker's current CV with what was read from it
