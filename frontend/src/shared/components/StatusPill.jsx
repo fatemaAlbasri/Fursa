@@ -1,4 +1,4 @@
-import '../styles/StatusPill.css';
+import '../styles/statusPill.css';
 
 const STATUS_PILL = {
   New: 'status-pill--new',
