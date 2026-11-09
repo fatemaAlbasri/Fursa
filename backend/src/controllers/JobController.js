@@ -593,8 +593,80 @@ const deleteJob = async (req, res, next) => {
   }
 }
 
+// POST /api/jobs/:id/apply → apply with the current CV (jobseeker)
+const applyToJob = async (req, res, next) => {
+  let client
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) return res.status(400).json({ error: 'Invalid job id' })
+
+    client = await db.connect()
+    await client.query('BEGIN')
+
+    const { rows: jobs } = await client.query(
+      `SELECT j.id, j.title, c.user_id AS company_user_id
+         FROM jobs j JOIN companies c ON c.id = j.company_id
+        WHERE j.id = $1 AND j.status = 'open' AND j.deadline >= CURRENT_DATE`,
+      [jobId]
+    )
+    if (jobs.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'This job is closed or does not exist' })
+    }
+
+    const { rows: cv } = await client.query(
+      'SELECT id FROM resumes WHERE seeker_id = $1 AND is_current',
+      [req.user.id]
+    )
+    if (cv.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(400).json({ error: 'Upload a CV before applying' })
+    }
+
+    const { rows: app } = await client.query(
+      `INSERT INTO applications (job_id, seeker_id, resume_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (job_id, seeker_id) DO NOTHING
+       RETURNING id, status, applied_at`,
+      [jobId, req.user.id, cv[0].id]
+    )
+    if (app.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: 'You already applied to this job' })
+    }
+
+    await client.query(
+      `INSERT INTO application_history (application_id, changed_by, from_status, to_status)
+       VALUES ($1, $2, NULL, 'applied')`,
+      [app[0].id, req.user.id]
+    )
+
+    await client.query(
+      `INSERT INTO notifications (user_id, application_id, job_id, type, title, message)
+       VALUES ($1, $2, $3, 'new_applicants', 'New applicant', $4)`,
+      [jobs[0].company_user_id, app[0].id, jobId, `Someone applied to ${jobs[0].title}`]
+    )
+
+    await client.query('COMMIT')
+
+    const { rows: match } = await db.query(
+      `SELECT score, tier, is_qualified, breakdown->'missing' AS missing
+         FROM match_scores WHERE job_id = $1 AND seeker_id = $2`,
+      [jobId, req.user.id]
+    )
+
+    res.status(201).json({ application: app[0], feedback: match[0] || null })
+  } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {})
+    next(err)
+  } finally {
+    if (client) client.release()
+  }
+}
+
+
  module.exports = {
   getJobs, getCompanyJobs, getOneJob, getCompanyOneJob,
   createJob, editJob, deleteJob,
-  closeJob, getApplicants, updateApplicants
+  closeJob, getApplicants, updateApplicants, applyToJob
 }
