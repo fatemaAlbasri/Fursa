@@ -20,6 +20,20 @@ router.get('/mine/:id/applicants', requireAuth, requireRole('employer'), JobCont
 // PATCH /api/jobs/mine/:id/applicants  (company) → shortlist selected
 router.patch('/mine/:id/applicants', requireAuth, requireRole('employer'), JobController.updateApplicants)
 
+const employer = [requireAuth, requireRole('employer')]
+
+// GET /api/jobs/mine/:id/applicants/:appId  (company) 
+router.get('/mine/:id/applicants/:appId', employer, JobController.getOneApplicant)
+
+// PATCH /api/jobs/mine/:id/applicants/:appId  { status, reason? }  (company)
+router.patch('/mine/:id/applicants/:appId', employer, JobController.updateOneApplicant)
+
+// POST /api/jobs/mine/:id/applicants/:appId/interview  { date, time, type, location, note? }  (company)
+router.post('/mine/:id/applicants/:appId/interview', employer, JobController.scheduleInterview)
+
+// PATCH /api/jobs/mine/:id/applicants/:appId/interview/notes  { notes }  (company)
+router.patch('/mine/:id/applicants/:appId/interview/notes', employer, JobController.saveInterviewNotes)
+
 // GET /api/jobs/:id  (seeker) 
 router.get('/:id', requireAuth, requireRole('seeker'), JobController.getOneJob)
 
