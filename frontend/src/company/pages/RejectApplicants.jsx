@@ -3,16 +3,9 @@ import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { api } from '../../shared/api.js';
 import '../styles/RejectApplicants.css';
 
-// =====================================================================
-// Reject applicants page (/company/jobs/:id/reject).
-// Rejects the applicants ticked on the Applicants page, with one reason.
-//   Step 1: a box asks "Reject 12 applicants?" with the reason + notify.
-//   Step 2: a message says it's done.
-// =====================================================================
+const REASONS = ['Missing a must-have skill', "Skills don't match the role", 'Position filled', 'Other'];
 
-const REASONS = ['Missing a must-have skill', 'Not enough experience', 'Position filled', 'Other'];
-
-// ---------- Small icons used on this page ----------
+// icons
 const WarningIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <circle cx="12" cy="12" r="9" />
@@ -26,25 +19,23 @@ const CheckIcon = (
 );
 
 export default function RejectApplicants() {
-  const { id } = useParams(); // the job id from the URL
-  const { state } = useLocation(); // { applicantIds, allNotQualified } from the Applicants page
+  const { id } = useParams(); 
+  const { state } = useLocation(); 
   const ids = state?.applicantIds || [];
 
-  // ---------- Page state ----------
-  // Fursa fills the reason when everyone ticked is missing a must-have
+  // Page state 
   const [reason, setReason] = useState(state?.allNotQualified ? REASONS[0] : REASONS[1]);
-  const [otherReason, setOtherReason] = useState('');
-  const [notify, setNotify] = useState(true); // "Notify each applicant" tick box
-  const [result, setResult] = useState(null); // { updated, skipped } once rejected
+  const [note, setNote] = useState(''); 
+  const [notify, setNotify] = useState(true); 
+  const [result, setResult] = useState(null); 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Opened directly (nobody ticked) → back to the list
   if (ids.length === 0) return <Navigate to="/company/applicants" replace />;
 
-  // ---------- Button ----------
+  // Button
   const reject = async () => {
-    const text = reason === 'Other' ? otherReason.trim() : reason;
+    const text = reason === 'Other' ? note.trim() : reason;
     if (!text) return setError('Write the reason for the applicants.');
     setBusy(true);
     setError('');
@@ -64,7 +55,6 @@ export default function RejectApplicants() {
   return (
     <main className="rj">
       {!result ? (
-        /* =================== Step 1: confirm box =================== */
         <section className="rj-dialog" role="dialog" aria-modal="true" aria-labelledby="rj-title">
           {/* red icon + title */}
           <div className="rj-head">
@@ -82,12 +72,18 @@ export default function RejectApplicants() {
           {/* one reason for everyone, sent to each applicant */}
           <div className="rj-reasons">
             <label className="rj-reasons__title" htmlFor="rj-reason">Reason (sent to each applicant)</label>
-            <select id="rj-reason" value={reason} onChange={(e) => setReason(e.target.value)}>
+            <select id="rj-reason" value={reason} onChange={(e) => { setReason(e.target.value); setError(''); }}>
               {REASONS.map((r) => <option key={r}>{r}</option>)}
             </select>
+            {/* the writing box shows only for "Other"*/}
             {reason === 'Other' && (
-              <input type="text" maxLength={300} aria-label="Write the reason"
-                value={otherReason} onChange={(e) => setOtherReason(e.target.value)} />
+              <>
+                <label className="rj-reasons__label" htmlFor="rj-note">Write the reason</label>
+                <textarea id="rj-note" rows="3" maxLength={300} value={note} autoFocus
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. We need someone with at least one year of React experience." />
+                <span className="rj-reasons__count">{note.length}/300</span>
+              </>
             )}
           </div>
           {error && <p className="field__error" role="alert">{error}</p>}
@@ -95,7 +91,7 @@ export default function RejectApplicants() {
           {/* notify tick box */}
           <label className="rj-notify">
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
-            Notify each applicant with their reason and a link to the AI CV Optimizer
+            Notify each applicant with their reason
           </label>
 
           {/* buttons */}
@@ -107,7 +103,7 @@ export default function RejectApplicants() {
           </div>
         </section>
       ) : (
-        /* =================== Step 2: done message =================== */
+        /* done message */
         <div className="rj-toast" role="status">
           <span className="rj-toast__text">
             {CheckIcon}

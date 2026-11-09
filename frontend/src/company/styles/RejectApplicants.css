@@ -31,10 +31,14 @@
 }
 .rj-reasons__title { font-weight: 700; }
 .rj-reasons select,
-.rj-reasons input {
-  height: var(--input-h); padding: var(--input-pad); font: inherit;
+.rj-reasons textarea {
+  padding: var(--input-pad); font: inherit;
   border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--white);
 }
+.rj-reasons select { height: var(--input-h); }
+.rj-reasons textarea { padding: 10px 12px; resize: vertical; }
+.rj-reasons__label { font-size: var(--label-size); font-weight: 600; }
+.rj-reasons__count { align-self: flex-end; font-size: var(--hint-size); color: var(--slate); }
 
 /* notify tick box */
 .rj-notify {
