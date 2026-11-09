@@ -19,6 +19,8 @@ import JobDetails from './jobseeker/pages/JobDetails.jsx';
 import AllJobs from './jobseeker/pages/AllJobs.jsx';
 import Companies from './jobseeker/pages/Companies.jsx';
 import CompanyDetails from './jobseeker/pages/CompanyDetails.jsx';
+import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx';
+import CvReport from './jobseeker/pages/CvReport.jsx';
 import UserInitials from './jobseeker/components/UserInitials.jsx';
 import { NavbarAccount } from './shared/components/Navbar.jsx';
 import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/components/icons.jsx';
@@ -27,7 +29,7 @@ import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/componen
 const SEEKER_LINKS = [
   { to: '/jobseeker/jobs', label: 'Jobs for you', icon: <HomeIcon /> },
   { to: '/jobseeker/companies', label: 'Companies', icon: <BuildingIcon /> },
-  { label: 'AI CV Optimizer', icon: <SparkleIcon />, soon: true },
+  { to: '/jobseeker/cv-optimizer', label: 'AI CV Optimizer', icon: <SparkleIcon /> },
   { label: 'My applications', icon: <FileIcon />, soon: true }
 ];
 
@@ -94,6 +96,9 @@ export default function App() {
         <Route path="/jobseeker/companies" element={<Companies />} />
         {/* :id = the company's real id, e.g. /jobseeker/companies/2 */}
         <Route path="/jobseeker/companies/:id" element={<CompanyDetails />} />
+        {/* AI CV Optimizer (free) and the Advanced report (after unlocking) */}
+        <Route path="/jobseeker/cv-optimizer" element={<CvOptimizer />} />
+        <Route path="/jobseeker/cv-optimizer/report" element={<CvReport />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
