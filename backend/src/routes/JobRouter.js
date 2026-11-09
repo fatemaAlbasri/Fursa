@@ -35,6 +35,7 @@ router.delete('/mine/:id', requireAuth, requireRole('employer'), JobController.d
 // PATCH /api/jobs/mine/:id/close  (company)
 router.patch('/mine/:id/close', requireAuth, requireRole('employer'), JobController.closeJob)
 
-
+// POST /api/jobs/:id/apply  (seeker) → apply with the current CV
+router.post('/:id/apply', requireAuth, requireRole('seeker'), JobController.applyToJob)
 
 module.exports = router

@@ -59,6 +59,8 @@ export default function JobDetails() {
   const [job, setJob] = useState(null)
   const [me, setMe] = useState(null) // the seeker's own info for this job (can be null)
   const [reloadKey, setReloadKey] = useState(0) // "Try again" bumps this to load again
+  const [applying, setApplying] = useState(false) // true while the request is being sent
+  const [applyError, setApplyError] = useState('')
 
   // Load the signed-in user, then this job. No token or a bad token → Sign In.
   useEffect(() => {
@@ -185,6 +187,25 @@ export default function JobDetails() {
   const majorOk = Boolean(me?.major && job.field && me.major.trim().toLowerCase() === job.field.trim().toLowerCase())
   const experienceOk = me?.years_experience != null && Number(me.years_experience) >= job.min_years
 
+  // Apply with the CV from the seeker's profile
+  const handleApply = async () => {
+    setApplying(true)
+    setApplyError('')
+    try {
+      await api(`/jobs/${id}/apply`, { method: 'POST' })
+      // the box switches to "You applied · Applied"
+      setMe((m) => ({ ...m, application_status: 'applied' }))
+    } catch (err) {
+      if (err.error === 'You already applied to this job') {
+        setMe((m) => ({ ...m, application_status: 'applied' }))
+      } else {
+        setApplyError(err.error || 'Could not reach the server')
+      }
+    } finally {
+      setApplying(false)
+    }
+  }
+
   return (
     <main className="container jd">
       {backLink}
@@ -304,11 +325,13 @@ export default function JobDetails() {
                   )}
                 </div>
                 {/* No application endpoint in the backend yet → the button stays disabled */}
-                <button type="button" className="btn btn--block" disabled>
-                  Applying coming soon
+                <button type="button" className="btn btn--block"  disabled={!me?.cv_file_name || applying}
+                  onClick={handleApply}>
+                {applying ? 'Sending…' : 'Apply with my CV'}
                 </button>
-                <p className="jd-apply__note">Online applications aren't available on Fursa yet.</p>
-              </>
+                {applyError && (
+                  <p className="jd-apply__note" role="alert">{applyError}</p>
+                )}</>
             )}
           </section>
 
