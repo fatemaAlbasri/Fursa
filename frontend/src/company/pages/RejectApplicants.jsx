@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { getNotQualified } from '../data/applicants.js';
+import { useState } from 'react';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
+import { api } from '../../shared/api.js';
 import '../styles/RejectApplicants.css';
 
 // =====================================================================
 // Reject applicants page (/company/jobs/:id/reject).
-// Rejects everyone in the job's "Not qualified" tab at once.
-//   Step 1: a box asks "Reject 42 applicants?" with the reasons.
-//   Step 2: after "Reject", a message shows with Undo (10 seconds).
+// Rejects the applicants ticked on the Applicants page, with one reason.
+//   Step 1: a box asks "Reject 12 applicants?" with the reason + notify.
+//   Step 2: a message says it's done.
 // =====================================================================
 
-const UNDO_SECONDS = 10; // how long the employer has to press Undo
+const REASONS = ['Missing a must-have skill', 'Not enough experience', 'Position filled', 'Other'];
 
 // ---------- Small icons used on this page ----------
 const WarningIcon = (
@@ -27,49 +27,51 @@ const CheckIcon = (
 
 export default function RejectApplicants() {
   const { id } = useParams(); // the job id from the URL
-  const { count, reasons } = getNotQualified(id);
+  const { state } = useLocation(); // { applicantIds, allNotQualified } from the Applicants page
+  const ids = state?.applicantIds || [];
 
   // ---------- Page state ----------
+  // Fursa fills the reason when everyone ticked is missing a must-have
+  const [reason, setReason] = useState(state?.allNotQualified ? REASONS[0] : REASONS[1]);
+  const [otherReason, setOtherReason] = useState('');
   const [notify, setNotify] = useState(true); // "Notify each applicant" tick box
-  const [rejected, setRejected] = useState(false); // false = show the box, true = show the message
-  const [secondsLeft, setSecondsLeft] = useState(UNDO_SECONDS); // Undo countdown
+  const [result, setResult] = useState(null); // { updated, skipped } once rejected
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  // ---------- Undo countdown ----------
-  // After "Reject", count down 1 second at a time. At 0 the reject is final.
-  useEffect(() => {
-    if (!rejected || secondsLeft === 0) return;
+  // Opened directly (nobody ticked) → back to the list
+  if (ids.length === 0) return <Navigate to="/company/applicants" replace />;
 
-    const timer = setTimeout(() => {
-      const next = secondsLeft - 1;
-      setSecondsLeft(next);
-      if (next === 0) {
-        // TODO (backend): POST /api/company/jobs/:id/reject-not-qualified  { notify }
-        // (each rejected applicant gets their reason + a link to the AI CV Optimizer when notify is on)
-        console.log('Reject not qualified applicants', { jobId: id, count, notify });
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer); // stop the timer if the page closes or Undo is pressed
-  }, [rejected, secondsLeft, id, count, notify]);
-
-  // ---------- Buttons ----------
-  const reject = () => {
-    setSecondsLeft(UNDO_SECONDS);
-    setRejected(true);
+  // ---------- Button ----------
+  const reject = async () => {
+    const text = reason === 'Other' ? otherReason.trim() : reason;
+    if (!text) return setError('Write the reason for the applicants.');
+    setBusy(true);
+    setError('');
+    try {
+      const data = await api(`/jobs/mine/${id}/applicants`, {
+        method: 'PATCH',
+        body: { ids, status: 'rejected', reason: text, notify }
+      });
+      setResult(data);
+    } catch (err) {
+      setError(err.error || 'Could not reject. Try again.');
+    } finally {
+      setBusy(false);
+    }
   };
-  const undo = () => setRejected(false); // nothing was sent yet, so just go back to the box
 
   return (
     <main className="rj">
-      {!rejected ? (
+      {!result ? (
         /* =================== Step 1: confirm box =================== */
         <section className="rj-dialog" role="dialog" aria-modal="true" aria-labelledby="rj-title">
           {/* red icon + title */}
           <div className="rj-head">
             <span className="rj-icon">{WarningIcon}</span>
             <div>
-              <p className="rj-kicker">Not qualified tab · Reject all</p>
-              <h1 id="rj-title">Reject {count} applicants?</h1>
+              <p className="rj-kicker">Reject selected</p>
+              <h1 id="rj-title">Reject {ids.length} applicants?</h1>
             </div>
           </div>
 
@@ -77,16 +79,18 @@ export default function RejectApplicants() {
             They will move to the <b>Rejected</b> tab. Nothing is deleted. You can still open their CVs later.
           </p>
 
-          {/* reasons, worked out by Fursa */}
+          {/* one reason for everyone, sent to each applicant */}
           <div className="rj-reasons">
-            <p className="rj-reasons__title">Reasons (filled in by Fursa)</p>
-            {reasons.map((r) => (
-              <div key={r.text} className="rj-reason">
-                <span>{r.text}</span>
-                <b>{r.count}</b>
-              </div>
-            ))}
+            <label className="rj-reasons__title" htmlFor="rj-reason">Reason (sent to each applicant)</label>
+            <select id="rj-reason" value={reason} onChange={(e) => setReason(e.target.value)}>
+              {REASONS.map((r) => <option key={r}>{r}</option>)}
+            </select>
+            {reason === 'Other' && (
+              <input type="text" maxLength={300} aria-label="Write the reason"
+                value={otherReason} onChange={(e) => setOtherReason(e.target.value)} />
+            )}
           </div>
+          {error && <p className="field__error" role="alert">{error}</p>}
 
           {/* notify tick box */}
           <label className="rj-notify">
@@ -97,8 +101,8 @@ export default function RejectApplicants() {
           {/* buttons */}
           <div className="rj-actions">
             <Link to="/company/applicants" className="btn rj-cancel">Cancel</Link>
-            <button type="button" className="btn rj-reject" onClick={reject}>
-              Reject {count} applicants
+            <button type="button" className="btn rj-reject" onClick={reject} disabled={busy}>
+              {busy ? 'Rejecting…' : `Reject ${ids.length} applicants`}
             </button>
           </div>
         </section>
@@ -107,13 +111,9 @@ export default function RejectApplicants() {
         <div className="rj-toast" role="status">
           <span className="rj-toast__text">
             {CheckIcon}
-            {count} applicants rejected{notify ? ' and notified' : ''}.
+            {result.updated.length} applicants rejected{notify ? ' and notified' : ''}.
+            {result.skipped.length > 0 && ` ${result.skipped.length} skipped (already accepted or rejected).`}
           </span>
-
-          {/* Undo only while the countdown is running */}
-          {secondsLeft > 0 && (
-            <button type="button" className="rj-undo" onClick={undo}>Undo ({secondsLeft}s)</button>
-          )}
 
           <Link to="/company/applicants" className="rj-back">Back to applicants</Link>
         </div>

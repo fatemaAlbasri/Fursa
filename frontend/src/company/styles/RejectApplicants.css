@@ -30,7 +30,11 @@
   display: flex; flex-direction: column; gap: 10px; font-size: var(--text-size);
 }
 .rj-reasons__title { font-weight: 700; }
-.rj-reason { display: flex; justify-content: space-between; gap: 12px; }
+.rj-reasons select,
+.rj-reasons input {
+  height: var(--input-h); padding: var(--input-pad); font: inherit;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--white);
+}
 
 /* notify tick box */
 .rj-notify {
