@@ -28,7 +28,6 @@ const getJobs = async (req, res, next) => {
   }
 }
 
-
 // GET /api/jobs/mine → view only their jobs (company)
 const getCompanyJobs = async (req, res, next) => {
   try {
@@ -529,7 +528,9 @@ const getApplicants = async (req, res, next) => {
 const updateApplicants = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
-    const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(Number).filter(Number.isInteger) : []
+    const ids = Array.isArray(req.body?.ids)
+      ? req.body.ids.map(Number).filter(Number.isInteger)
+      : []
     const { status } = req.body || {}
     if (!jobId || ids.length === 0) {
       return res.status(400).json({ error: 'Pick at least one applicant' })
@@ -611,7 +612,9 @@ const applyToJob = async (req, res, next) => {
     )
     if (jobs.length === 0) {
       await client.query('ROLLBACK')
-      return res.status(404).json({ error: 'This job is closed or does not exist' })
+      return res
+        .status(404)
+        .json({ error: 'This job is closed or does not exist' })
     }
 
     const { rows: cv } = await client.query(
@@ -644,18 +647,17 @@ const applyToJob = async (req, res, next) => {
     await client.query(
       `INSERT INTO notifications (user_id, application_id, job_id, type, title, message)
        VALUES ($1, $2, $3, 'new_applicants', 'New applicant', $4)`,
-      [jobs[0].company_user_id, app[0].id, jobId, `Someone applied to ${jobs[0].title}`]
+      [
+        jobs[0].company_user_id,
+        app[0].id,
+        jobId,
+        `Someone applied to ${jobs[0].title}`
+      ]
     )
 
     await client.query('COMMIT')
 
-    const { rows: match } = await db.query(
-      `SELECT score, tier, is_qualified, breakdown->'missing' AS missing
-         FROM match_scores WHERE job_id = $1 AND seeker_id = $2`,
-      [jobId, req.user.id]
-    )
-
-    res.status(201).json({ application: app[0], feedback: match[0] || null })
+    res.status(201).json({ application: app[0] })
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {})
     next(err)
@@ -664,9 +666,16 @@ const applyToJob = async (req, res, next) => {
   }
 }
 
-
- module.exports = {
-  getJobs, getCompanyJobs, getOneJob, getCompanyOneJob,
-  createJob, editJob, deleteJob,
-  closeJob, getApplicants, updateApplicants, applyToJob
+module.exports = {
+  getJobs,
+  getCompanyJobs,
+  getOneJob,
+  getCompanyOneJob,
+  createJob,
+  editJob,
+  deleteJob,
+  closeJob,
+  getApplicants,
+  updateApplicants,
+  applyToJob
 }
