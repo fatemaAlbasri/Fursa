@@ -104,7 +104,10 @@ export default function Applicants() {
   const shortlistSelected = async () => {
     if (selected.length === 0) return;
     try {
-      await api(`/jobs/mine/${jobId}/applicants`, { method: 'PATCH', body: { ids: selected, status: 'shortlisted' } });
+      const data = await api(`/jobs/mine/${jobId}/applicants`, { method: 'PATCH', body: { ids: selected, status: 'shortlisted' } });
+
+      setApplicants(applicants.map((a) => (data.updated.includes(a.id) ? { ...a, status: 'Shortlisted' } : a)));
+
       setApplicants(applicants.map((a) => (selected.includes(a.id) ? { ...a, status: 'Shortlisted' } : a)));
       setSelected([]);
     } catch (err) {
@@ -112,8 +115,11 @@ export default function Applicants() {
     }
   };
   const rejectSelected = () => {
-    // goes to the confirm page; the ticked ids go with it
-    navigate(`/company/jobs/${jobId}/reject`, { state: { applicantIds: selected } });
+    if (selected.length === 0) return;
+    const picked = applicants.filter((a) => selected.includes(a.id));
+    navigate(`/company/jobs/${jobId}/reject`, {
+      state: { applicantIds: selected, allNotQualified: picked.every((a) => !a.qualified) }
+    });
   };
 
   return (

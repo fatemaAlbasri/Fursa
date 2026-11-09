@@ -496,6 +496,295 @@ const closeJob = async (req, res, next) => {
   }
 }
 
+// Applicant status (company)
+const NEXT_STATUS = {
+  applied: ['shortlisted', 'rejected'],
+  shortlisted: ['interview', 'rejected'],
+  interview: ['accepted', 'rejected'],
+  rejected: ['shortlisted'],
+  accepted: []
+}
+
+// The notification the seeker gets for each new status
+const STATUS_NOTICE = {
+  shortlisted: (a) => [
+    'shortlisted',
+    'You are shortlisted',
+    `${a.company_name} shortlisted you for ${a.title}.`
+  ],
+  interview: (a) => [
+    'interview',
+    'Interview invitation',
+    `${a.company_name} invited you to an interview for ${a.title}.`
+  ],
+  accepted: (a) => [
+    'accepted',
+    'You got the job!',
+    `${a.company_name} accepted you for ${a.title}.`
+  ],
+  rejected: (a) => [
+    'rejected',
+    'Application update',
+    `${a.company_name} did not move forward with your application for ${a.title}. See why and improve your CV.`
+  ]
+}
+
+const parseAppId = (req) => {
+  const appId = Number(req.params.appId)
+  return Number.isInteger(appId) && appId > 0 ? appId : null
+}
+
+const inTransaction = async (work) => {
+  const client = await db.connect()
+  try {
+    await client.query('BEGIN')
+    const result = await work(client)
+    await client.query('COMMIT')
+    return result
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {})
+    throw err
+  } finally {
+    client.release()
+  }
+}
+
+const loadOwnApplication = async (client, jobId, appId, companyUserId) => {
+  const { rows } = await client.query(
+    `SELECT a.id, a.job_id, a.seeker_id, a.status, j.title, c.name AS company_name
+       FROM applications a
+       JOIN jobs j ON j.id = a.job_id
+       JOIN companies c ON c.id = j.company_id
+      WHERE a.id = $1 AND a.job_id = $2 AND c.user_id = $3
+      FOR UPDATE OF a`,
+    [appId, jobId, companyUserId]
+  )
+  return rows[0] || null
+}
+
+const notifySeeker = async (client, app, [type, title, message]) => {
+  await client.query(
+    `INSERT INTO notifications (user_id, application_id, job_id, type, title, message)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [app.seeker_id, app.id, app.job_id, type, title, message]
+  )
+}
+
+const moveApplication = async (
+  client,
+  app,
+  to,
+  changedBy,
+  { reason = null, notify = true } = {}
+) => {
+  if (!NEXT_STATUS[app.status].includes(to)) {
+    const err = new Error(`Can't move an applicant from ${app.status} to ${to}`)
+    err.status = 409
+    throw err
+  }
+  // the reason is kept only while rejected (Undo clears it)
+  await client.query(
+    'UPDATE applications SET status = $2, rejection_reason = $3 WHERE id = $1',
+    [app.id, to, to === 'rejected' ? reason : null]
+  )
+  await client.query(
+    `INSERT INTO application_history (application_id, changed_by, from_status, to_status)
+     VALUES ($1, $2, $3, $4)`,
+    [app.id, changedBy, app.status, to]
+  )
+  if (notify) await notifySeeker(client, app, STATUS_NOTICE[to](app))
+}
+
+const readReason = (body) => {
+  const reason = String(body?.reason || '').trim()
+  if (!reason) return { error: 'Pick a reason' }
+  if (reason.length > 300) return { error: 'Reason is too long' }
+  return { reason }
+}
+
+// GET /api/jobs/mine/:id/applicants/:appId → one applicant's page (company)
+const getOneApplicant = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    const appId = parseAppId(req)
+    if (!jobId || !appId) return res.status(400).json({ error: 'Invalid id' })
+
+    const { rows } = await db.query(
+      `SELECT a.id, a.status, a.rejection_reason, a.applied_at,
+              u.first_name, u.last_name, u.email, sp.phone,
+              sp.major, sp.years_experience,
+              r.file_name AS cv_file_name, r.file_url AS cv_url,
+              j.title AS job_title, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
+              m.score, m.tier, COALESCE(m.is_qualified, true) AS is_qualified,
+              -- Rank #: 1 + how many applicants of this job scored higher
+              CASE WHEN m.score IS NULL THEN NULL ELSE
+                (SELECT COUNT(*) + 1 FROM applications a2
+                   JOIN match_scores m2 ON m2.job_id = a2.job_id AND m2.seeker_id = a2.seeker_id
+                  WHERE a2.job_id = a.job_id AND m2.score > m.score)::int
+              END AS rank,
+              -- "Why this score": every job skill, must-have or not, in the CV or not
+              COALESCE((SELECT json_agg(json_build_object(
+                          'name', s.name, 'required', js.is_required, 'has', ss.skill_id IS NOT NULL)
+                          ORDER BY js.is_required DESC, s.name)
+                          FROM job_skills js
+                          JOIN skills s ON s.id = js.skill_id
+                          LEFT JOIN seeker_skills ss ON ss.skill_id = js.skill_id AND ss.seeker_id = a.seeker_id
+                         WHERE js.job_id = a.job_id), '[]') AS skills
+         FROM applications a
+         JOIN jobs j ON j.id = a.job_id
+         JOIN companies c ON c.id = j.company_id
+         JOIN users u ON u.id = a.seeker_id
+         JOIN seeker_profiles sp ON sp.user_id = a.seeker_id
+         JOIN resumes r ON r.id = a.resume_id
+         LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+        WHERE a.id = $1 AND a.job_id = $2 AND c.user_id = $3`,
+      [appId, jobId, req.user.id]
+    )
+    if (rows.length === 0)
+      return res.status(404).json({ error: 'Applicant not found' })
+
+    // interview (null if none yet); confirmed,reschedule_requested 
+    const { rows: interviews } = await db.query(
+      `SELECT id, scheduled_at, type, location_or_link, note_to_applicant, employer_notes, status
+         FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1`,
+      [appId]
+    )
+    const { rows: history } = await db.query(
+      `SELECT from_status, to_status, changed_at
+         FROM application_history WHERE application_id = $1 ORDER BY changed_at, id`,
+      [appId]
+    )
+
+    res.json({ applicant: rows[0], interview: interviews[0] || null, history })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// PATCH /api/jobs/mine/:id/applicants/:appId  { status, reason? } (company)
+// shortlisted (also Undo from rejected) 
+// rejected (reason required) 
+// accepted (after interview)
+const updateOneApplicant = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    const appId = parseAppId(req)
+    if (!jobId || !appId) return res.status(400).json({ error: 'Invalid id' })
+
+    const { status } = req.body || {}
+    if (!['shortlisted', 'rejected', 'accepted'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' })
+    }
+    let reason = null
+    if (status === 'rejected') {
+      const r = readReason(req.body)
+      if (r.error) return res.status(400).json({ error: r.error })
+      reason = r.reason
+    }
+
+    const found = await inTransaction(async (client) => {
+      const app = await loadOwnApplication(client, jobId, appId, req.user.id)
+      if (!app) return false
+      await moveApplication(client, app, status, req.user.id, { reason })
+      return true
+    })
+    if (!found) return res.status(404).json({ error: 'Applicant not found' })
+
+    res.json({ id: appId, status, rejection_reason: reason })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/jobs/mine/:id/applicants/:appId/interview { date, time, type, location, note? } (company)
+// shortlisted → schedules it and moves to "interview" 
+// already "interview" → reschedules it
+const scheduleInterview = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    const appId = parseAppId(req)
+    if (!jobId || !appId) return res.status(400).json({ error: 'Invalid id' })
+
+    const { date, time, type } = req.body || {}
+    const location = String(req.body?.location || '').trim()
+    const note = String(req.body?.note || '').trim() || null
+
+    const errors = {}
+    const scheduledAt = new Date(`${date}T${time}:00+03:00`)
+    if (!date || !time || isNaN(scheduledAt))
+      errors.date = 'Pick a date and time'
+    else if (scheduledAt <= new Date())
+      errors.date = 'The interview must be in the future'
+    if (!['in_person', 'online'].includes(type))
+      errors.type = 'Pick in person or online'
+    if (!location)
+      errors.location =
+        type === 'online' ? 'Add the meeting link' : 'Add the location'
+    if (Object.keys(errors).length)
+      return res.status(400).json({ error: 'Check the form', errors })
+
+    const result = await inTransaction(async (client) => {
+      const app = await loadOwnApplication(client, jobId, appId, req.user.id)
+      if (!app) return null
+
+      if (app.status === 'interview') {
+        await client.query(
+          `UPDATE interviews
+              SET scheduled_at = $2, type = $3, location_or_link = $4, note_to_applicant = $5, status = 'invited'
+            WHERE id = (SELECT id FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1)`,
+          [app.id, scheduledAt, type, location, note]
+        )
+        await notifySeeker(client, app, [
+          'interview',
+          'Interview rescheduled',
+          `${app.company_name} changed your interview time for ${app.title}.`
+        ])
+        return 'rescheduled'
+      }
+
+      await moveApplication(client, app, 'interview', req.user.id)
+      await client.query(
+        `INSERT INTO interviews (application_id, scheduled_at, type, location_or_link, note_to_applicant)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [app.id, scheduledAt, type, location, note]
+      )
+      return 'scheduled'
+    })
+    if (!result) return res.status(404).json({ error: 'Applicant not found' })
+
+    res
+      .status(result === 'scheduled' ? 201 : 200)
+      .json({ id: appId, status: 'interview', result })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// PATCH /api/jobs/mine/:id/applicants/:appId/interview/notes { notes } (company, never shown to the seeker)
+const saveInterviewNotes = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    const appId = parseAppId(req)
+    if (!jobId || !appId) return res.status(400).json({ error: 'Invalid id' })
+    const notes = String(req.body?.notes || '').trim() || null
+
+    const { rowCount } = await db.query(
+      `UPDATE interviews i SET employer_notes = $1
+         FROM applications a
+         JOIN jobs j ON j.id = a.job_id
+         JOIN companies c ON c.id = j.company_id
+        WHERE i.application_id = a.id AND a.id = $2 AND a.job_id = $3 AND c.user_id = $4
+          AND i.id = (SELECT id FROM interviews WHERE application_id = $2 ORDER BY id DESC LIMIT 1)`,
+      [notes, appId, jobId, req.user.id]
+    )
+    if (rowCount === 0)
+      return res.status(404).json({ error: 'Interview not found' })
+    res.json({ notes })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // GET /api/jobs/mine/:id/applicants → applicants of one job, best match first (company)
 const getApplicants = async (req, res, next) => {
   try {
@@ -523,8 +812,8 @@ const getApplicants = async (req, res, next) => {
   }
 }
 
-// PATCH /api/jobs/mine/:id/applicants → shortlist the ticked applicants (company)
-// body: { ids: [1, 2], status: 'shortlisted' }
+// PATCH /api/jobs/mine/:id/applicants { ids, status, reason?, notify? } (company)
+// Bulk shortlist / reject. Applicants that can't make that move (e.g. already accepted) are skipped.
 const updateApplicants = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
@@ -532,31 +821,36 @@ const updateApplicants = async (req, res, next) => {
       ? req.body.ids.map(Number).filter(Number.isInteger)
       : []
     const { status } = req.body || {}
-    if (!jobId || ids.length === 0) {
+    const notify = req.body?.notify !== false
+    if (!jobId || ids.length === 0)
       return res.status(400).json({ error: 'Pick at least one applicant' })
-    }
-    if (status !== 'shortlisted') {
+    if (!['shortlisted', 'rejected'].includes(status))
       return res.status(400).json({ error: 'Invalid status' })
+
+    let reason = null
+    if (status === 'rejected') {
+      const r = readReason(req.body)
+      if (r.error) return res.status(400).json({ error: r.error })
+      reason = r.reason
     }
 
-    // Change the status and keep a history row for each changed application
-    const { rows } = await db.query(
-      `WITH old AS (
-         SELECT a.id, a.status
-           FROM applications a
-           JOIN jobs j ON j.id = a.job_id
-           JOIN companies c ON c.id = j.company_id
-          WHERE a.id = ANY($1::int[]) AND a.job_id = $2 AND c.user_id = $3 AND a.status <> $4
-       ),
-       changed AS (
-         UPDATE applications SET status = $4 WHERE id IN (SELECT id FROM old) RETURNING id
-       )
-       INSERT INTO application_history (application_id, changed_by, from_status, to_status)
-       SELECT id, $3, status, $4 FROM old
-       RETURNING application_id AS id`,
-      [ids, jobId, req.user.id, status]
-    )
-    res.json({ updated: rows.map((r) => r.id), status })
+    const updated = []
+    await inTransaction(async (client) => {
+      for (const appId of ids) {
+        const app = await loadOwnApplication(client, jobId, appId, req.user.id)
+        if (!app || !NEXT_STATUS[app.status].includes(status)) continue
+        await moveApplication(client, app, status, req.user.id, {
+          reason,
+          notify
+        })
+        updated.push(appId)
+      }
+    })
+    res.json({
+      updated,
+      skipped: ids.filter((id) => !updated.includes(id)),
+      status
+    })
   } catch (err) {
     next(err)
   }
@@ -677,5 +971,9 @@ module.exports = {
   closeJob,
   getApplicants,
   updateApplicants,
-  applyToJob
+  applyToJob,
+  getOneApplicant,
+  updateOneApplicant,
+  scheduleInterview,
+  saveInterviewNotes
 }
