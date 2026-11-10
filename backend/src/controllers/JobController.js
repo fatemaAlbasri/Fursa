@@ -1,5 +1,6 @@
 const db = require('../config/db')
 const { saveJobEmbedding, rescoreJob } = require('../services/matching')
+const { inTransaction } = require('../config/transaction')
 
 // Runs in the background: the job is still scored without the CV component if embedding fails
 const scoreOpenJob = (jobId) =>
@@ -532,21 +533,6 @@ const STATUS_NOTICE = {
 const parseAppId = (req) => {
   const appId = Number(req.params.appId)
   return Number.isInteger(appId) && appId > 0 ? appId : null
-}
-
-const inTransaction = async (work) => {
-  const client = await db.connect()
-  try {
-    await client.query('BEGIN')
-    const result = await work(client)
-    await client.query('COMMIT')
-    return result
-  } catch (err) {
-    await client.query('ROLLBACK').catch(() => {})
-    throw err
-  } finally {
-    client.release()
-  }
 }
 
 const loadOwnApplication = async (client, jobId, appId, companyUserId) => {
