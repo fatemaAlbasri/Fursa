@@ -523,11 +523,12 @@ const STATUS_NOTICE = {
     'You got the job!',
     `${a.company_name} accepted you for ${a.title}.`
   ],
-  rejected: (a) => [
+   rejected: (a, reason) => [
     'rejected',
-    'Application update',
-    `${a.company_name} did not move forward with your application for ${a.title}. See why and improve your CV.`
+    'Application not successful',
+    `${a.company_name} did not move forward with your application for ${a.title}.${reason ? ` Reason: ${reason}` : ''}`
   ]
+
 }
 
 const parseAppId = (req) => {
@@ -578,7 +579,7 @@ const moveApplication = async (
      VALUES ($1, $2, $3, $4)`,
     [app.id, changedBy, app.status, to]
   )
-  if (notify) await notifySeeker(client, app, STATUS_NOTICE[to](app))
+  if (notify) await notifySeeker(client, app, STATUS_NOTICE[to](app, reason))
 }
 
 const readReason = (body) => {
@@ -924,16 +925,29 @@ const applyToJob = async (req, res, next) => {
       [app[0].id, req.user.id]
     )
 
-    await client.query(
-      `INSERT INTO notifications (user_id, application_id, job_id, type, title, message)
-       VALUES ($1, $2, $3, 'new_applicants', 'New applicant', $4)`,
-      [
-        jobs[0].company_user_id,
-        app[0].id,
-        jobId,
-        `Someone applied to ${jobs[0].title}`
-      ]
+    // one unread "new applicants" notice per job: add to it instead of one per person
+    const { rows: open } = await client.query(
+      `SELECT id, title FROM notifications
+        WHERE user_id = $1 AND job_id = $2 AND type = 'new_applicants' AND NOT is_read
+        ORDER BY id DESC LIMIT 1`,
+      [jobs[0].company_user_id, jobId]
     )
+    const count = open.length ? (parseInt(open[0].title, 10) || 1) + 1 : 1
+    const title = `${count} new applicant${count > 1 ? 's' : ''}`
+    const message = `${title} for ${jobs[0].title}.`
+
+    if (open.length) {
+      await client.query(
+        'UPDATE notifications SET title = $2, message = $3, created_at = now() WHERE id = $1',
+        [open[0].id, title, message]
+      )
+    } else {
+      await client.query(
+        `INSERT INTO notifications (user_id, job_id, type, title, message)
+         VALUES ($1, $2, 'new_applicants', $3, $4)`,
+        [jobs[0].company_user_id, jobId, title, message]
+      )
+    }
 
     await client.query('COMMIT')
 
