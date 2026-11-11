@@ -276,6 +276,33 @@ img.jfy-logo {
   white-space: nowrap;
 }
 
+/* ---------- Match ring (same look as the Company details ring) ---------- */
+.jfy-card__heading {
+  flex: 1;
+  min-width: 0;
+}
+.jfy-ring {
+  --score: 0;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--teal) calc(var(--score) * 1%), #d6efef 0);
+}
+.jfy-ring__value {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--white);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f6b6d;
+}
+
 /* ---------- Loading / empty / error ---------- */
 .jfy-state {
   background: var(--white);
