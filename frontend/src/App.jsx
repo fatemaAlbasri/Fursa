@@ -23,6 +23,7 @@ import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx';
 import CvReport from './jobseeker/pages/CvReport.jsx';
 import MyApplications from './jobseeker/pages/MyApplications.jsx';
 import ApplicationDetails from './jobseeker/pages/ApplicationDetails.jsx';
+import Notifications from './jobseeker/pages/Notifications.jsx';
 import UserInitials from './jobseeker/components/UserInitials.jsx';
 import { NavbarAccount } from './shared/components/Navbar.jsx';
 import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/components/icons.jsx';
@@ -105,6 +106,8 @@ export default function App() {
         <Route path="/jobseeker/applications" element={<MyApplications />} />
         {/* :id = the application's real id, e.g. /jobseeker/applications/5 */}
         <Route path="/jobseeker/applications/:id" element={<ApplicationDetails />} />
+        {/* Notifications: newest first, mark as read, opens the related page */}
+        <Route path="/jobseeker/notifications" element={<Notifications />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
