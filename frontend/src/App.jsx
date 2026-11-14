@@ -12,6 +12,7 @@ import PostJob from './company/pages/PostJob.jsx';
 import JobView from './company/pages/JobView.jsx';
 import RejectApplicants from './company/pages/RejectApplicants.jsx';
 import Applicants from './company/pages/Applicants.jsx';
+import ApplicantView from './company/pages/ApplicantView.jsx';
 import CompanyHome from './company/pages/CompanyHome.jsx';
 
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
@@ -113,6 +114,8 @@ export default function App() {
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView startEditing />} />
         <Route path="jobs/:id/reject" element={<RejectApplicants />} />
+        {/* one applicant: :id = job id, :appId = application id */}
+        <Route path="jobs/:id/applicants/:appId" element={<ApplicantView />} />
         <Route path="applicants" element={<Applicants />} />
       </Route>
     </Routes>
