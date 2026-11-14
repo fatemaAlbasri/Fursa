@@ -21,6 +21,7 @@ import Companies from './jobseeker/pages/Companies.jsx';
 import CompanyDetails from './jobseeker/pages/CompanyDetails.jsx';
 import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx';
 import CvReport from './jobseeker/pages/CvReport.jsx';
+import MyApplications from './jobseeker/pages/MyApplications.jsx';
 import UserInitials from './jobseeker/components/UserInitials.jsx';
 import { NavbarAccount } from './shared/components/Navbar.jsx';
 import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/components/icons.jsx';
@@ -30,7 +31,7 @@ const SEEKER_LINKS = [
   { to: '/jobseeker/jobs', label: 'Jobs for you', icon: <HomeIcon /> },
   { to: '/jobseeker/companies', label: 'Companies', icon: <BuildingIcon /> },
   { to: '/jobseeker/cv-optimizer', label: 'AI CV Optimizer', icon: <SparkleIcon /> },
-  { label: 'My applications', icon: <FileIcon />, soon: true }
+  { to: '/jobseeker/applications', label: 'My applications', icon: <FileIcon /> }
 ];
 
 
@@ -99,6 +100,8 @@ export default function App() {
         {/* AI CV Optimizer (free) and the Advanced report (after unlocking) */}
         <Route path="/jobseeker/cv-optimizer" element={<CvOptimizer />} />
         <Route path="/jobseeker/cv-optimizer/report" element={<CvReport />} />
+        {/* My applications: every application with its status and progress */}
+        <Route path="/jobseeker/applications" element={<MyApplications />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
