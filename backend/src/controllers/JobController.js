@@ -1,6 +1,7 @@
 const db = require('../config/db')
 const { saveJobEmbedding, rescoreJob } = require('../services/matching')
 const { cleanCvText } = require('../services/cvOptimizer')
+const { inTransaction } = require('../config/transaction')
 
 // Runs in the background: the job is still scored without the CV component if embedding fails
 const scoreOpenJob = (jobId) =>
@@ -269,6 +270,19 @@ const planLimitError = (max) => ({
   error: `Your plan allows ${max} active job(s). Upgrade your plan or save it as a draft.`
 })
 
+// The company's plan features (has_bulk_actions, has_ai_ranking...)
+const loadPlanFeatures = async (companyUserId) => {
+  const { rows } = await db.query(
+    `SELECT p.has_ai_ranking, p.has_match_reasons, p.has_bulk_actions, p.has_hiring_summary
+       FROM companies c
+       JOIN subscriptions s ON s.company_id = c.id AND s.status = 'active'
+       JOIN plans p ON p.id = s.plan_id
+      WHERE c.user_id = $1`,
+    [companyUserId]
+  )
+  return rows[0] || {}
+}
+
 // Adds any skill that isn't in the skills table yet, then links all of them to the job
 const saveJobSkills = async (client, jobId, skills) => {
   const names = skills.map((s) => s.name)
@@ -523,31 +537,17 @@ const STATUS_NOTICE = {
     'You got the job!',
     `${a.company_name} accepted you for ${a.title}.`
   ],
-  rejected: (a) => [
+   rejected: (a, reason) => [
     'rejected',
-    'Application update',
-    `${a.company_name} did not move forward with your application for ${a.title}. See why and improve your CV.`
+    'Application not successful',
+    `${a.company_name} did not move forward with your application for ${a.title}.${reason ? ` Reason: ${reason}` : ''}`
   ]
+
 }
 
 const parseAppId = (req) => {
   const appId = Number(req.params.appId)
   return Number.isInteger(appId) && appId > 0 ? appId : null
-}
-
-const inTransaction = async (work) => {
-  const client = await db.connect()
-  try {
-    await client.query('BEGIN')
-    const result = await work(client)
-    await client.query('COMMIT')
-    return result
-  } catch (err) {
-    await client.query('ROLLBACK').catch(() => {})
-    throw err
-  } finally {
-    client.release()
-  }
 }
 
 const loadOwnApplication = async (client, jobId, appId, companyUserId) => {
@@ -602,7 +602,7 @@ const moveApplication = async (
      VALUES ($1, $2, $3, $4)`,
     [app.id, changedBy, app.status, to]
   )
-  if (notify) await notifySeeker(client, app, STATUS_NOTICE[to](app))
+  if (notify) await notifySeeker(client, app, STATUS_NOTICE[to](app, reason))
 }
 
 const readReason = (body) => {
@@ -868,6 +868,13 @@ const updateApplicants = async (req, res, next) => {
     if (!['shortlisted', 'rejected'].includes(status))
       return res.status(400).json({ error: 'Invalid status' })
 
+    // Free plan has no bulk actions (Plans page)
+    const features = await loadPlanFeatures(req.user.id)
+    if (!features.has_bulk_actions) {
+      return res.status(403).json({
+        error: 'Bulk shortlist / reject is on the Starter and Growth plans. Upgrade to use it.'
+      })
+    }
     let reason = null
     if (status === 'rejected') {
       const r = readReason(req.body)
@@ -979,16 +986,29 @@ const applyToJob = async (req, res, next) => {
       [app[0].id, req.user.id]
     )
 
-    await client.query(
-      `INSERT INTO notifications (user_id, application_id, job_id, type, title, message)
-       VALUES ($1, $2, $3, 'new_applicants', 'New applicant', $4)`,
-      [
-        jobs[0].company_user_id,
-        app[0].id,
-        jobId,
-        `Someone applied to ${jobs[0].title}`
-      ]
+    // one unread "new applicants" notice per job: add to it instead of one per person
+    const { rows: open } = await client.query(
+      `SELECT id, title FROM notifications
+        WHERE user_id = $1 AND job_id = $2 AND type = 'new_applicants' AND NOT is_read
+        ORDER BY id DESC LIMIT 1`,
+      [jobs[0].company_user_id, jobId]
     )
+    const count = open.length ? (parseInt(open[0].title, 10) || 1) + 1 : 1
+    const title = `${count} new applicant${count > 1 ? 's' : ''}`
+    const message = `${title} for ${jobs[0].title}.`
+
+    if (open.length) {
+      await client.query(
+        'UPDATE notifications SET title = $2, message = $3, created_at = now() WHERE id = $1',
+        [open[0].id, title, message]
+      )
+    } else {
+      await client.query(
+        `INSERT INTO notifications (user_id, job_id, type, title, message)
+         VALUES ($1, $2, 'new_applicants', $3, $4)`,
+        [jobs[0].company_user_id, jobId, title, message]
+      )
+    }
 
     await client.query('COMMIT')
 

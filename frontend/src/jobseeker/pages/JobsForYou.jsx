@@ -13,6 +13,8 @@ export default function JobsForYou() {
   const [filters, setFilters] = useState(EMPTY_FILTERS)
 
   const shown = filterJobs(jobs, filters)
+  // The backend sends best match first, then newest; before any job is scored it is just newest first
+  const hasScores = jobs.some((job) => job.match_score != null)
 
   return (
     <main className="container jfy">
@@ -28,7 +30,7 @@ export default function JobsForYou() {
 
       <div className="jfy-section-head">
         <h2>Open jobs</h2>
-        <span className="pill">Newest first</span>
+        <span className="pill">{hasScores ? 'Sorted by your match' : 'Newest first'}</span>
         {!loading && !error && jobs.length > 0 && (
           <span className="jfy-count">
             Showing {shown.length} of {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'}

@@ -37,6 +37,17 @@ function JobTags({ job, withWorkMode }) {
   )
 }
 
+// The signed-in seeker's match for this job (match_score from GET /api/jobs).
+// null = not scored yet → no ring; 0 is a real score and is shown.
+function MatchRing({ score }) {
+  if (score == null) return null
+  return (
+    <div className="jfy-ring" style={{ '--score': score }} aria-label={`${score}% match`} title={`${score}% match`}>
+      <span className="jfy-ring__value">{score}%</span>
+    </div>
+  )
+}
+
 const fadeIn = (index) => ({ animationDelay: `${Math.min(index, 8) * 40}ms` })
 
 export default function JobCard({ job, index }) {
@@ -44,12 +55,13 @@ export default function JobCard({ job, index }) {
     <article className="jfy-card" style={fadeIn(index)}>
       <div className="jfy-card__top">
         <CompanyLogo job={job} className="jfy-logo" />
-        <div>
+        <div className="jfy-card__heading">
           <h3 className="jfy-card__title">{job.title}</h3>
           <p className="jfy-card__company">
             {job.company_name} · {job.location}
           </p>
         </div>
+        <MatchRing score={job.match_score} />
       </div>
 
       <JobTags job={job} withWorkMode />
@@ -81,6 +93,8 @@ export function JobRow({ job, index }) {
           <span className="jfy-row__salary">{salaryText(job)}</span>
         </div>
       </div>
+
+      <MatchRing score={job.match_score} />
 
       <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--outline jfy-row__btn">
         View job

@@ -63,3 +63,33 @@ export const GridIcon = () => (
 export const ListIcon = () => (
   <Icon><path d="M9 6h12M9 12h12M9 18h12" /><path d="M4 6h.01M4 12h.01M4 18h.01" strokeWidth="3" /></Icon>
 );
+
+// ---------- My applications: progress steps (Applied → Shortlisted → Interview → Decision) ----------
+
+// Paper plane = Applied
+export const SendIcon = () => (
+  <Icon><path d="M21 3 10 14" /><path d="M21 3 14.5 21l-4.5-7-7-4.5z" /></Icon>
+);
+
+export const StarIcon = () => (
+  <Icon><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z" /></Icon>
+);
+
+export const CalendarIcon = () => (
+  <Icon><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></Icon>
+);
+
+// Flag = Decision (not made yet)
+export const FlagIcon = () => (
+  <Icon><path d="M5 21V4" /><path d="M5 4h11l-2 4 2 4H5" /></Icon>
+);
+
+// X = Not selected
+export const XIcon = () => (
+  <Icon><path d="M18 6 6 18M6 6l12 12" /></Icon>
+);
+
+// › at the end of a clickable row
+export const ChevronRightIcon = () => (
+  <Icon><path d="m9 6 6 6-6 6" /></Icon>
+);
