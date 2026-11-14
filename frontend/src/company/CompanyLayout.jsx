@@ -16,10 +16,18 @@ export default function CompanyLayout() {
       .catch(() => {}); // not signed in → keep the default letter
   }, []);
 
+  // Number of unread notifications on the bell (the Notifications page updates it)
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    api('/notifications/unread-count')
+      .then((data) => setUnread(data.unread))
+      .catch(() => {}); // not signed in → no number
+  }, []);
+
   return (
     <div className="company-page">
-      <CompanyNavbar companyInitial={initial || undefined} />
-      <Outlet />
+      <CompanyNavbar companyInitial={initial || undefined} unread={unread} />
+      <Outlet context={{ setUnread }} />
     </div>
   );
 }

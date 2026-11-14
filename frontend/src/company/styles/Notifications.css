@@ -1,0 +1,44 @@
+/* Notifications page. Colours follow the wireframe "16b · Employer: notifications". */
+
+.nt { gap: 18px; }
+.container.nt { max-width: 860px; padding: 32px 20px; } /* same size as the wireframe */
+
+/* ===== Title + Mark all as read ===== */
+.nt-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+.nt-head h1 { font-size: 30px; font-weight: 700; }
+.nt-sub { margin-top: 4px; color: #5b7186; }
+.nt-markall {
+  min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid #117a7c;
+  background: var(--white); color: #117a7c; font: inherit; font-weight: 700; cursor: pointer;
+}
+.nt-markall:hover:not(:disabled) { background: #eaf7f7; }
+.nt-markall:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ===== List box ===== */
+.nt-list { background: var(--white); border: 1px solid #e5eaf0; border-radius: 18px; overflow: hidden; }
+
+/* one row (a link, or a button when there is nothing to open) */
+.nt-row {
+  display: flex; gap: 14px; align-items: flex-start; width: 100%; padding: 18px 20px;
+  border: 0; border-bottom: 1px solid #eef2f5; background: var(--white); color: #102a3d;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.nt-row:last-child { border-bottom: 0; }
+.nt-row:hover { background: #eaf7f7; }
+.nt-row--unread { background: #f4fafa; }
+
+.nt-icon {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: grid; place-items: center;
+}
+.nt-icon svg { width: 20px; height: 20px; }
+
+.nt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nt-text b { font-weight: 600; }
+.nt-row--unread .nt-text b { font-weight: 700; }
+.nt-text span { font-size: 14px; color: #5b7186; }
+.nt-text small { font-size: 12px; color: #8a9bab; margin-top: 4px; }
+
+.nt-dot { width: 10px; height: 10px; border-radius: 999px; background: #159a9c; margin-top: 8px; flex-shrink: 0; }
+
+.nt-empty { padding: 24px 20px; text-align: center; color: #5b7186; }
