@@ -588,7 +588,7 @@ const moveApplication = async (
     'UPDATE applications SET status = $2, rejection_reason = $3 WHERE id = $1',
     [app.id, to, to === 'rejected' ? reason : null]
   )
-    // rejected after an interview → the interview is over
+  // rejected after an interview → the interview is over
   if (to === 'rejected' && app.status === 'interview') {
     await client.query(
       `UPDATE interviews SET status = 'done'
@@ -625,14 +625,14 @@ const getOneApplicant = async (req, res, next) => {
               sp.major, sp.years_experience,
               r.file_name AS cv_file_name, r.file_url AS cv_url, r.parsed_text AS cv_text,
               j.title AS job_title, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
-              m.score, m.tier, COALESCE(m.is_qualified, true) AS is_qualified,
+              m.score, COALESCE(m.is_qualified, true) AS is_qualified,
               -- Rank #: 1 + how many applicants of this job scored higher
               CASE WHEN m.score IS NULL THEN NULL ELSE
                 (SELECT COUNT(*) + 1 FROM applications a2
                    JOIN match_scores m2 ON m2.job_id = a2.job_id AND m2.seeker_id = a2.seeker_id
                   WHERE a2.job_id = a.job_id AND m2.score > m.score)::int
               END AS rank,
-                (SELECT COUNT(*) FROM applications WHERE job_id = a.job_id)::int AS total_applicants,
+              (SELECT COUNT(*) FROM applications WHERE job_id = a.job_id)::int AS total_applicants,
               -- "Why this score": every job skill, must-have or not, in the CV or not
               COALESCE((SELECT json_agg(json_build_object(
                           'name', s.name, 'required', js.is_required, 'has', ss.skill_id IS NOT NULL)
@@ -654,45 +654,57 @@ const getOneApplicant = async (req, res, next) => {
     if (rows.length === 0)
       return res.status(404).json({ error: 'Applicant not found' })
 
-    // interview (null if none yet); confirmed,reschedule_requested 
-    const { rows: interviews } = await db.query(
-      `SELECT id, scheduled_at, type, location_or_link, note_to_applicant, employer_notes, status
-         FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1`,
-      [appId]
-    )
-    const { rows: history } = await db.query(
-      `SELECT from_status, to_status, changed_at
-         FROM application_history WHERE application_id = $1 ORDER BY changed_at, id`,
-      [appId]
-    )
+    // these don't depend on each other so run them at the same time
+    const [{ rows: interviews }, { rows: history }, { rows: nav }] =
+      await Promise.all([
+        // latest interview, null if there isn't one yet
+        db.query(
+          `SELECT id, scheduled_at, type, location_or_link, note_to_applicant, employer_notes, status
+           FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1`,
+          [appId]
+        ),
+        db.query(
+          `SELECT from_status, to_status, changed_at
+           FROM application_history WHERE application_id = $1 ORDER BY changed_at, id`,
+          [appId]
+        ),
+        // previous / next applicant, same order as the applicants list
+        db.query(
+          `SELECT position, prev_id, next_id FROM (
+           SELECT a.id,
+                  (ROW_NUMBER() OVER w)::int AS position,
+                  LAG(a.id)  OVER w AS prev_id,
+                  LEAD(a.id) OVER w AS next_id
+             FROM applications a
+             LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+            WHERE a.job_id = $1
+           WINDOW w AS (ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id)
+         ) t
+         WHERE id = $2`,
+          [jobId, appId]
+        )
+      ])
 
-    // CV text for the "Highlighted text" view (null = the file couldn't be read)
-    const applicant = { ...rows[0], cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null }
+    // cv text for the highlighted view, null if the file couldn't be read
+    const applicant = {
+      ...rows[0],
+      cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null
+    }
 
-    // Previous / next applicant: same order as the Applicants list (best match first)
-    const { rows: nav } = await db.query(
-      `SELECT position, prev_id, next_id FROM (
-         SELECT a.id,
-                ROW_NUMBER() OVER w ::int AS position,
-                LAG(a.id)  OVER w AS prev_id,
-                LEAD(a.id) OVER w AS next_id
-           FROM applications a
-           LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
-          WHERE a.job_id = $1
-         WINDOW w AS (ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id)
-       ) t
-       WHERE id = $2`,
-      [jobId, appId]
-    )
-    res.json({ applicant, interview: interviews[0] || null, history, nav: nav[0] })
+    res.json({
+      applicant,
+      interview: interviews[0] || null,
+      history,
+      nav: nav[0]
+    })
   } catch (err) {
     next(err)
   }
 }
 
 // PATCH /api/jobs/mine/:id/applicants/:appId  { status, reason? } (company)
-// shortlisted (also Undo from rejected) 
-// rejected (reason required) 
+// shortlisted (also Undo from rejected)
+// rejected (reason required)
 // accepted (after interview)
 const updateOneApplicant = async (req, res, next) => {
   try {
@@ -726,7 +738,7 @@ const updateOneApplicant = async (req, res, next) => {
 }
 
 // POST /api/jobs/mine/:id/applicants/:appId/interview { date, time, type, location, note? } (company)
-// shortlisted → schedules it and moves to "interview" 
+// shortlisted → schedules it and moves to "interview"
 // already "interview" → reschedules it
 const scheduleInterview = async (req, res, next) => {
   try {
