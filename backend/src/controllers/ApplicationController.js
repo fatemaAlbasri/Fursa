@@ -14,7 +14,7 @@ const getMyApplications = async (req, res, next) => {
     const { rows } = await db.query(
       `SELECT a.id, a.status, a.applied_at,
               j.id AS job_id, j.title, j.job_type, j.work_mode, j.location,
-              c.name AS company_name, c.logo_url,
+              c.id AS company_id, c.name AS company_name, c.logo_url,
               -- latest time they were shortlisted (an Undo can shortlist again)
               (SELECT MAX(changed_at) FROM application_history h
                 WHERE h.application_id = a.id AND h.to_status = 'shortlisted') AS shortlisted_at,
@@ -55,6 +55,9 @@ const getMyApplication = async (req, res, next) => {
               c.phone AS company_phone, hr.email AS company_email,
               r.file_name AS cv_file_name, r.file_url AS cv_url,
               m.score,
+              -- the interview time itself (same as the list), kept after the decision
+              (SELECT scheduled_at FROM interviews i
+                WHERE i.application_id = a.id ORDER BY i.id DESC LIMIT 1) AS interview_at,
               -- for "Why you were not selected": must-have skills they don't have, then the others
               COALESCE((SELECT json_agg(s.name ORDER BY s.name)
                           FROM job_skills js
