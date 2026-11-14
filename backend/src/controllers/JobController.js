@@ -697,10 +697,11 @@ const updateOneApplicant = async (req, res, next) => {
 }
 
 // Interview time in Bahrain, e.g. "20 Oct, 10:00 AM" (used in the seeker's notification)
+// Some Node versions put a narrow no-break space before AM/PM; make it a normal one.
 const formatInterviewTime = (when) => {
   const day = when.toLocaleDateString('en-GB', { timeZone: 'Asia/Bahrain', day: 'numeric', month: 'short' })
   const time = when.toLocaleTimeString('en-US', { timeZone: 'Asia/Bahrain', hour: 'numeric', minute: '2-digit' })
-  return `${day}, ${time}`
+  return `${day}, ${time}`.replace(/\s/g, ' ')
 }
 
 // POST /api/jobs/mine/:id/applicants/:appId/interview { date, time, type, location, note? } (company)
