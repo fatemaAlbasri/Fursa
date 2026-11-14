@@ -159,6 +159,21 @@ export default function ApplicantView() {
   };
 
   const isPdf = /\.pdf$/i.test(a.cv_url || '');
+  
+  const downloadCv = async () => {
+    try {
+      const res = await fetch(SERVER + a.cv_url);
+      if (!res.ok) throw new Error();
+      const url = URL.createObjectURL(await res.blob());
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = a.cv_file_name || 'cv';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError('Could not download the CV.');
+    }
+  };
 
   // ---------- Buttons ----------
   // Every change goes to the backend, then the page reloads the applicant (status, history, interview)
@@ -278,10 +293,7 @@ export default function ApplicantView() {
             <div className="apd-cv__head">
               <h2>CV</h2>
               <div className="apd-cv__actions">
-                <a href={SERVER + a.cv_url} target="_blank" rel="noreferrer" className="apd-btn apd-btn--plain">
-                  {isPdf ? 'Open PDF' : 'Open file'}
-                </a>
-                <a href={SERVER + a.cv_url} download={a.cv_file_name} className="apd-btn apd-btn--plain">Download</a>
+                <button type="button" className="apd-btn apd-btn--plain" onClick={downloadCv}>Download</button>
               </div>
             </div>
             {isPdf ? (
