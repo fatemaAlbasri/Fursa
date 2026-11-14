@@ -248,7 +248,7 @@ export default function ApplicantView() {
           </p>
         </div>
         <StatusPill status={STATUS_LABELS[status]} />
-        <ScoreRing score={a.score} size={76} className="ap-score apd-score" />
+        <ScoreRing score={a.score} size={76} className="ap-score apd-score" byScore thickness={3.75} />
       </section>
 
       {error && <p className="field__error" role="alert">{error}</p>}
