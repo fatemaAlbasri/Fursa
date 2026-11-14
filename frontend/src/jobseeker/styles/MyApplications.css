@@ -1,0 +1,468 @@
+/* ===== My applications (job seeker) =====
+   Summary boxes, status tabs, one card per application with its 4-step progress, and the legend.
+   Uses the shared .title, .muted and .btn styles from index.css and the shared StatusPill.
+   Every class here starts with "ma-". Rules that change a shared class (.container, .status-pill)
+   use two classes, because index.css loads after this file and would win otherwise.
+
+   Progress step classes (from progressSteps() in utils/applicationFormat.js):
+     ma-step--applied | --shortlisted | --interview | --decision   → which step (sets its colour)
+     ma-step--done | --current | --next | --skipped | --accepted | --rejected → how far it got */
+
+/* colours used only on this page (status colours = the same as the status pills) */
+.container.ma {
+  --ma-purple: #6d4ae8;
+  --ma-blue: #3a96c7;
+  --ma-applied: #3e5468;
+  --ma-shortlisted: #0b77b5;
+  --ma-shortlisted-bg: #e0f2fe;
+  --ma-interview: #5235d6;
+  --ma-interview-bg: #efebff;
+  --ma-accepted: #067647;
+  --ma-rejected: #b42318;
+  --ma-error-bg: #fdecea;
+  --ma-error-line: #f5c2bd;
+}
+
+/* page body: same width as Jobs for you and Companies */
+.container.ma {
+  max-width: 1120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ma-head .muted {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+/* ---------- Summary boxes (one per status) ---------- */
+.ma-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.ma-stat {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+}
+.ma-stat__count {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.ma-stat__label {
+  font-size: 13px;
+  color: var(--slate);
+}
+.ma-stat--applied .ma-stat__count {
+  color: var(--ma-applied);
+}
+.ma-stat--shortlisted .ma-stat__count {
+  color: var(--ma-shortlisted);
+}
+.ma-stat--interview .ma-stat__count {
+  color: var(--ma-interview);
+}
+.ma-stat--accepted .ma-stat__count {
+  color: var(--ma-accepted);
+}
+.ma-stat--rejected .ma-stat__count {
+  color: var(--ma-rejected);
+}
+
+/* ---------- Status tabs (same pill buttons as Companies) ---------- */
+.ma-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ma-tab {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--navy);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.ma-tab:hover {
+  border-color: var(--accent);
+}
+.ma-tab--active,
+.ma-tab--active:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+  font-weight: 700;
+}
+.ma-tab:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Application cards ---------- */
+.ma-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* the whole card is one link to the application's details */
+.ma-card {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) minmax(340px, 1.5fr) auto auto;
+  grid-template-areas: 'logo info progress status chevron';
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 14px;
+  padding: 18px 20px;
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: var(--radius);
+  color: inherit;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.ma-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(24, 59, 86, 0.09);
+}
+.ma-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Logo box (CompanyLogo with className "ma-logo") ---------- */
+.ma-logo {
+  grid-area: logo;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--teal);
+  color: var(--white);
+  font-size: 17px;
+  font-weight: 700;
+}
+img.ma-logo {
+  object-fit: cover;
+  background: var(--light);
+  border: 1px solid var(--gray);
+}
+/* letter box colour from the company id (same colours as the other job seeker pages; 0 = teal above) */
+.ma-logo--1 {
+  background: var(--ma-purple);
+}
+.ma-logo--2 {
+  background: var(--ma-blue);
+}
+.ma-logo--3 {
+  background: var(--navy);
+}
+
+.ma-card__info {
+  grid-area: info;
+  min-width: 0;
+}
+.ma-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.ma-card__meta {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--slate);
+}
+
+.ma-card__status {
+  grid-area: status;
+}
+/* wider pill than the employer tables, like the wireframe */
+.ma-card__status .status-pill {
+  display: inline-block;
+  min-width: 120px;
+}
+.ma-card__chevron {
+  grid-area: chevron;
+  display: grid;
+  place-items: center;
+  color: var(--slate);
+}
+.ma-card__chevron svg {
+  width: 18px;
+  height: 18px;
+}
+.ma-card:hover .ma-card__chevron {
+  color: var(--teal);
+}
+
+/* ---------- 4-step progress: Applied → Shortlisted → Interview → Decision ---------- */
+.ma-progress {
+  grid-area: progress;
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.ma-step {
+  --step-color: var(--teal); /* colour of this step while it is the current one */
+  --step-bg: var(--light);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  min-width: 0;
+}
+.ma-step--shortlisted {
+  --step-color: var(--ma-shortlisted);
+  --step-bg: var(--ma-shortlisted-bg);
+}
+.ma-step--interview {
+  --step-color: var(--ma-interview);
+  --step-bg: var(--ma-interview-bg);
+}
+
+/* line from the step before to this one: solid once this step is reached, dashed while it isn't */
+.ma-step + .ma-step::before {
+  content: '';
+  position: absolute;
+  top: 17px; /* middle of the icon box */
+  right: 50%;
+  left: -50%;
+  border-top: 2px solid var(--teal);
+}
+.ma-step + .ma-step--next::before,
+.ma-step + .ma-step--skipped::before {
+  border-top-style: dashed;
+  border-top-color: var(--line);
+}
+
+.ma-step__icon {
+  position: relative; /* above the line */
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+.ma-step__icon svg {
+  width: 17px;
+  height: 17px;
+}
+.ma-step__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.3;
+}
+.ma-step__date {
+  font-size: 10px;
+  color: var(--slate);
+}
+
+/* done = teal box, white icon */
+.ma-step--done .ma-step__icon {
+  background: var(--teal);
+  color: var(--white);
+}
+/* current = light box with a coloured border and a soft ring */
+.ma-step--current .ma-step__icon {
+  background: var(--step-bg);
+  color: var(--step-color);
+  border: 2px solid var(--step-color);
+  box-shadow: 0 0 0 3px var(--step-bg);
+}
+.ma-step--current .ma-step__label {
+  color: var(--step-color);
+}
+/* next / not reached = white box with a dashed border, grey text */
+.ma-step--next .ma-step__icon,
+.ma-step--skipped .ma-step__icon {
+  background: var(--white);
+  color: #9aabbb;
+  border: 1.5px dashed #c3d0db;
+}
+.ma-step--next .ma-step__label,
+.ma-step--skipped .ma-step__label {
+  font-weight: 500;
+  color: var(--slate);
+}
+/* the decision once it is made */
+.ma-step--accepted .ma-step__icon {
+  background: var(--success);
+  color: var(--white);
+}
+.ma-step--accepted .ma-step__label {
+  color: var(--ma-accepted);
+}
+.ma-step--rejected .ma-step__icon {
+  background: var(--error);
+  color: var(--white);
+}
+.ma-step--rejected .ma-step__label {
+  color: var(--ma-rejected);
+}
+
+/* ---------- Legend under the list ---------- */
+.ma-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 12px;
+  color: var(--slate);
+}
+.ma-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ma-legend__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+.ma-legend__swatch--done {
+  background: var(--teal);
+}
+.ma-legend__swatch--current {
+  background: var(--ma-interview-bg);
+  border: 2px solid var(--ma-interview);
+}
+.ma-legend__swatch--next {
+  background: var(--white);
+  border: 1.5px dashed #c3d0db;
+}
+
+/* ---------- Loading / empty / error ---------- */
+.ma-state {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--slate);
+  font-size: 14px;
+}
+.ma-state h2,
+.ma-state h3 {
+  font-size: 17px;
+  color: var(--navy);
+}
+.ma-state .btn {
+  margin-top: 6px;
+}
+.ma-state--error {
+  background: var(--ma-error-bg);
+  border-color: var(--ma-error-line);
+}
+.ma-state--error h2,
+.ma-state--error h3 {
+  color: var(--error);
+}
+.ma-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--light);
+  border-top-color: var(--teal);
+  animation: ma-spin 0.8s linear infinite;
+}
+@keyframes ma-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Smaller screens ---------- */
+/* tablets: logo + text + pill + › on top, the progress across the whole card underneath */
+@media (max-width: 1000px) {
+  .ma-card {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'logo info status chevron'
+      'progress progress progress progress';
+  }
+}
+@media (max-width: 760px) {
+  .ma-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+/* phones: pill under the text, smaller step boxes */
+@media (max-width: 520px) {
+  .ma-head .title {
+    font-size: 24px;
+  }
+  .ma-stat {
+    padding: 12px;
+  }
+  .ma-stat__count {
+    font-size: 20px;
+  }
+  .ma-tab {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+  .ma-card {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'logo info chevron'
+      'logo status chevron'
+      'progress progress progress';
+    column-gap: 12px;
+    row-gap: 10px;
+    padding: 16px;
+  }
+  .ma-card__status .status-pill {
+    min-width: 0;
+  }
+  .ma-step + .ma-step::before {
+    top: 15px;
+  }
+  .ma-step__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .ma-step__icon svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ma-card,
+  .ma-tab {
+    transition: none;
+  }
+  .ma-spinner {
+    animation-duration: 2s;
+  }
+}
