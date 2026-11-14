@@ -1,0 +1,68 @@
+/* Delete company account. Colours follow the wireframe "22 · Delete account warning: company". */
+
+.container.da { max-width: 620px; padding: 48px 20px; }
+
+/* ===== Warning card (red line on top) ===== */
+.da-card {
+  background: var(--white); border: 1px solid #e5eaf0; border-top: 6px solid #d92d20; border-radius: 20px;
+  padding: 32px; display: flex; flex-direction: column; gap: 22px; box-shadow: 0 10px 30px rgba(16, 42, 61, .06);
+}
+.da-head { display: flex; gap: 16px; align-items: center; }
+.da-head__icon {
+  width: 56px; height: 56px; border-radius: 16px; background: #fdecea; color: #d92d20;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.da-head__icon svg { width: 30px; height: 30px; }
+.da-head h1 { font-size: 28px; font-weight: 700; }
+.da-head p { margin-top: 2px; color: #5b7186; font-size: 15px; }
+
+/* what will be deleted */
+.da-lost {
+  padding: 16px 18px; border-radius: 14px; background: #fff4f2; border: 1px solid #f7b4ae;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.da-lost__title { font-weight: 700; color: #912018; }
+.da-lost__item { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: #3e5468; }
+.da-lost__item svg { width: 18px; height: 18px; color: #d92d20; flex-shrink: 0; margin-top: 2px; }
+
+/* "Only want to stop paying?" */
+.da-alt {
+  display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px;
+  background: #eaf7f7; font-size: 14px; color: #3e5468;
+}
+.da-alt svg { width: 22px; height: 22px; color: #117a7c; flex-shrink: 0; }
+.da-alt b { color: #117a7c; }
+
+/* buttons */
+.da-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.da-keep, .da-delete {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; border-radius: 12px;
+  font: inherit; font-weight: 700;
+}
+.da-keep { flex: 1 1 160px; border: 1px solid #cbd5df; color: #102a3d; }
+.da-keep:hover { background: #f4fafa; }
+.da-delete { flex: 2 1 220px; border: 0; background: #b42318; color: var(--white); cursor: pointer; }
+.da-delete:hover:not(:disabled) { background: #912018; }
+.da-delete:disabled { opacity: .6; cursor: not-allowed; }
+.da-delete svg { width: 18px; height: 18px; }
+
+/* ===== After deleting ===== */
+.da-done {
+  background: var(--white); border: 1px solid #e5eaf0; border-radius: 20px; padding: 40px 32px;
+  display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center;
+}
+.da-done__icon {
+  width: 64px; height: 64px; border-radius: 999px; background: #eef2f5; color: #5b7186; display: grid; place-items: center;
+}
+.da-done__icon svg { width: 30px; height: 30px; }
+.da-done h1 { font-size: 26px; font-weight: 700; }
+.da-done p { color: #5b7186; max-width: 420px; }
+.da-home {
+  display: flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 12px;
+  background: #117a7c; color: var(--white); font-weight: 700;
+}
+.da-home:hover { background: #0e6466; }
+
+@media (max-width: 640px) {
+  .da-card { padding: 22px; }
+}
