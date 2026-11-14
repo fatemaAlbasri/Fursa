@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api } from '../../shared/api.js';
 import { userInitials } from '../../shared/utils/jobFormat.js';
 import { STATUS_LABELS, avatarColor } from '../data/applicants.js';
+import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx';
 import StatusPill from '../../shared/components/StatusPill';
 import ScoreRing from '../components/ScoreRing.jsx';
 import '../styles/ApplicantView.css';
@@ -139,7 +140,7 @@ export default function ApplicantView() {
     return (
       <main className="container container--wide apd">
         <Link to="/company/applicants" state={{ jobId: Number(id) }} className="apd-back">← Back to applicants</Link>
-        {error ? <p className="field__error" role="alert">{error}</p> : <p className="apd-muted">Loading…</p>}
+        {error ? <p className="field__error" role="alert">{error}</p> : <Loading text="Loading applicant…" />}
       </main>
     );
   }
