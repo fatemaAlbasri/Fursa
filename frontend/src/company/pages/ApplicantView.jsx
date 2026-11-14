@@ -48,8 +48,8 @@ function interviewToForm(interview) {
   if (!interview) return { date: '', time: '', type: 'in_person', location: '', note: '' };
   const d = new Date(interview.scheduled_at);
   return {
-    date: d.toLocaleDateString('en-CA', { timeZone: TIME_ZONE }), // YYYY-MM-DD
-    time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: TIME_ZONE }),
+    date: d.toLocaleDateString('en-CA', { timeZone: TIME_ZONE }),
+    time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour23: false, timeZone: TIME_ZONE }),
     type: interview.type,
     location: interview.location_or_link,
     note: interview.note_to_applicant || '',
