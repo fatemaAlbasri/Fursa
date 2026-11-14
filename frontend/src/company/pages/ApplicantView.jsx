@@ -153,6 +153,19 @@ export default function ApplicantView() {
   const experienceOk = a.years_experience != null && Number(a.years_experience) >= a.min_years;
   const years = Number(a.years_experience || 0);
 
+  const yearsWord = (n) => `${n} ${n === 1 ? 'year' : 'years'}`;
+  const asksYears = a.min_years === 0
+    ? (a.max_years ? `Fresh graduate – ${yearsWord(a.max_years)}` : 'Fresh graduate')
+    : (a.max_years ? `${a.min_years}–${a.max_years} years` : `${a.min_years}+ years`);
+
+  const reqs = [
+    { label: a.major_must_have ? 'Major (must-have)' : 'Major', value: a.major || '—',
+      asks: a.field || 'Any major', ok: majorOk ? true : null },
+    { label: 'Experience', value: a.years_experience == null ? '—' : years === 0 ? 'No experience' : yearsWord(years),
+      asks: asksYears, ok: a.years_experience == null ? null : experienceOk },
+    ...(a.language ? [{ label: 'Language (required)', value: a.language, ok: null }] : []),
+  ];
+
   // date of the last move to a status (for "Offer sent · 9 Oct" / "REJECTED · 1 Oct")
   const movedOn = (to) => {
     const step = [...history].reverse().find((h) => h.to_status === to);
@@ -258,34 +271,33 @@ export default function ApplicantView() {
         <div className="apd-main">
           <section className="apd-card">
             <h2>Why this score (AI match)</h2>
-            {a.skills.length > 0 && (
-              <div className="apd-skills">
-                {a.skills.map((s) => (
-                  <div key={s.name} className={s.has ? 'apd-skill apd-skill--has' : 'apd-skill apd-skill--missing'}>
-                    <span>
-                      <b>{s.name}</b>
-                      {s.required && <span className="apd-must"> Must-have</span>}
-                    </span>
-                    <b className="apd-skill__mark">{s.has ? '✓ In CV' : '– Not in CV'}</b>
+            <p className="apd-muted">Skills in the job requirements compared with the skills found in the CV.</p>
+              {a.skills.map((s) => {
+                  const kind = s.has ? 'has' : s.required ? 'lacking' : 'missing';
+                  const mark = { has: '✓ In CV', lacking: '✗ Missing', missing: '– Not in CV' }[kind];
+                  return (
+                    <div key={s.name} className={`apd-skill apd-skill--${kind}`}>
+                      <span>
+                        <b>{s.name}</b>
+                        {s.required && <span className="apd-must"> Must-have</span>}
+                      </span>
+                      <b className="apd-skill__mark">{mark}</b>
+                    </div>
+                  );
+                })}
+                <p className="apd-subhead">Other requirements</p>
+            <div className="apd-reqs">
+              {reqs.map((r) => (
+                <div key={r.label} className="apd-req">
+                  <div className="apd-req__top">
+                    <span>{r.label}</span>
+                    {r.ok === true && <b className="apd-req__ok">✓ Matches</b>}
+                    {r.ok === false && <b className="apd-req__no">✗ Doesn't match</b>}
                   </div>
-                ))}
-              </div>
-            )}
-            <div className="apd-facts">
-              <div className="apd-fact">
-                <span>{a.major_must_have ? 'Major (must-have)' : 'Major'}</span>
-                <b>{a.major || '—'}{majorOk && ' ✓'}</b>
-              </div>
-              <div className="apd-fact">
-                <span>Experience</span>
-                <b>{a.years_experience == null ? '—' : years === 0 ? 'No experience' : `${years} ${years === 1 ? 'year' : 'years'}`}{experienceOk && ' ✓'}</b>
-              </div>
-              {a.language && (
-                <div className="apd-fact">
-                  <span>Language (required)</span>
-                  <b>{a.language}</b>
+                  <b className="apd-req__value">{r.value}</b>
+                  {r.asks && <span className="apd-req__asks">Job asks: {r.asks}</span>}
                 </div>
-              )}
+              ))}
             </div>
           </section>
 

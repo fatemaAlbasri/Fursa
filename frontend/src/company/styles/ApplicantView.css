@@ -39,19 +39,30 @@
 .apd-side { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 
 /* ===== Why this score ===== */
-.apd-skills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.apd-skills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: center;}
 .apd-skill { display: flex; justify-content: space-between; gap: 8px; padding: 12px 14px; border-radius: 12px; }
 .apd-skill--has { background: #e3f8ef; }
 .apd-skill--has .apd-skill__mark { color: #067647; }
 .apd-skill--missing { background: #fef3e2; }
 .apd-skill--missing .apd-skill__mark { color: #93370d; }
+.apd-skill--lacking { background: #fdecea; }
+.apd-skill--lacking .apd-skill__mark { color: #b42318; }
 .apd-skill__mark { white-space: nowrap; }
 .apd-must { font-size: 12px; color: #b42318; font-weight: 700; }
 
-.apd-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.apd-fact { padding: 12px 14px; border-radius: 12px; background: #f4fafa; display: flex; flex-direction: column; }
-.apd-fact span { font-size: 12px; color: #5b7186; font-weight: 600; }
-.apd-fact b { font-weight: 700; }
+.apd-subhead { margin: 4px 0 0; font-size: 13px; font-weight: 700; color: #3e5468; }
+.apd-reqs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.apd-req {
+  padding: 12px 14px; border-radius: 12px; background: #f4fafa; border: 1px solid #e5eaf0;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.apd-req__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #5b7186; }
+
+.apd-req__ok { color: #067647; }
+.apd-req__no { color: #b42318; }
+.apd-req__value { font-size: 14px; }
+.apd-req__asks { font-size: 12px; color: #8a9bab; }
+
 
 /* ===== CV ===== */
 .apd-cv__head { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; }
@@ -140,6 +151,6 @@
 }
 
 @media (max-width: 640px) {
-  .apd-skills, .apd-facts { grid-template-columns: 1fr; }
+  .apd-skills, .apd-reqs { grid-template-columns: 1fr; }
   .apd-cv__preview { height: 420px; }
 }
