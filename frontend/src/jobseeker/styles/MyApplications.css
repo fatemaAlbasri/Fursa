@@ -228,6 +228,7 @@ img.ma-logo {
 .ma-step {
   --step-color: var(--teal); /* colour of this step while it is the current one */
   --step-bg: var(--light);
+  --icon-size: 36px; /* the lines are measured from it, so they stop at the boxes' edges */
   position: relative;
   display: flex;
   flex-direction: column;
@@ -245,13 +246,16 @@ img.ma-logo {
   --step-bg: var(--ma-interview-bg);
 }
 
-/* line from the step before to this one: solid once this step is reached, dashed while it isn't */
+/* line from the step before to this one: solid once this step is reached, dashed while it isn't.
+   It runs only in the gap between the two boxes (from the edge of the box before to the edge of this one),
+   so it never crosses a box or its border. */
 .ma-step + .ma-step::before {
   content: '';
   position: absolute;
-  top: 17px; /* middle of the icon box */
-  right: 50%;
-  left: -50%;
+  z-index: 0;
+  top: calc(var(--icon-size) / 2 - 1px); /* middle of the icon box (line is 2px) */
+  left: calc(-50% + var(--icon-size) / 2);
+  right: calc(50% + var(--icon-size) / 2);
   border-top: 2px solid var(--teal);
 }
 .ma-step + .ma-step--next::before,
@@ -261,9 +265,10 @@ img.ma-logo {
 }
 
 .ma-step__icon {
-  position: relative; /* above the line */
-  width: 36px;
-  height: 36px;
+  position: relative;
+  z-index: 1; /* above every line, including the next step's (it comes later in the page) */
+  width: var(--icon-size);
+  height: var(--icon-size);
   border-radius: 9px;
   display: grid;
   place-items: center;
@@ -444,12 +449,10 @@ img.ma-logo {
   .ma-card__status .status-pill {
     min-width: 0;
   }
-  .ma-step + .ma-step::before {
-    top: 15px;
+  .ma-step {
+    --icon-size: 32px;
   }
   .ma-step__icon {
-    width: 32px;
-    height: 32px;
     border-radius: 8px;
   }
   .ma-step__icon svg {
