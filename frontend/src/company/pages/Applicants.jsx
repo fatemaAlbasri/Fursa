@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../shared/api.js';
 import { toApplicant, countStats } from '../data/applicants.js';
 import StatusPill from '../../shared/components/StatusPill';
+import ScoreRing from '../components/ScoreRing.jsx';
 import '../styles/Applicants.css';
 
 // =====================================================================
@@ -24,26 +25,9 @@ const TABS = [
   { id: 'all', label: (s) => `All (${s.total})`, show: () => true },
 ];
 
-// Round match-score ring (e.g. 92%). score = null → empty ring with "–"
-function ScoreRing({ score }) {
-  const CIRCLE = 125.66; // length of the circle's edge (2 × π × 20)
-  const filled = ((score ?? 0) / 100) * CIRCLE;
-  return (
-    <div className="ap-score" role="img" aria-label={score == null ? 'Not ranked yet' : `${score}% match`}>
-      <svg width="50" height="50" viewBox="0 0 50 50" aria-hidden="true">
-        <circle cx="25" cy="25" r="20" fill="none" stroke="#DDF1F1" strokeWidth="5" />
-        {score != null && (
-          <circle cx="25" cy="25" r="20" fill="none" stroke="#159A9C" strokeWidth="5" strokeLinecap="round"
-            strokeDasharray={`${filled.toFixed(1)} ${CIRCLE}`} transform="rotate(-90 25 25)" />
-        )}
-      </svg>
-      <span>{score == null ? '–' : `${score}%`}</span>
-    </div>
-  );
-}
-
 export default function Applicants() {
   const navigate = useNavigate();
+  const { state } = useLocation(); // { jobId } when coming back from one applicant's page
 
   // ---------- Page state ----------
   const [jobs, setJobs] = useState([]); // the company's jobs (for the drop-down)
@@ -57,12 +41,12 @@ export default function Applicants() {
   const stats = countStats(applicants);
 
   // ---------- Load from the backend ----------
-  // 1) the company's jobs → open the first one that has applicants
+  // 1) the company's jobs → open the job we came back from, else the first one that has applicants
   useEffect(() => {
     api('/jobs/mine')
       .then(({ jobs }) => {
         setJobs(jobs);
-        const first = jobs.find((j) => j.applicants > 0) || jobs[0];
+        const first = jobs.find((j) => j.id === state?.jobId) || jobs.find((j) => j.applicants > 0) || jobs[0];
         if (first) setJobId(first.id);
       })
       .catch((err) => setError(err.error || 'Could not load your jobs.'));
@@ -193,8 +177,7 @@ export default function Applicants() {
               </div>
               <ScoreRing score={a.score} />
               <StatusPill status={a.status} />
-              {/* TODO: applicant page (/company/applicants/:id) is not built yet */}
-              <Link to={`/company/applicants/${a.id}`} className="ap-view">View applicant</Link>
+              <Link to={`/company/jobs/${jobId}/applicants/${a.id}`} className="ap-view">View applicant</Link>
             </div>
           ))}
           {rows.length === 0 && <p className="ap-empty">No applicants here yet.</p>}
