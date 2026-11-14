@@ -27,6 +27,8 @@
 .apd-head__who h1 { margin: 0; font-size: 26px; font-weight: 700; }
 .apd-head__who p { margin: 0; color: #5b7186; }
 .apd-head__who b { color: var(--navy); }
+.apd-job-link { color: var(--navy); font-weight: 700; text-decoration: none; }
+.apd-job-link:hover { color: #117a7c; text-decoration: underline; }
 .ap-score.apd-score { width: 76px; height: 76px; }
 .ap-score.apd-score span { font-size: 16px; }
 .apd-head .status-pill { padding: 8px 16px; font-size: 16px; }
