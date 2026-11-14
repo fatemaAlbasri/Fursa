@@ -587,6 +587,15 @@ const moveApplication = async (
     'UPDATE applications SET status = $2, rejection_reason = $3 WHERE id = $1',
     [app.id, to, to === 'rejected' ? reason : null]
   )
+    // rejected after an interview → the interview is over
+  if (to === 'rejected' && app.status === 'interview') {
+    await client.query(
+      `UPDATE interviews SET status = 'done'
+        WHERE id = (SELECT id FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1)`,
+      [app.id]
+    )
+  }
+
   await client.query(
     `INSERT INTO application_history (application_id, changed_by, from_status, to_status)
      VALUES ($1, $2, $3, $4)`,
