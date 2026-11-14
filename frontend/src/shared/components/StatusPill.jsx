@@ -2,6 +2,7 @@ import '../styles/statusPill.css';
 
 const STATUS_PILL = {
   New: 'status-pill--new',
+  Applied: 'status-pill--new', // job seeker's word for the same status (employers see "New")
   Shortlisted: 'status-pill--shortlisted',
   Interview: 'status-pill--interview',
   Accepted: 'status-pill--accepted',
