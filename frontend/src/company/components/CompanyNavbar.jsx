@@ -11,8 +11,7 @@ export default function CompanyNavbar({ companyInitial = 'A' }) {
     <header className="cnav">
       <div className="cnav__inner">
         <Link to="/company/jobs" className="logo">
-          <img src="/fursa-key.png" alt="" className="logo__key" />
-          <img src="/fursa-wordmark-white.png" alt="Fursa" className="logo__wordmark" />
+          <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
           <span className="logo__tag">Employer</span>
         </Link>
 
