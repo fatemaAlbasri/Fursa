@@ -23,6 +23,7 @@ const companyRoutes = require('./routes/CompanyRouter')
 const applicationRoutes = require('./routes/ApplicationRouter')
 const notificationRoutes = require('./routes/NotificationRouter')
 const profileRoutes = require('./routes/ProfileRouter')
+const planRoutes = require('./routes/PlanRouter')
 
 // Uploaded CVs and logos
 app.use('/uploads', express.static(UPLOADS_DIR))
@@ -35,6 +36,7 @@ app.use('/api/companies', companyRoutes)
 app.use('/api/applications', applicationRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/profile', profileRoutes)
+app.use('/api/plans', planRoutes)
 
 // 404 for unknown routes
 app.use((req, res) => {

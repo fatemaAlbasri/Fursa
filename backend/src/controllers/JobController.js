@@ -269,6 +269,19 @@ const planLimitError = (max) => ({
   error: `Your plan allows ${max} active job(s). Upgrade your plan or save it as a draft.`
 })
 
+// The company's plan features (has_bulk_actions, has_ai_ranking...)
+const loadPlanFeatures = async (companyUserId) => {
+  const { rows } = await db.query(
+    `SELECT p.has_ai_ranking, p.has_match_reasons, p.has_bulk_actions, p.has_hiring_summary
+       FROM companies c
+       JOIN subscriptions s ON s.company_id = c.id AND s.status = 'active'
+       JOIN plans p ON p.id = s.plan_id
+      WHERE c.user_id = $1`,
+    [companyUserId]
+  )
+  return rows[0] || {}
+}
+
 // Adds any skill that isn't in the skills table yet, then links all of them to the job
 const saveJobSkills = async (client, jobId, skills) => {
   const names = skills.map((s) => s.name)
@@ -814,6 +827,13 @@ const updateApplicants = async (req, res, next) => {
     if (!['shortlisted', 'rejected'].includes(status))
       return res.status(400).json({ error: 'Invalid status' })
 
+    // Free plan has no bulk actions (Plans page)
+    const features = await loadPlanFeatures(req.user.id)
+    if (!features.has_bulk_actions) {
+      return res.status(403).json({
+        error: 'Bulk shortlist / reject is on the Starter and Growth plans. Upgrade to use it.'
+      })
+    }
     let reason = null
     if (status === 'rejected') {
       const r = readReason(req.body)
