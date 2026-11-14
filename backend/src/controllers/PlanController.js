@@ -2,7 +2,7 @@ const db = require('../config/db')
 const { inTransaction } = require('../config/transaction')
 const { sendMail } = require('../config/mailer')
 
-const PAYMENT_METHODS = ['card', 'benefitpay']
+const PAYMENT_METHODS = ['card']
 
 // Price + VAT 10% , total = subtotal + vat exactly
 const PLAN_COLUMNS = `
