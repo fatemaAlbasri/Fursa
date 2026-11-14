@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 
+// match score circle, used in the applicants list and the applicant page
+// byScore: color by score (red / orange / green) instead of always teal
+// thickness: ring width, default 5
+
 export default function ScoreRing({
   score,
   size = 50,
@@ -8,6 +12,7 @@ export default function ScoreRing({
   thickness = 5
 }) {
   const [shown, setShown] = useState(score ?? 0)
+  // count the number up with the ring animation
   useEffect(() => {
     if (
       score == null ||
@@ -25,7 +30,7 @@ export default function ScoreRing({
     return () => cancelAnimationFrame(frame)
   }, [score])
 
-  const CIRCLE = 125.66
+  const CIRCLE = 125.66 // 2 * PI * 20
   const filled = ((score ?? 0) / 100) * CIRCLE
   const [ring, text] =
     !byScore || score == null
