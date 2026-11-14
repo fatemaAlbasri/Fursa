@@ -669,7 +669,22 @@ const getOneApplicant = async (req, res, next) => {
     // CV text for the "Highlighted text" view (null = the file couldn't be read)
     const applicant = { ...rows[0], cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null }
 
-    res.json({ applicant, interview: interviews[0] || null, history })
+    // Previous / next applicant: same order as the Applicants list (best match first)
+    const { rows: nav } = await db.query(
+      `SELECT position, prev_id, next_id FROM (
+         SELECT a.id,
+                ROW_NUMBER() OVER w ::int AS position,
+                LAG(a.id)  OVER w AS prev_id,
+                LEAD(a.id) OVER w AS next_id
+           FROM applications a
+           LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+          WHERE a.job_id = $1
+         WINDOW w AS (ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id)
+       ) t
+       WHERE id = $2`,
+      [jobId, appId]
+    )
+    res.json({ applicant, interview: interviews[0] || null, history, nav: nav[0] })
   } catch (err) {
     next(err)
   }
@@ -817,7 +832,7 @@ const getApplicants = async (req, res, next) => {
          JOIN users u ON u.id = a.seeker_id
          LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
         WHERE a.job_id = $1 AND c.user_id = $2
-        ORDER BY m.score DESC NULLS LAST, a.applied_at`,
+        ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id`,
       [jobId, req.user.id]
     )
     res.json({ applicants: rows })
