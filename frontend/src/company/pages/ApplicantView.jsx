@@ -257,7 +257,8 @@ export default function ApplicantView() {
         <div className="apd-head__who">
           <h1>{a.first_name} {a.last_name}</h1>
           <p>
-            Applied for <Link to={`/company/jobs/${id}`} className="apd-job-link">{a.job_title}</Link> · {shortDate(a.applied_at)}
+            Applied for <Link to={`/company/jobs/${id}`} className="apd-job-link">{a.job_title}</Link> · {shortDate(a.applied_at)}{a.rank != null && ` · Rank #${a.rank} of ${a.total_applicants}`}
+
           </p>
         </div>
         <StatusPill status={STATUS_LABELS[status]} />

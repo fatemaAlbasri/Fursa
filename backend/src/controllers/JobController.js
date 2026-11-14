@@ -631,6 +631,7 @@ const getOneApplicant = async (req, res, next) => {
                    JOIN match_scores m2 ON m2.job_id = a2.job_id AND m2.seeker_id = a2.seeker_id
                   WHERE a2.job_id = a.job_id AND m2.score > m.score)::int
               END AS rank,
+                (SELECT COUNT(*) FROM applications WHERE job_id = a.job_id)::int AS total_applicants,
               -- "Why this score": every job skill, must-have or not, in the CV or not
               COALESCE((SELECT json_agg(json_build_object(
                           'name', s.name, 'required', js.is_required, 'has', ss.skill_id IS NOT NULL)
