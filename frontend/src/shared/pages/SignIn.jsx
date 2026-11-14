@@ -55,12 +55,7 @@ export default function SignIn() {
     <div className="split">
       <aside className="split__brand">
         <Link to="/" className="logo">
-          <img src="/fursa-key.png" alt="" className="logo__key" />
-          <img
-            src="/fursa-wordmark-white.png"
-            alt="Fursa"
-            className="logo__wordmark"
-          />
+          <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
         </Link>
         <div className="split__copy">
           <h1>
