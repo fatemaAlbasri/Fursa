@@ -696,6 +696,13 @@ const updateOneApplicant = async (req, res, next) => {
   }
 }
 
+// Interview time in Bahrain, e.g. "20 Oct, 10:00 AM" (used in the seeker's notification)
+const formatInterviewTime = (when) => {
+  const day = when.toLocaleDateString('en-GB', { timeZone: 'Asia/Bahrain', day: 'numeric', month: 'short' })
+  const time = when.toLocaleTimeString('en-US', { timeZone: 'Asia/Bahrain', hour: 'numeric', minute: '2-digit' })
+  return `${day}, ${time}`
+}
+
 // POST /api/jobs/mine/:id/applicants/:appId/interview { date, time, type, location, note? } (company)
 // shortlisted → schedules it and moves to "interview" 
 // already "interview" → reschedules it
@@ -737,12 +744,18 @@ const scheduleInterview = async (req, res, next) => {
         await notifySeeker(client, app, [
           'interview',
           'Interview rescheduled',
-          `${app.company_name} changed your interview time for ${app.title}.`
+          `${app.company_name} moved your interview for ${app.title} to ${formatInterviewTime(scheduledAt)}.`
         ])
         return 'rescheduled'
       }
 
-      await moveApplication(client, app, 'interview', req.user.id)
+      // notify: false → the notice below has the interview date, the generic one doesn't
+      await moveApplication(client, app, 'interview', req.user.id, { notify: false })
+      await notifySeeker(client, app, [
+        'interview',
+        'Interview scheduled',
+        `${app.company_name} invited you to an interview for ${app.title} on ${formatInterviewTime(scheduledAt)}.`
+      ])
       await client.query(
         `INSERT INTO interviews (application_id, scheduled_at, type, location_or_link, note_to_applicant)
          VALUES ($1, $2, $3, $4, $5)`,
