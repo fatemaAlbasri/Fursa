@@ -263,7 +263,7 @@ export default function ApplicantView() {
               </div>
               <div className="apd-fact">
                 <span>Experience</span>
-                <b>{years === 0 ? 'No experience' : `${years} ${years === 1 ? 'year' : 'years'}`}{experienceOk && ' ✓'}</b>
+                <b>{a.years_experience == null ? '—' : years === 0 ? 'No experience' : `${years} ${years === 1 ? 'year' : 'years'}`}{experienceOk && ' ✓'}</b>
               </div>
               {a.language && (
                 <div className="apd-fact">
