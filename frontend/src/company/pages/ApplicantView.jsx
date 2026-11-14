@@ -247,8 +247,8 @@ export default function ApplicantView() {
             {a.rank != null && ` · Rank #${a.rank}`}
           </p>
         </div>
-        <ScoreRing score={a.score} size={76} className="ap-score apd-score" />
         <StatusPill status={STATUS_LABELS[status]} />
+        <ScoreRing score={a.score} size={76} className="ap-score apd-score" />
       </section>
 
       {error && <p className="field__error" role="alert">{error}</p>}
