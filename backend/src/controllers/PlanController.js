@@ -101,7 +101,7 @@ const subscribe = async (req, res, next) => {
 
       const isPaid = Number(plan.price_bhd_month) > 0
       if (isPaid && !PAYMENT_METHODS.includes(method)) {
-        return { code: 400, error: 'Please choose how to pay', fields: { method: 'Card or BenefitPay' } }
+        return { code: 400, error: 'Please choose how to pay', fields: { method: 'Card' } }
       }
 
       const { rows: current } = await client.query(
