@@ -188,6 +188,17 @@ a.apd-nav__btn:hover { background: #f4fafa; }
 .apd-history__step b { font-size: 14px; }
 .apd-history__step span:not([class]) { font-size: 12px; color: #8a9bab; }
 
+/* ===== Page animation (same as the job seeker pages: fade-up 0.35s) ===== */
+.apd-head { animation: fade-up 0.35s ease backwards; }
+.apd-main > .apd-card,
+.apd-side > .apd-card { animation: fade-up 0.35s ease backwards; }
+/* one after the other: head → left cards → right cards */
+.apd-main > .apd-card:nth-child(1) { animation-delay: 0.06s; }
+.apd-main > .apd-card:nth-child(2) { animation-delay: 0.12s; }
+.apd-side > .apd-card:nth-child(1) { animation-delay: 0.1s; }
+.apd-side > .apd-card:nth-child(2) { animation-delay: 0.16s; }
+.apd-side > .apd-card.apd-step { animation: swap-in 0.3s ease both; animation-delay: 0s; }
+
 @media (max-width: 900px) {
   .apd-body { grid-template-columns: 1fr; }
 }
@@ -195,4 +206,7 @@ a.apd-nav__btn:hover { background: #f4fafa; }
 @media (max-width: 640px) {
   .apd-skills, .apd-reqs { grid-template-columns: 1fr; }
   .apd-cv__preview { height: 420px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .apd-head, .apd-card, .apd-step { animation: none; }
 }
