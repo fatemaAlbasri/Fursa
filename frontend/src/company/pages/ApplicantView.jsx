@@ -97,7 +97,7 @@ function ScheduleForm({ initial, errors, busy, submitLabel, onSubmit, children }
       <div>
         <label htmlFor="apd-note">Note to applicant (optional)</label>
         <textarea id="apd-note" rows="2" value={form.note} onChange={set('note')}
-          placeholder="e.g. Bring a copy of your CV" />
+          placeholder="e.g. Bring your Laptop" />
       </div>
       <button type="button" className="apd-btn apd-btn--blue" disabled={busy} onClick={() => onSubmit(form)}>
         {busy ? 'Sending…' : submitLabel}
