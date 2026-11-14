@@ -50,7 +50,7 @@ function interviewToForm(interview) {
   const d = new Date(interview.scheduled_at);
   return {
     date: d.toLocaleDateString('en-CA', { timeZone: TIME_ZONE }),
-    time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour23: false, timeZone: TIME_ZONE }),
+    time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: TIME_ZONE }),
     type: interview.type,
     location: interview.location_or_link,
     note: interview.note_to_applicant || '',
@@ -101,7 +101,7 @@ function ScheduleForm({ initial, errors, busy, submitLabel, onSubmit, children }
           placeholder="e.g. Bring your Laptop" />
       </div>
       <button type="button" className="apd-btn apd-btn--blue" disabled={busy} onClick={() => onSubmit(form)}>
-        {busy ? 'Sending…' : submitLabel}
+        {busy ? <><ButtonSpinner /> Sending…</> : submitLabel}
       </button>
       {children}
     </>
@@ -170,7 +170,7 @@ export default function ApplicantView() {
       link.href = url;
       link.download = a.cv_file_name || 'cv';
       link.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
       setError('Could not download the CV.');
     }
@@ -312,7 +312,7 @@ export default function ApplicantView() {
               <h2>New applicant · decide</h2>
               <p className="apd-muted">Shortlist to move forward, or reject with a reason.</p>
               <button type="button" className="apd-btn apd-btn--teal" disabled={busy} onClick={() => moveTo('shortlisted')}>
-                Shortlist
+                {busy ? <><ButtonSpinner /> Shortlisting…</> : 'Shortlist'}
               </button>
               {rejectButton}
             </section>
@@ -364,7 +364,7 @@ export default function ApplicantView() {
                 </>
               )}
               <button type="button" className="apd-btn apd-btn--green" disabled={busy} onClick={() => moveTo('accepted')}>
-                Accept · send offer
+                {busy ? <><ButtonSpinner /> Sending offer…</> : 'Accept · send offer'}
               </button>
               {rejectButton}
               <button type="button" className="apd-btn apd-btn--link" disabled={busy}
@@ -393,7 +393,7 @@ export default function ApplicantView() {
                 </div>
               )}
               <button type="button" className="apd-btn apd-btn--red" disabled={busy} onClick={confirmReject}>
-                {busy ? 'Rejecting…' : 'Reject & notify'}
+                {busy ? <><ButtonSpinner /> Rejecting…</> : 'Reject & notify'}
               </button>
               <button type="button" className="apd-btn apd-btn--plain" disabled={busy}
                 onClick={() => { setRejecting(false); setError(''); }}>

@@ -101,10 +101,11 @@
 
 /* ===== Buttons ===== */
 .apd-btn {
-  display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px;
   border-radius: 12px; border: 0; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
 }
 .apd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.apd-btn:disabled:has(.loading__spinner) { opacity: 0.85; }
 .apd-btn--teal, .apd-btn--blue, .apd-btn--green, .apd-btn--red { min-height: 48px; color: var(--white); }
 .apd-btn--teal { background: #117a7c; }
 .apd-btn--teal:hover:not(:disabled) { background: #0e6466; }
