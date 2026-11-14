@@ -205,12 +205,7 @@ function Header({ employer, right }) {
   return (
     <header className="topbar">
       <Link to="/" className="logo">
-        <img src="/fursa-key.png" alt="" className="logo__key" />
-        <img
-          src="/fursa-wordmark-white.png"
-          alt="Fursa"
-          className="logo__wordmark"
-        />
+        <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
         {employer && <span className="logo__tag">Employer</span>}
       </Link>
       <span className="topbar__right">{right}</span>
@@ -254,12 +249,7 @@ function SignupSplit({ role, children }) {
     <div className="split split--signup">
       <aside className="split__brand">
         <Link to="/" className="logo">
-          <img src="/fursa-key.png" alt="" className="logo__key" />
-          <img
-            src="/fursa-wordmark-white.png"
-            alt="Fursa"
-            className="logo__wordmark"
-          />
+          <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
           {role === 'company' && <span className="logo__tag">Employer</span>}
         </Link>
         <div className="split__copy">
