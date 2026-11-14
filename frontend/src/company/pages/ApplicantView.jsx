@@ -411,7 +411,7 @@ export default function ApplicantView() {
                 <div><b>Email:</b> <a href={`mailto:${a.email}`}>{a.email}</a></div>
                 {a.phone && <div><b>Phone:</b> {a.phone}</div>}
               </div>
-              <Link to={`/company/jobs/${id}`} className="apd-btn apd-btn--outline-green">Position filled? Close this job</Link>
+              <Link to={`/company/jobs/${id}`} className="apd-btn apd-btn--outline-red">Position filled? Close this job</Link>
             </section>
           )}
 

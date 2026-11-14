@@ -118,8 +118,8 @@
 .apd-btn--plain:hover:not(:disabled) { background: #f4fafa; }
 .apd-btn--link { min-height: 40px; background: transparent; color: #117a7c; }
 .apd-btn--link:hover:not(:disabled) { text-decoration: underline; }
-.apd-btn--outline-green { border: 1px solid #067647; color: #067647; }
-.apd-btn--outline-green:hover { background: var(--white); }
+.apd-btn--outline-red { border: 1px solid #f04438; background: var(--white); color: #b42318; }
+.apd-btn--outline-red:hover { background: #fdecea; }
 
 /* ===== History ===== */
 .apd-history { padding: 22px; gap: 4px; }
