@@ -142,7 +142,7 @@ function ScheduleForm({ initial, errors, busy, submitLabel, onSubmit, children }
   );
 }
 
-export default function ApplicantView() {
+function ApplicantPage() {
   const { id, appId } = useParams(); // job id + application id
 
   // ---------- Page state ----------
@@ -180,7 +180,7 @@ export default function ApplicantView() {
     );
   }
 
-  const { applicant: a, interview, history } = data;
+  const { applicant: a, interview, history, nav } = data;
   const status = a.status;
 
   // ✓ only when we can be sure from the applicant's profile (same check as the job details page)
@@ -287,7 +287,24 @@ export default function ApplicantView() {
 
   return (
     <main className="container container--wide apd">
-      <Link to="/company/applicants" state={{ jobId: Number(id) }} className="apd-back">← Back to applicants</Link>
+            <div className="apd-top">
+        <Link to="/company/applicants" state={{ jobId: Number(id) }} className="apd-back">← Back to applicants</Link>
+        {nav && (
+          <nav className="apd-nav" aria-label="Other applicants">
+            <span className="apd-nav__count">Applicant {nav.position} of {a.total_applicants}</span>
+            {nav.prev_id ? (
+              <Link to={`/company/jobs/${id}/applicants/${nav.prev_id}`} className="apd-nav__btn">← Previous</Link>
+            ) : (
+              <span className="apd-nav__btn" aria-disabled="true">← Previous</span>
+            )}
+            {nav.next_id ? (
+              <Link to={`/company/jobs/${id}/applicants/${nav.next_id}`} className="apd-nav__btn">Next →</Link>
+            ) : (
+              <span className="apd-nav__btn" aria-disabled="true">Next →</span>
+            )}
+          </nav>
+        )}
+      </div>
 
       {/* ---------- Name · job · score · status ---------- */}
       <section className="apd-head">
@@ -521,4 +538,9 @@ export default function ApplicantView() {
       </div>
     </main>
   );
+}
+
+export default function ApplicantView() {
+  const { appId } = useParams();
+  return <ApplicantPage key={appId} />;
 }

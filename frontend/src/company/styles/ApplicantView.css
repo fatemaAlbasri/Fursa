@@ -5,6 +5,16 @@
 
 .apd-back { font-weight: 600; color: #117a7c; }
 .apd-back:hover { color: #0e6466; text-decoration: underline; }
+.apd-top { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+.apd-nav { display: flex; gap: 8px; align-items: center; }
+.apd-nav__count { font-size: 13px; color: #5b7186; }
+.apd-nav__btn {
+  display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 10px;
+  border: 1px solid #cbd5df; background: var(--white); color: #3e5468; font-weight: 600; text-decoration: none;
+}
+a.apd-nav__btn:hover { background: #f4fafa; }
+.apd-nav__btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+
 .apd-muted { margin: 0; font-size: 14px; color: #5b7186; }
 
 /* ===== Cards ===== */
