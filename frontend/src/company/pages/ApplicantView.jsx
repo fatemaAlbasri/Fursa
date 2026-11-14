@@ -85,7 +85,7 @@ function ScheduleForm({ initial, errors, busy, submitLabel, onSubmit, children }
         <label htmlFor="apd-type">Type</label>
         <select id="apd-type" value={form.type} onChange={set('type')}>
           <option value="in_person">In person</option>
-          <option value="online">Online (video call)</option>
+          <option value="online">Online</option>
         </select>
       </div>
       <div>
