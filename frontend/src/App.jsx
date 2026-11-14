@@ -15,6 +15,8 @@ import Applicants from './company/pages/Applicants.jsx';
 import CompanyHome from './company/pages/CompanyHome.jsx';
 import CompanyProfile from './company/pages/CompanyProfile.jsx';
 import DeleteAccount from './company/pages/DeleteAccount.jsx';
+import Plans from './company/pages/Plans.jsx';
+import Payment from './company/pages/Payment.jsx';
 
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
 import JobDetails from './jobseeker/pages/JobDetails.jsx';
@@ -88,6 +90,39 @@ export default function App() {
           element={<ChangePassword role="company" />}
         />
         <Route path="/company/delete-account" element={<DeleteAccount />} />
+      </Route>
+      {/* Change plan: logo + "Employer" and a back link (no employer menu, like the wireframe) */}
+      <Route
+        element={
+          <Layout
+            tag="Employer"
+            right={
+              <Link to="/company/profile" className="back-link">
+                ← Back
+              </Link>
+            }
+          />
+        }
+      >
+        <Route path="/company/plans" element={<Plans />} />
+      </Route>
+      {/* Payment: logo + "Secure checkout" */}
+      <Route
+        element={
+          <Layout
+            right={
+              <span className="pay-secure">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                </svg>
+                Secure checkout
+              </span>
+            }
+          />
+        }
+      >
+        {/* :planId = the plan's real id, e.g. /company/payment/2 */}
+        <Route path="/company/payment/:planId" element={<Payment />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 

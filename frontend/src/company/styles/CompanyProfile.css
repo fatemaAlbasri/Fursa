@@ -34,8 +34,9 @@
 .cp-plan__usage { font-size: 14px; color: #d3ecec; }
 .cp-plan__change {
   display: flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 12px;
-  background: var(--white); color: #117a7c; font-weight: 700; opacity: .6; cursor: not-allowed;
+  background: var(--white); color: #117a7c; font-weight: 700;
 }
+.cp-plan__change:hover { background: #eaf7f7; }
 
 /* ===== White cards ===== */
 .cp-card {

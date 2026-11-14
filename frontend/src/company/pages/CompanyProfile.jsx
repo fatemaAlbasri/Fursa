@@ -187,8 +187,7 @@ export default function CompanyProfile() {
               {plan.subscription.renews_at && ` · Renews ${formatDeadline(plan.subscription.renews_at)}`}
             </p>
           </div>
-          {/* no plans page yet, so it can't be clicked */}
-          <span className="cp-plan__change" aria-disabled="true" title="Change plan — coming soon">Change plan</span>
+          <Link to="/company/plans" className="cp-plan__change">Change plan</Link>
         </section>
       )}
 

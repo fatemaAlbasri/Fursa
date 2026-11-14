@@ -31,7 +31,8 @@
   background: #eaf7f7; font-size: 14px; color: #3e5468;
 }
 .da-alt svg { width: 22px; height: 22px; color: #117a7c; flex-shrink: 0; }
-.da-alt b { color: #117a7c; }
+.da-alt a { color: #117a7c; font-weight: 700; }
+.da-alt a:hover { color: #0e6466; text-decoration: underline; }
 
 /* buttons */
 .da-actions { display: flex; flex-wrap: wrap; gap: 10px; }

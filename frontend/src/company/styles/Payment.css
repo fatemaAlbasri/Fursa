@@ -1,0 +1,79 @@
+/* Payment page. Colours follow the wireframe "17 · Payment: company plan". */
+
+.container.pay { max-width: 1060px; padding: 36px 20px; gap: 22px; }
+
+.pay-back { font-weight: 600; color: #117a7c; }
+.pay-back:hover { color: #0e6466; text-decoration: underline; }
+
+/* "Secure checkout" in the top bar */
+.pay-secure { display: flex; align-items: center; gap: 8px; color: #c5d3de; font-weight: 600; }
+.pay-secure svg { width: 18px; height: 18px; color: #8ed1d1; }
+
+/* ===== Two columns: card form + order summary ===== */
+.pay-body { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+
+.pay-form {
+  flex: 999 1 480px; min-width: 0; background: var(--white); border: 1px solid #e5eaf0; border-radius: 20px;
+  padding: 28px; display: flex; flex-direction: column; gap: 20px;
+}
+.pay-form h1 { font-size: 28px; font-weight: 700; }
+.pay-form .field { margin: 0; }
+
+.pay-method { border: 0; margin: 0; padding: 0; }
+.pay-method legend { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.pay-method__option {
+  width: 50%; min-height: 64px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  border-radius: 12px; border: 2px solid #117a7c; background: #ddf1f1; color: #0e6466; font: inherit; font-weight: 700;
+}
+.pay-method__option svg { width: 22px; height: 22px; }
+
+.pay-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+.pay-receipt { display: flex; gap: 10px; align-items: center; font-size: 14px; cursor: pointer; }
+.pay-receipt input { width: 18px; height: 18px; margin: 0; accent-color: #117a7c; }
+
+.pay-btn {
+  min-height: 54px; border-radius: 12px; border: 0; background: #117a7c; color: var(--white);
+  font: inherit; font-weight: 700; font-size: 17px; cursor: pointer;
+}
+.pay-btn:hover:not(:disabled) { background: #0e6466; }
+.pay-btn:disabled { opacity: .6; cursor: not-allowed; }
+.pay-pilot { padding: 12px 14px; border-radius: 12px; background: #fef3e2; color: #93370d; font-size: 13px; font-weight: 600; }
+
+/* ===== Order summary (navy) ===== */
+.pay-summary {
+  flex: 1 1 300px; min-width: 0; background: var(--navy); color: var(--white); border-radius: 20px;
+  padding: 26px; display: flex; flex-direction: column; gap: 16px;
+}
+.pay-summary__kicker { font-size: 13px; font-weight: 700; color: #b9e4e4; }
+.pay-summary__name { font-size: 22px; font-weight: 700; }
+.pay-summary__muted { font-size: 14px; color: #c5d3de; }
+.pay-summary__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.pay-summary__list li { display: flex; gap: 8px; }
+.pay-summary__list span { color: #8ed1d1; font-weight: 700; }
+.pay-summary hr { width: 100%; height: 1px; border: 0; background: #24506f; margin: 0; }
+.pay-summary__row { display: flex; justify-content: space-between; font-size: 14px; color: #c5d3de; }
+.pay-summary__total { font-size: 20px; font-weight: 700; color: var(--white); }
+.pay-summary__note { font-size: 13px; color: #b9e4e4; }
+
+/* ===== Payment successful ===== */
+.pay-done {
+  width: 100%; max-width: 560px; margin: 20px auto; background: var(--white); border: 1px solid #e5eaf0;
+  border-radius: 22px; padding: 36px; display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center;
+}
+.pay-done__icon {
+  width: 72px; height: 72px; border-radius: 999px; background: #e3f8ef; color: #067647; display: grid; place-items: center;
+}
+.pay-done__icon svg { width: 36px; height: 36px; }
+.pay-done h1 { font-size: 28px; font-weight: 700; }
+.pay-done p { color: #5b7186; }
+.pay-done__next {
+  display: flex; align-items: center; min-height: 52px; padding: 0 28px; border-radius: 12px;
+  background: #117a7c; color: var(--white); font-weight: 700;
+}
+.pay-done__next:hover { background: #0e6466; }
+
+@media (max-width: 640px) {
+  .pay-form, .pay-summary { padding: 22px; }
+  .pay-method__option { width: 100%; }
+}
