@@ -7,6 +7,7 @@ import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx';
 import StatusPill from '../../shared/components/StatusPill';
 import ScoreRing from '../components/ScoreRing.jsx';
 import '../styles/ApplicantView.css';
+import { buildCvView } from '../../jobseeker/utils/cvText.js';
 
 // =====================================================================
 // One applicant's page (/company/jobs/:id/applicants/:appId).
@@ -63,6 +64,39 @@ const INTERVIEW_REPLY = {
   confirmed: ['apd-reply apd-reply--ok', '✓ Applicant confirmed attendance'],
   reschedule_requested: ['apd-reply apd-reply--warn', 'Applicant asked for another time'],
 };
+
+// Wraps the job's skills that are in the CV in a green <mark>
+function highlight(text, re) {
+  if (!re) return text;
+  return text.split(re).map((part, i) => (i % 2 === 1 ? <mark key={i} className="apd-hl">{part}</mark> : part));
+}
+
+// CV text laid out like the wireframe: name · line under it · HEADINGS · lines, skills highlighted
+function HighlightedCv({ text, skills }) {
+  // longest first, so "React Native" is matched before "React"
+  const names = skills
+    .filter((s) => s.has)
+    .map((s) => s.name)
+    .sort((x, y) => y.length - x.length)
+    .map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // whole words only (so "Java" doesn't light up inside "JavaScript", "C" not inside "C++")
+  const re = names.length ? new RegExp(`(?<![\\w])(${names.join('|')})(?![\\w#+])`, 'gi') : null;
+
+  // same reader as the CV Optimizer page; [] = no suggestions to mark
+  const { name, header, items } = buildCvView(text, []);
+
+  return (
+    <div className="apd-cv__text">
+      {name && <p className="apd-cv__name">{name}</p>}
+      {header.length > 0 && <p className="apd-cv__sub">{header.join(' · ')}</p>}
+      {items.map((item, i) =>
+        item.type === 'heading'
+          ? <p key={i} className="apd-cv__heading">{item.text}</p>
+          : <p key={i} className="apd-cv__line">{highlight(item.text, re)}</p>
+      )}
+    </div>
+  );
+}
 
 // Schedule (or reschedule) an interview: Date · Time · Type · Location · Note
 function ScheduleForm({ initial, errors, busy, submitLabel, onSubmit, children }) {
@@ -122,6 +156,7 @@ export default function ApplicantView() {
   const [formErrors, setFormErrors] = useState({});
   const [notes, setNotes] = useState(''); // private interview notes
   const [notesSaved, setNotesSaved] = useState(false);
+  const [cvTab, setCvTab] = useState('text'); // 'text' = highlighted text · 'pdf' = the file
 
   // ---------- Load from the backend ----------
   const load = () =>
@@ -173,7 +208,10 @@ export default function ApplicantView() {
   };
 
   const isPdf = /\.pdf$/i.test(a.cv_url || '');
-  
+
+  // no readable text → only the file view
+  const cvView = a.cv_text ? cvTab : 'pdf';
+
   const downloadCv = async () => {
     try {
       const res = await fetch(SERVER + a.cv_url);
@@ -303,17 +341,39 @@ export default function ApplicantView() {
           </section>
 
           <section className="apd-card">
-            <div className="apd-cv__head">
+                        <div className="apd-cv__head">
               <h2>CV</h2>
               <div className="apd-cv__actions">
+                {a.cv_text && (
+                  <div className="apd-tabs" role="group" aria-label="How to show the CV">
+                    <button type="button" className="apd-tab" aria-pressed={cvView === 'text'} onClick={() => setCvTab('text')}>
+                      Highlighted text
+                    </button>
+                    <button type="button" className="apd-tab" aria-pressed={cvView === 'pdf'} onClick={() => setCvTab('pdf')}>
+                      {isPdf ? 'PDF' : 'File'}
+                    </button>
+                  </div>
+                )}
                 <button type="button" className="apd-btn apd-btn--plain" onClick={downloadCv}>Download</button>
               </div>
             </div>
-            {isPdf ? (
+
+            {cvView === 'text' && (
+              <>
+                <p className="apd-muted apd-cv__note">Text read from the uploaded file · skills the job asks for are highlighted</p>
+                <div className="apd-cv__box">
+                  <HighlightedCv text={a.cv_text} skills={a.skills} />
+                  <div className="apd-cv__legend"><span aria-hidden="true" /> Matches the job requirements</div>
+                </div>
+              </>
+            )}
+
+            {cvView === 'pdf' && (isPdf ? (
               <iframe className="apd-cv__preview" src={SERVER + a.cv_url} title={`CV of ${a.first_name} ${a.last_name}`} />
             ) : (
               <p className="apd-cv__file">{a.cv_file_name}</p>
-            )}
+            ))}
+
           </section>
         </div>
 

@@ -1,5 +1,6 @@
 const db = require('../config/db')
 const { saveJobEmbedding, rescoreJob } = require('../services/matching')
+const { cleanCvText } = require('../services/cvOptimizer')
 
 // Runs in the background: the job is still scored without the CV component if embedding fails
 const scoreOpenJob = (jobId) =>
@@ -622,7 +623,7 @@ const getOneApplicant = async (req, res, next) => {
       `SELECT a.id, a.status, a.rejection_reason, a.applied_at,
               u.first_name, u.last_name, u.email, sp.phone,
               sp.major, sp.years_experience,
-              r.file_name AS cv_file_name, r.file_url AS cv_url,
+              r.file_name AS cv_file_name, r.file_url AS cv_url, r.parsed_text AS cv_text,
               j.title AS job_title, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
               m.score, m.tier, COALESCE(m.is_qualified, true) AS is_qualified,
               -- Rank #: 1 + how many applicants of this job scored higher
@@ -665,7 +666,10 @@ const getOneApplicant = async (req, res, next) => {
       [appId]
     )
 
-    res.json({ applicant: rows[0], interview: interviews[0] || null, history })
+    // CV text for the "Highlighted text" view (null = the file couldn't be read)
+    const applicant = { ...rows[0], cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null }
+
+    res.json({ applicant, interview: interviews[0] || null, history })
   } catch (err) {
     next(err)
   }
