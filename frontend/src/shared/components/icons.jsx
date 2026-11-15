@@ -64,6 +64,11 @@ export const ListIcon = () => (
   <Icon><path d="M9 6h12M9 12h12M9 18h12" /><path d="M4 6h.01M4 12h.01M4 18h.01" strokeWidth="3" /></Icon>
 );
 
+// Briefcase = a job (Notifications: new matches, deadline)
+export const BriefcaseIcon = () => (
+  <Icon><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /><path d="M3 13h18" /></Icon>
+);
+
 // ---------- My applications: progress steps (Applied → Shortlisted → Interview → Decision) ----------
 
 // Paper plane = Applied
