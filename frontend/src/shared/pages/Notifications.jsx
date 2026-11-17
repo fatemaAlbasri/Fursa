@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { api } from '../../shared/api.js'
-import Notice from '../../shared/components/Notice.jsx'
+import { api } from '../api.js'
+import Notice from '../components/Notice.jsx'
 import {
   CalendarIcon,
   BriefcaseIcon,
@@ -9,8 +9,12 @@ import {
   CheckIcon,
   SparkleIcon,
   StarIcon,
-  BellIcon
-} from '../../shared/components/icons.jsx'
+  BellIcon,
+  PeopleIcon,
+  ClockIcon,
+  ListIcon,
+  CardIcon,
+} from '../components/icons.jsx'
 import {
   getNotifications,
   markNotificationRead,
