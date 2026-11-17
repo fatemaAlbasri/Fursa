@@ -18,6 +18,12 @@ export const markAllNotificationsRead = () => api('/notifications/read-all', { m
 // Only pages that already exist. null = no page for it → it is just marked as read.
 export function notificationLink(notification) {
   const { type, application_id, job_id } = notification
+  if (role === 'company'){
+    if (type === 'new_applicants') return '/company/applicants'
+    if (type === 'interview_reply') return `/company/jobs/${job_id}/applicants/${application_id}`
+    if (job_id) return `/company/jobs/${job_id}`   
+    return null                                    
+  }
   if (type === 'new_matches') return '/jobseeker/jobs'
   if (type === 'cv_ready') return '/jobseeker/cv-optimizer'
   if (application_id) return `/jobseeker/applications/${application_id}`
