@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import Loading from '../../shared/components/Loading.jsx'
+import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
 import { LogOutIcon } from '../../shared/components/icons.jsx'
 import { userInitials } from '../../shared/utils/jobFormat.js'
 import PersonalDetails from '../components/profile/PersonalDetails.jsx'
@@ -47,6 +48,17 @@ export default function Profile() {
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0) // "Try again" bumps this to load again
   const [loggingOut, setLoggingOut] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false) // "Are you sure?" dialog is open
+
+  // Escape closes the log out dialog (= Cancel), never logs out. Ignored while logging out.
+  useEffect(() => {
+    if (!confirmLogout || loggingOut) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setConfirmLogout(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [confirmLogout, loggingOut])
 
   // Load the signed-in user's profile. No token or a bad token → Sign In; a company → its own home.
   useEffect(() => {
@@ -117,7 +129,16 @@ export default function Profile() {
 
   return (
     <main className="container pf">
-      <ProfileHeader profile={profile} onLogout={logout} loggingOut={loggingOut} />
+      <ProfileHeader profile={profile} onLogout={() => setConfirmLogout(true)} loggingOut={loggingOut} />
+      <ConfirmDialog
+        open={confirmLogout}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Log out"
+        busy={loggingOut}
+        onConfirm={logout}
+        onCancel={() => setConfirmLogout(false)}
+      />
       <PersonalDetails profile={profile} onSaved={update} />
       <SkillsCard skills={profile.skills} onSaved={(skills) => update({ skills })} />
       <PreferencesCard
