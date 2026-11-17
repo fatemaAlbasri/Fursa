@@ -1719,6 +1719,21 @@ button {
   font-size: 15px;
   font-weight: 700;
 }
+/* working Profile link: hover, keyboard focus, teal while the profile page is open */
+.topbar__profile--link {
+  transition: background-color 0.15s ease;
+}
+.topbar__profile--link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.topbar__profile--link:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+.topbar__profile--active,
+.topbar__profile--active:hover {
+  background: var(--teal);
+}
 .topbar__avatar {
   width: 36px;
   height: 36px;
