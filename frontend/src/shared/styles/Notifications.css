@@ -21,6 +21,8 @@
   --nt-blue: #0b77b5;
   --nt-blue-bg: #e0f2fe;
   --nt-error-line: #f5c2bd;
+  --nt-orange: #b54708;
+  --nt-orange-bg: #fef3e2;
 }
 
 /* page body: narrower than the job lists, like the design */
@@ -121,9 +123,24 @@
   background: var(--nt-blue-bg);
   color: var(--nt-blue);
 }
+
+/* Company (wireframe 16b). new_applicants + plan use the default teal tile */
+.nt-item--interview_reply .nt-item__icon {
+  background: var(--nt-purple-bg);
+  color: var(--nt-purple);
+}
+.nt-item--reschedule .nt-item__icon {
+  background: var(--nt-red-bg);
+  color: var(--nt-red);
+}
+.nt--company .nt-item--deadline .nt-item__icon {
+  background: var(--nt-orange-bg);
+  color: var(--nt-orange);
+}
+
 /* deadline + anything without its own colour: grey-blue */
 .nt-item--deadline .nt-item__icon,
-.nt-item--plan .nt-item__icon {
+.nt-item--job_closed .nt-item__icon {
   color: var(--navy);
 }
 
