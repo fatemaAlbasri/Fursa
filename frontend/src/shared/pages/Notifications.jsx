@@ -26,7 +26,7 @@ import {
 import '../styles/Notifications.css'
 
 // =====================================================================
-// Notifications (/jobseeker/notifications).
+// Notifications (/jobseeker/notifications and /company/notifications).
 // Newest first; unread ones are tinted with a dot. Clicking one marks it as read and opens its page
 // (an application, a job, the CV optimizer) — or stays here when it has no page.
 // Data: GET /api/notifications → { notifications, unread }.
@@ -221,9 +221,9 @@ export default function Notifications({ role }) {
           <BellIcon />
         </span>
         <h3>No notifications yet</h3>
-        <p>We will let you know here when a company updates one of your applications.</p>
-        <Link to="/jobseeker/jobs" className="btn btn--outline">
-          Find jobs
+                <p>{cfg.emptyText}</p>
+        <Link to={cfg.emptyLink.to} className="btn btn--outline">
+          {cfg.emptyLink.label}
         </Link>
       </div>
     )
@@ -232,7 +232,7 @@ export default function Notifications({ role }) {
       <ul className="nt-list">
         {notifications.map((notification) => (
           <li key={notification.id}>
-            <NotificationItem notification={notification} onOpen={openNotification} />
+            <NotificationItem notification={notification} role={role} onOpen={openNotification} />
           </li>
         ))}
       </ul>
@@ -242,11 +242,11 @@ export default function Notifications({ role }) {
   const ready = !loading && !error
 
   return (
-    <main className="container nt">
+    <main className={`container nt nt--${role}`}>
       <header className="nt-head">
         <div>
           <h1 className="title">Notifications</h1>
-          {ready && <p className="muted">{unread} unread</p>}
+          {ready && <p className="muted">{unread ? `${unread} unread` : 'You are all caught up'}</p>}
         </div>
         {ready && notifications.length > 0 && (
           <button type="button" className="btn btn--outline" onClick={markAllRead} disabled={busy || unread === 0}>
