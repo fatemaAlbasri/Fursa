@@ -19,8 +19,8 @@ const EMPTY = { currentPassword: '', newPassword: '', confirmPassword: '' }
 // One page for both roles: role = 'jobseeker' | 'company' (set by the route in App.jsx).
 export default function ChangePassword({ role }) {
   const navigate = useNavigate()
-  // Temporary: no profile pages yet, so "back to profile" goes to the role's home page
-  const profilePath = role === 'company' ? '/company' : '/jobseeker'
+  // Company: no profile page yet, so "back to profile" goes to its home page
+  const profilePath = role === 'company' ? '/company' : '/jobseeker/profile'
 
   const [email, setEmail] = useState('')
   const [form, setForm] = useState(EMPTY)

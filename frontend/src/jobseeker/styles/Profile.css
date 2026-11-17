@@ -1,0 +1,297 @@
+/* ===== Profile (job seeker) =====
+   Navy header, then one white card per section: Personal details, My skills, Job preferences, My CV, Account.
+   Uses the shared .card, .btn, .field, .choice-box and .skills styles from index.css.
+   Every class here starts with "pf-". Rules that change a shared class (.container, .card, .btn)
+   use two classes, because index.css loads after this file and would win otherwise. */
+
+/* colours used only on this page */
+.container.pf {
+  --pf-tile: #f2f8f8;
+  --pf-pref: #d6efef;
+  --pf-pref-text: #0e6f71;
+  --pf-danger: #b42318;
+  --pf-danger-line: #f5c2bd;
+  --pf-danger-bg: #fdecea;
+  --pf-logout: #f4a59b;
+}
+
+/* page body: narrower than the job lists, like the reference */
+.container.pf {
+  max-width: 760px;
+  gap: 16px;
+  padding-top: 24px;
+  padding-bottom: 48px;
+}
+
+/* ---------- Header ---------- */
+.pf-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 22px;
+  border-radius: var(--radius);
+  background: var(--navy);
+  color: var(--white);
+  box-shadow: 0 8px 24px rgba(24, 59, 86, 0.18);
+}
+.pf-header__avatar {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--navy);
+  font-size: 20px;
+  font-weight: 800;
+}
+.pf-header__info {
+  flex: 1;
+  min-width: 0;
+}
+.pf-header__name {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.pf-header__meta {
+  margin-top: 3px;
+  font-size: var(--text-size);
+  color: var(--gray);
+  overflow-wrap: anywhere;
+}
+.btn.pf-logout {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--pf-logout);
+  border-color: var(--pf-logout);
+}
+.btn.pf-logout:hover:not(:disabled) {
+  background: rgba(244, 165, 155, 0.12);
+}
+
+/* ---------- Cards ---------- */
+.card.pf-card {
+  padding: 20px;
+  gap: 14px;
+}
+.pf-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pf-card__title {
+  font-size: var(--section-size);
+  font-weight: 700;
+  color: var(--navy);
+}
+.pf-card__opt {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--slate);
+}
+.btn.pf-edit {
+  padding: 8px 16px;
+}
+
+/* two columns of read-only boxes (and of form fields while editing) */
+.pf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.pf-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--pf-tile);
+}
+.pf-tile__label {
+  font-size: 12px;
+  color: var(--slate);
+}
+.pf-tile__value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+.pf-empty {
+  font-size: var(--text-size);
+  font-weight: 500;
+  color: var(--slate);
+}
+
+/* edit forms */
+.pf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pf-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---------- My skills ---------- */
+.pf-skills {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pf-skill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--teal);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+}
+.pf-note {
+  font-size: var(--hint-size);
+  color: var(--slate);
+}
+
+/* ---------- Job preferences ---------- */
+.pf-prefs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.pf-pref {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--pf-pref);
+  color: var(--pf-pref-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- My CV ---------- */
+.pf-cv {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pf-cv__icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--pf-pref);
+  color: var(--teal);
+}
+.pf-cv__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.pf-cv__info {
+  flex: 1;
+  min-width: 0;
+}
+.pf-cv__meta {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--slate);
+  overflow-wrap: anywhere;
+}
+.pf-cv__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ---------- Account ---------- */
+.pf-account {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.btn.pf-danger {
+  background: var(--white);
+  color: var(--pf-danger);
+  border-color: var(--pf-danger-line);
+}
+.btn.pf-danger:hover:not(:disabled) {
+  background: var(--pf-danger-bg);
+  border-color: var(--pf-danger);
+}
+/* password box inside the delete dialog (.dialog p would make the error grey) */
+.dialog .pf-dialog-field {
+  margin-top: 4px;
+}
+.dialog .pf-dialog-field .field__error {
+  color: var(--error);
+  font-size: var(--hint-size);
+}
+
+/* ---------- Load error ---------- */
+.card.pf-state {
+  align-items: center;
+  text-align: center;
+  padding: 32px 20px;
+}
+.pf-state h2 {
+  font-size: 18px;
+  color: var(--navy);
+}
+.pf-state p {
+  color: var(--slate);
+  font-size: var(--text-size);
+}
+
+/* ---------- Tablet / phone ---------- */
+@media (max-width: 640px) {
+  .container.pf {
+    padding-top: 16px;
+  }
+  .pf-header {
+    flex-wrap: wrap;
+    padding: 18px;
+    gap: 14px;
+  }
+  .pf-header__avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+  }
+  .pf-header__name {
+    font-size: 19px;
+  }
+  .btn.pf-logout {
+    width: 100%;
+  }
+  .card.pf-card {
+    padding: 16px;
+  }
+  .pf-grid {
+    grid-template-columns: 1fr;
+  }
+  .pf-cv {
+    flex-wrap: wrap;
+  }
+  .pf-cv__actions {
+    width: 100%;
+  }
+  .pf-cv__actions .btn {
+    flex: 1;
+  }
+  .pf-account .btn {
+    flex: 1 1 100%;
+  }
+  .pf-actions .btn {
+    flex: 1;
+  }
+}

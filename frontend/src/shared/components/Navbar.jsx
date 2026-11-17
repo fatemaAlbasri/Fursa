@@ -40,8 +40,15 @@ export default function Navbar({ tag, links = [], right }) {
 // Right side for signed-in pages: notifications bell + round avatar with "Profile".
 // `avatar` = what goes in the circle, e.g. the user's initials.
 // `bell` = a working bell (e.g. the job seeker's NotificationBell); without it the bell is visual only.
-// Profile is visual only for now (no profile page yet), so it can't be clicked.
-export function NavbarAccount({ avatar, bell }) {
+// `to` = the profile page's path: "Profile" becomes a link (teal while that page is open).
+// Without `to` it is visual only and can't be clicked.
+export function NavbarAccount({ avatar, bell, to }) {
+  const content = (
+    <>
+      <span className="topbar__avatar">{avatar}</span>
+      Profile
+    </>
+  );
   return (
     <span className="topbar__account">
       {bell || (
@@ -50,10 +57,16 @@ export function NavbarAccount({ avatar, bell }) {
           <BellIcon />
         </span>
       )}
-      <span className="topbar__profile" aria-disabled="true" title="Profile — coming soon">
-        <span className="topbar__avatar">{avatar}</span>
-        Profile
-      </span>
+      {to ? (
+        <NavLink to={to}
+          className={({ isActive }) => (isActive ? 'topbar__profile topbar__profile--link topbar__profile--active' : 'topbar__profile topbar__profile--link')}>
+          {content}
+        </NavLink>
+      ) : (
+        <span className="topbar__profile" aria-disabled="true" title="Profile — coming soon">
+          {content}
+        </span>
+      )}
     </span>
   );
 }

@@ -98,3 +98,18 @@ export const XIcon = () => (
 export const ChevronRightIcon = () => (
   <Icon><path d="m9 6 6 6-6 6" /></Icon>
 );
+
+// ---------- Profile ----------
+
+// Door with an arrow = Log out
+export const LogOutIcon = () => (
+  <Icon><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></Icon>
+);
+
+// Bin = Delete
+export const TrashIcon = () => (
+  <Icon>
+    <path d="M3 6h18" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" />
+  </Icon>
+);
