@@ -2,16 +2,16 @@ import { useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import MultiSelect from '../components/MultiSelect.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
+import ChoiceChips from '../components/ChoiceChips.jsx'
+import PhoneInput from '../components/PhoneInput.jsx'
 import { api } from '../api.js'
+import {
+  MAJORS,
+  STATUSES,
+  JOB_TYPE_OPTIONS as JOB_TYPES,
+  WORK_MODE_OPTIONS as WORK_MODES
+} from '../utils/seekerOptions.js'
 
-const MAJORS = [
-  'Computer Science',
-  'Information Systems',
-  'Computer Engineering',
-  'Business',
-  'Accounting'
-]
-const STATUSES = ['Graduated', 'Final year student', 'Student']
 const INDUSTRIES = [
   'Technology',
   'Banking & Finance',
@@ -28,16 +28,6 @@ const LOCATIONS = [
   'Riffa',
   'Isa Town',
   'Hamad Town'
-]
-const JOB_TYPES = [
-  { label: 'Full-time', value: 'full_time' },
-  { label: 'Part-time', value: 'part_time' },
-  { label: 'Internship', value: 'internship' }
-]
-const WORK_MODES = [
-  { label: 'On-site', value: 'onsite' },
-  { label: 'Remote', value: 'remote' },
-  { label: 'Hybrid', value: 'hybrid' }
 ]
 
 const PLANS = [
@@ -95,59 +85,6 @@ function Field({ label, error, hint, children }) {
       {children}
       {hint && <p className="hint">{hint}</p>}
       {error && <p className="field__error">{error}</p>}
-    </div>
-  )
-}
-
-// A row of buttons where several can be on. Click a selected one again to remove it.
-function ChoiceChips({ label, options, value, onChange, error }) {
-  const toggle = (opt) =>
-    onChange(
-      value.includes(opt) ? value.filter((v) => v !== opt) : [...value, opt]
-    )
-  return (
-    <div className="choice-box">
-      <p className="choice-box__label">
-        {label} <span className="choice-box__opt">(choose one or more)</span>
-      </p>
-      <div className="choice-box__chips" role="group" aria-label={label}>
-        {options.map((opt) => {
-          const on = value.includes(opt.value)
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              role="checkbox"
-              className={on ? 'choice choice--on' : 'choice'}
-              aria-checked={on}
-              onClick={() => toggle(opt.value)}
-            >
-              {on && <span className="choice__tick">✓</span>}
-              {opt.label}
-            </button>
-          )
-        })}
-      </div>
-      {error && <p className="field__error">{error}</p>}
-    </div>
-  )
-}
-
-// +973 phone box
-function PhoneInput({ value, onChange, placeholder = '3XXX XXXX' }) {
-  return (
-    <div className="phone">
-      <span className="phone__code">+973</span>
-      <input
-        name="phone"
-        type="tel"
-        inputMode="numeric"
-        maxLength={9}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        autoComplete="off"
-      />
     </div>
   )
 }
