@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api } from '../api.js'
-import { formatShortDate } from './applicationFormat.js'
+import { formatShortDate } from '../../jobseeker/utils/applicationFormat.js'
 
 // ---------- API ----------
 export const getNotifications = () => api('/notifications')
