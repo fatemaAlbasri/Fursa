@@ -32,15 +32,24 @@ import '../styles/Notifications.css'
 // Data: GET /api/notifications → { notifications, unread }.
 // =====================================================================
 
-// Icon tile for each type (colour is set by .nt-item--<type> in the CSS). Anything else gets the bell.
+// Same type can mean different things per role (deadline), so icons are per role
 const TYPE_ICONS = {
-  interview: <CalendarIcon />,
-  new_matches: <BriefcaseIcon />,
-  rejected: <XIcon />,
-  accepted: <CheckIcon />,
-  cv_ready: <SparkleIcon />,
-  deadline: <BriefcaseIcon />,
-  shortlisted: <StarIcon />
+  jobseeker:{
+    interview: <CalendarIcon />,
+    new_matches: <BriefcaseIcon />,
+    rejected: <XIcon />,
+    accepted: <CheckIcon />,
+    cv_ready: <SparkleIcon />,
+    deadline: <BriefcaseIcon />,
+    shortlisted: <StarIcon />
+  },
+  company:{
+    new_applicants: <PeopleIcon />,
+    interview_reply: <CalendarIcon />,
+    deadline: <ClockIcon />,
+    job_closed: <ListIcon />,
+    plan: <CardIcon />
+  }
 }
 
 // One row. Unread rows and rows with a page are buttons; a read row with no page is plain text.
