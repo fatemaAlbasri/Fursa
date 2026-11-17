@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BellIcon } from '../../shared/components/icons.jsx'
+import { BellIcon } from './icons.jsx'
 import { useUnreadCount } from '../utils/notifications.js'
 
 // Bell in the job seeker top bar (<NavbarAccount bell={<NotificationBell />} />).
