@@ -67,18 +67,19 @@ const ROLES = {
 }
 
 // One row. Unread rows and rows with a page are buttons; a read row with no page is plain text.
-function NotificationItem({ notification, onOpen }) {
+function NotificationItem({ notification, role,onOpen }) {
   const unread = !notification.is_read
-  const clickable = unread || notificationLink(notification)
+  const clickable = unread || notificationLink(notification, role)
   const Tag = clickable ? 'button' : 'div'
+  const reschedule = notification.title === 'Reschedule requested' ? ' nt-item--reschedule' : ''
 
   return (
     <Tag
       {...(clickable ? { type: 'button', onClick: () => onOpen(notification) } : {})}
-      className={`nt-item nt-item--${notification.type}${unread ? ' nt-item--unread' : ''}${clickable ? ' nt-item--clickable' : ''}`}
+      className={`nt-item nt-item--${notification.type}${reschedule}${unread ? ' nt-item--unread' : ''}${clickable ? ' nt-item--clickable' : ''}`}
     >
       <span className="nt-item__icon" aria-hidden="true">
-        {TYPE_ICONS[notification.type] || <BellIcon />}
+        {TYPE_ICONS[role]?.[notification.type] || <BellIcon />}
       </span>
       <span className="nt-item__body">
         <strong className="nt-item__title">{notification.title}</strong>
