@@ -16,7 +16,7 @@ export const markAllNotificationsRead = () => api('/notifications/read-all', { m
 
 // ---------- Where a notification opens ----------
 // Only pages that already exist. null = no page for it → it is just marked as read.
-export function notificationLink(notification) {
+export function notificationLink(notification, role) {
   const { type, application_id, job_id } = notification
   if (role === 'company'){
     if (type === 'new_applicants') return '/company/applicants'

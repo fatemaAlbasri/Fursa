@@ -12,7 +12,7 @@ import {
   BellIcon,
   PeopleIcon,
   ClockIcon,
-  ListIcon,
+  LockIcon,
   CardIcon,
 } from '../components/icons.jsx'
 import {
@@ -47,7 +47,7 @@ const TYPE_ICONS = {
     new_applicants: <PeopleIcon />,
     interview_reply: <CalendarIcon />,
     deadline: <ClockIcon />,
-    job_closed: <ListIcon />,
+    job_closed: <LockIcon />,
     plan: <CardIcon />
   }
 }
@@ -97,8 +97,9 @@ function NotificationItem({ notification, role,onOpen }) {
   )
 }
 
-export default function Notifications() {
+export default function Notifications({ role }) {
   const navigate = useNavigate()
+  const cfg = ROLES[role]
 
   const [notifications, setNotifications] = useState([])
   const [unread, setUnread] = useState(0)
@@ -111,7 +112,7 @@ export default function Notifications() {
   // Load the signed-in user, then their notifications. No token or a bad token → Sign In; a company → its own home.
   useEffect(() => {
     if (!localStorage.getItem('token')) {
-      navigate('/signin?role=jobseeker', { replace: true })
+      navigate(cfg.signin, { replace: true })
       return
     }
     let ignore = false // stops a late answer from updating the page after leaving it
@@ -127,7 +128,7 @@ export default function Notifications() {
         user = data.user
       } catch (err) {
         if (ignore) return
-        if (err.error) navigate('/signin?role=jobseeker', { replace: true })
+        if (err.error) navigate(cfg.signin, { replace: true })
         else {
           setError('Could not reach the server')
           setLoading(false)
@@ -135,8 +136,10 @@ export default function Notifications() {
         return
       }
       if (ignore) return
-      if (user.role === 'employer') {
-        navigate('/company', { replace: true })
+
+      const userRole = user.role === 'employer' ? 'company' : 'jobseeker'
+      if (userRole !== role) {
+        navigate(userRole === 'company' ? '/company/notifications' : '/jobseeker/notifications', { replace: true })
         return
       }
 
@@ -158,11 +161,11 @@ export default function Notifications() {
     return () => {
       ignore = true
     }
-  }, [navigate, reloadKey])
+  }, [navigate, reloadKey,role])
 
   // Clicked one: mark it as read (if it isn't), then open its page if it has one
   async function openNotification(notification) {
-    const link = notificationLink(notification)
+    const link = notificationLink(notification, role)
     if (!notification.is_read) {
       try {
         await markNotificationRead(notification.id)
