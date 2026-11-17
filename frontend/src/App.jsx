@@ -24,10 +24,10 @@ import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx';
 import CvReport from './jobseeker/pages/CvReport.jsx';
 import MyApplications from './jobseeker/pages/MyApplications.jsx';
 import ApplicationDetails from './jobseeker/pages/ApplicationDetails.jsx';
-import Notifications from './jobseeker/pages/Notifications.jsx';
+import Notifications from './shared/pages/Notifications.jsx';
 import Profile from './jobseeker/pages/Profile.jsx';
 import UserInitials from './jobseeker/components/UserInitials.jsx';
-import NotificationBell from './jobseeker/components/NotificationBell.jsx';
+import NotificationBell from './shared/components/NotificationBell.jsx';
 import { NavbarAccount } from './shared/components/Navbar.jsx';
 import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/components/icons.jsx';
 
