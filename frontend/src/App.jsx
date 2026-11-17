@@ -25,6 +25,7 @@ import CvReport from './jobseeker/pages/CvReport.jsx';
 import MyApplications from './jobseeker/pages/MyApplications.jsx';
 import ApplicationDetails from './jobseeker/pages/ApplicationDetails.jsx';
 import Notifications from './jobseeker/pages/Notifications.jsx';
+import Profile from './jobseeker/pages/Profile.jsx';
 import UserInitials from './jobseeker/components/UserInitials.jsx';
 import NotificationBell from './jobseeker/components/NotificationBell.jsx';
 import { NavbarAccount } from './shared/components/Navbar.jsx';
@@ -61,7 +62,7 @@ export default function App() {
         element={
           <Layout
             right={
-              <Link to="/jobseeker" className="back-link">
+              <Link to="/jobseeker/profile" className="back-link">
                 ← Back to profile
               </Link>
             }
@@ -92,7 +93,7 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* Job seeker pages: shared Navbar (Jobs for you and Companies work so far) + bell / profile */}
-      <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} bell={<NotificationBell />} />} />}>
+      <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} bell={<NotificationBell />} to="/jobseeker/profile" />} />}>
 
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
         <Route path="/jobseeker/jobs/all" element={<AllJobs />} />
@@ -110,6 +111,8 @@ export default function App() {
         <Route path="/jobseeker/applications/:id" element={<ApplicationDetails />} />
         {/* Notifications: newest first, mark as read, opens the related page */}
         <Route path="/jobseeker/notifications" element={<Notifications />} />
+        {/* Profile: personal details, skills, preferences, CV and account */}
+        <Route path="/jobseeker/profile" element={<Profile />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
