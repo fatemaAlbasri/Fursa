@@ -1,11 +1,13 @@
 import '../styles/ConfirmDialog.css'
 
 // "Are you sure?" pop-up with Cancel + a confirm button.
+// `children` (optional) = extra content under the message, e.g. a password field.
 
 export default function ConfirmDialog({
   open,
   title,
   message,
+  children,
   confirmLabel = 'Confirm',
   danger = false,
   busy = false,
@@ -25,6 +27,7 @@ export default function ConfirmDialog({
       >
         <h2 id="dialog-title">{title}</h2>
         {message && <p>{message}</p>}
+        {children}
         <div className="dialog__actions">
           <button
             type="button"
