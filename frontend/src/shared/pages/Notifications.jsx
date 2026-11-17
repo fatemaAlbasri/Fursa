@@ -52,6 +52,20 @@ const TYPE_ICONS = {
   }
 }
 
+// What changes between the two roles
+const ROLES = {
+  jobseeker: {
+    signin: '/signin?role=jobseeker',
+    emptyText: 'We will let you know here when a company updates one of your applications.',
+    emptyLink: { to: '/jobseeker/jobs', label: 'Find jobs' }
+  },
+  company: {
+    signin: '/signin?role=company',
+    emptyText: 'We will let you know here when someone applies to your jobs.',
+    emptyLink: { to: '/company/post-job', label: 'Post a job' }
+  }
+}
+
 // One row. Unread rows and rows with a page are buttons; a read row with no page is plain text.
 function NotificationItem({ notification, onOpen }) {
   const unread = !notification.is_read
