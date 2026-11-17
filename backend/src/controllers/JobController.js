@@ -501,7 +501,21 @@ const closeJob = async (req, res, next) => {
       return res.status(409).json({ error: 'This job is already closed.' })
     }
 
-    await db.query(`UPDATE jobs SET status = 'closed' WHERE id = $1`, [jobId])
+    // Close it + tell the company (same notification as autoCloseJobs, so the bell and page show it)
+    await db.query(
+      `WITH closed AS (
+         UPDATE jobs SET status = 'closed' WHERE id = $1
+         RETURNING id, title
+       )
+       INSERT INTO notifications (user_id, job_id, type, title, message)
+       SELECT $2, closed.id, 'job_closed',
+              LEFT('Job closed: ' || closed.title, 150),
+              (SELECT COUNT(*) FROM applications a
+                WHERE a.job_id = closed.id AND a.status IN ('applied', 'shortlisted', 'interview'))
+                || ' applicants are waiting for a decision.'
+         FROM closed`,
+      [jobId, req.user.id]
+    )
 
     const updated = await loadJob(jobId)
     updated.stats = await jobStats(jobId)

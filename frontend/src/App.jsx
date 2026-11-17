@@ -93,7 +93,8 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* Job seeker pages: shared Navbar (Jobs for you and Companies work so far) + bell / profile */}
-      <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} bell={<NotificationBell />} to="/jobseeker/notifications" />} />}>
+      <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} bell={<NotificationBell to="/jobseeker/notifications" />} to="/jobseeker/profile"
+      />} />}>
 
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
         <Route path="/jobseeker/jobs/all" element={<AllJobs />} />
