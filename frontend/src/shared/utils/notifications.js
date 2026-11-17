@@ -6,7 +6,7 @@
 // =====================================================================
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { api } from '../../shared/api.js'
+import { api } from '../api.js'
 import { formatShortDate } from './applicationFormat.js'
 
 // ---------- API ----------
