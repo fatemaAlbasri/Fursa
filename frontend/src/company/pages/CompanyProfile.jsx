@@ -190,6 +190,7 @@ export default function CompanyProfile() {
 
   return (
     <main className="container cp">
+      <Notice notice={notice} onClose={() => setNotice(null)} />
       {/* ---------- Company card: gradient strip, logo + pencil, name, Log out ---------- */}
       <section className="cp-hero" aria-label="Company">
         <div className="cp-hero__banner" />
@@ -236,8 +237,6 @@ export default function CompanyProfile() {
           <span className="cp-plan__change" aria-disabled="true" title="Change plan — coming soon">Change plan</span>
         </section>
       )}
-
-      <Notice notice={notice} onClose={() => setNotice(null)} />
 
       {/* ---------- Company details ---------- */}
       <section className="cp-card">
