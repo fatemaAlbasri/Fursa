@@ -13,7 +13,7 @@ export async function api(path, { method = 'GET', body } = {}) {
   })
   const data = await res.json()
   if (!res.ok) throw data
-  // Something changed on the server the bell checks its unread count again
+  // Tell the bell to check the unread count again (skip /notifications, that page updates it itself)
   if (method !== 'GET' && !path.startsWith('/notifications')) {
     window.dispatchEvent(new Event('fursa:data-changed'))
   }
