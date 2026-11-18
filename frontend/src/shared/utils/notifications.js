@@ -16,9 +16,10 @@ export function notificationLink(notification, role) {
   if (role === 'company'){
     if (type === 'new_applicants') return '/company/applicants'
     if (type === 'interview_reply') return `/company/jobs/${job_id}/applicants/${application_id}`
-    if (job_id) return `/company/jobs/${job_id}`  
-    return null // plan: no plans page yet
-      }
+    if (job_id) return `/company/jobs/${job_id}`
+    if (type === 'plan') return '/company/profile'
+    return null
+    }
   if (type === 'new_matches') return '/jobseeker/jobs'
   if (type === 'cv_ready') return '/jobseeker/cv-optimizer'
   if (application_id) return `/jobseeker/applications/${application_id}`
