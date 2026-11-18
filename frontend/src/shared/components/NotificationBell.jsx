@@ -2,14 +2,18 @@ import { NavLink } from 'react-router-dom'
 import { BellIcon } from './icons.jsx'
 import { useUnreadCount } from '../utils/notifications.js'
 
-// Bell in the top bar for both roles. to = that role's Notifications page.
-export default function NotificationBell({to}) {
+// Bell in the top bar with the unread count. "to" is the Notifications page for the role.
+export default function NotificationBell({ to }) {
   const unread = useUnreadCount()
   return (
     <NavLink
       to={to}
-      className={({ isActive }) => `topbar__bell topbar__bell--link${isActive ? ' topbar__bell--active' : ''}`}
-      aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+      className={({ isActive }) =>
+        `topbar__bell topbar__bell--link${isActive ? ' topbar__bell--active' : ''}`
+      }
+      aria-label={
+        unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'
+      }
     >
       <BellIcon />
       {unread > 0 && (
