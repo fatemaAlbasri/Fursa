@@ -65,27 +65,34 @@ const UNREAD_EVENT = 'fursa:notifications-unread'
 export const announceUnread = (count) =>
   window.dispatchEvent(new CustomEvent(UNREAD_EVENT, { detail: count }))
 
-// Unread count for the signed-in user. Reloaded on every page change; 0 if signed out or on error.
+const CHECK_EVERY = 30 * 1000
+
 export function useUnreadCount() {
   const [unread, setUnread] = useState(0)
   const { pathname } = useLocation()
 
-  useEffect(() => {
-    let active = true
-    if (localStorage.getItem('token')) {
-      api('/notifications/unread-count')
-        .then((data) => active && setUnread(data.unread))
-        .catch(() => active && setUnread(0))
-    }
-    return () => {
-      active = false
-    }
-  }, [pathname])
+  // Ask the server (only when signed in and the tab is open)
+  const load = () => {
+    if (!localStorage.getItem('token') || document.hidden) return
+    api('/notifications/unread-count')
+      .then((data) => setUnread(data.unread))
+      .catch(() => setUnread(0))
+  }
+
+  useEffect(load, [pathname])
 
   useEffect(() => {
-    const update = (e) => setUnread(e.detail)
+    const update = (e) => setUnread(e.detail)       
     window.addEventListener(UNREAD_EVENT, update)
-    return () => window.removeEventListener(UNREAD_EVENT, update)
+    window.addEventListener('fursa:data-changed', load) 
+    window.addEventListener('focus', load)              
+    const timer = setInterval(load, CHECK_EVERY)        
+    return () => {
+      window.removeEventListener(UNREAD_EVENT, update)
+      window.removeEventListener('fursa:data-changed', load)
+      window.removeEventListener('focus', load)
+      clearInterval(timer)
+    }
   }, [])
 
   return unread
