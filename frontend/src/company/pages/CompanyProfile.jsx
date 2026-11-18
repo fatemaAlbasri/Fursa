@@ -10,40 +10,13 @@ import {
   LogOutIcon,
   TrashIcon,
   BriefcaseIcon,
-  CalendarIcon
+  CalendarIcon,
+  PencilIcon,
+  TrendIcon
 } from '../../shared/components/icons.jsx'
 import '../styles/CompanyProfile.css'
 
 // Company profile page
-
-// icons for this page
-const PencilIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M4 20h4L19 9l-4-4L4 16z" />
-  </svg>
-)
-const TrendIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M3 17l6-6 4 4 8-8" />
-    <path d="M15 7h6v6" />
-  </svg>
-)
 
 // grey box with a label and a value
 function Info({ label, children, wide }) {
@@ -268,7 +241,7 @@ export default function CompanyProfile() {
               disabled={uploading}
               onClick={() => logoInput.current.click()}
             >
-              {uploading ? <ButtonSpinner /> : PencilIcon}
+              {uploading ? <ButtonSpinner /> : <PencilIcon />}
             </button>
             <input
               ref={logoInput}
@@ -307,7 +280,7 @@ export default function CompanyProfile() {
       {/* current plan */}
       {plan && (
         <section className="cp-plan" aria-label="Current plan">
-          <span className="cp-plan__icon">{TrendIcon}</span>
+          <span className="cp-plan__icon"><TrendIcon /></span>
           <div className="cp-plan__text">
             <p className="cp-plan__kicker">CURRENT PLAN</p>
             <p className="cp-plan__title">
