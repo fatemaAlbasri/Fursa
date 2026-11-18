@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL ||'http://localhost:5000/api'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export async function api(path, { method = 'GET', body } = {}) {
   const token = localStorage.getItem('token')
@@ -12,6 +12,10 @@ export async function api(path, { method = 'GET', body } = {}) {
     body: isForm ? body : body && JSON.stringify(body)
   })
   const data = await res.json()
-  if (!res.ok) throw data 
+  if (!res.ok) throw data
+  // Something changed on the server the bell checks its unread count again
+  if (method !== 'GET' && !path.startsWith('/notifications')) {
+    window.dispatchEvent(new Event('fursa:data-changed'))
+  }
   return data
 }
