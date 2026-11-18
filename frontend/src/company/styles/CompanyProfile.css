@@ -99,6 +99,46 @@
 .cp-btn--danger { border-color: #d92d20; background: #d92d20; color: var(--white); font-weight: 700; }
 .cp-btn--danger:hover:not(:disabled) { background: #b42318; border-color: #b42318; }
 
+/* ===== Animation ===== */
+
+/* cards come in one after another */
+.cp-hero, .cp-plan, .cp-card { animation: fade-up .4s ease backwards; }
+.cp-plan { animation-delay: .08s; }
+.cp-card { animation-delay: .16s; }
+.cp-card + .cp-card { animation-delay: .24s; }
+
+/* logo pops in after the card */
+.cp-logo { animation: cp-pop .45s .15s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+@keyframes cp-pop {
+  from { opacity: 0; transform: scale(.7); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* pencil: grows a little on hover */
+.cp-logo-edit { transition: transform .15s, background .15s; }
+.cp-logo-edit:hover { transform: scale(1.12) rotate(-8deg); }
+
+/* gradient strip moves slowly */
+.cp-hero__banner { background-size: 200% 100%; animation: cp-shine 8s ease-in-out infinite alternate; }
+@keyframes cp-shine {
+  from { background-position: 0% 0; }
+  to   { background-position: 100% 0; }
+}
+
+/* grey boxes: border shows on hover */
+.cp-info { border: 1px solid transparent; transition: border-color .15s, background .15s; }
+.cp-info:hover { border-color: #d3ecec; background: #eef8f8; }
+
+/* buttons lift slightly on hover */
+.cp-btn, .cp-edit, .cp-logout { transition: transform .15s, box-shadow .15s, background .15s, border-color .15s; }
+.cp-btn:hover:not(:disabled), .cp-edit:hover, .cp-logout:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 59, 86, .1);
+}
+
+/* Edit form fades in when you press Edit */
+.cp-card .field, .cp-actions { animation: fade-up .25s ease backwards; }
+
 @media (max-width: 640px) {
   .cp-grid { grid-template-columns: 1fr; }
 }
