@@ -69,6 +69,18 @@ export const BriefcaseIcon = () => (
   <Icon><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /><path d="M3 13h18" /></Icon>
 );
 
+export const PeopleIcon = () => (
+  <Icon><circle cx="9" cy="8" r="3.5" /><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2.4.6 4 2.4 4 5.5" /></Icon>
+);
+
+export const ClockIcon = () => (
+  <Icon><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Icon>
+);
+
+export const CardIcon = () => (
+  <Icon><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></Icon>
+);
+
 // ---------- My applications: progress steps (Applied → Shortlisted → Interview → Decision) ----------
 
 // Paper plane = Applied

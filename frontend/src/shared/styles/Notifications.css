@@ -1,11 +1,5 @@
-/* ===== Notifications (job seeker) =====
-   Heading with the unread count + "Mark all as read", then one card holding every notification.
-   Uses the shared .title, .muted, .btn styles from index.css and the shared Notice.
-   Every class here starts with "nt-". Rules that change a shared class (.container) use two classes,
-   because index.css loads after this file and would win otherwise.
-
-   Row classes: nt-item--<type> (sets the icon tile colour) · nt-item--unread (tint + dot)
-                nt-item--clickable (button: hover + focus ring) */
+/* Notifications page (job seeker and company).
+   Every class starts with "nt-". The icon colour comes from nt-item--<type>. */
 
 /* colours used only on this page (status colours = the same as My applications) */
 .container.nt {
@@ -21,6 +15,8 @@
   --nt-blue: #0b77b5;
   --nt-blue-bg: #e0f2fe;
   --nt-error-line: #f5c2bd;
+  --nt-orange: #b54708;
+  --nt-orange-bg: #fef3e2;
 }
 
 /* page body: narrower than the job lists, like the design */
@@ -121,9 +117,24 @@
   background: var(--nt-blue-bg);
   color: var(--nt-blue);
 }
-/* deadline + anything without its own colour: grey-blue */
+
+/* Company types (new_applicants and plan use the default teal) */
+.nt-item--interview_reply .nt-item__icon {
+  background: var(--nt-purple-bg);
+  color: var(--nt-purple);
+}
+.nt-item--reschedule .nt-item__icon {
+  background: var(--nt-red-bg);
+  color: var(--nt-red);
+}
+.nt--company .nt-item--deadline .nt-item__icon {
+  background: var(--nt-orange-bg);
+  color: var(--nt-orange);
+}
+
+/* Grey blue */
 .nt-item--deadline .nt-item__icon,
-.nt-item--plan .nt-item__icon {
+.nt-item--job_closed .nt-item__icon {
   color: var(--navy);
 }
 

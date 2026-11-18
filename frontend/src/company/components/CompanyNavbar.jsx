@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
+import NotificationBell from '../../shared/components/NotificationBell.jsx';
 import '../styles/CompanyNavbar.css';
 
 // Top bar for every company (employer) page.
@@ -38,12 +39,7 @@ export default function CompanyNavbar({ companyInitial = 'A' }) {
         </nav>
 
         <div className="cnav__right">
-          <NavLink to="/company/notifications" className="cnav__bell" aria-label="Notifications">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            </svg>
-          </NavLink>
+          <NotificationBell to="/company/notifications" />
 
           <NavLink to="/company/profile" className="cnav__profile">
             <span className="cnav__avatar">{companyInitial}</span>
