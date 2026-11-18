@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import Notice from '../components/Notice.jsx'
@@ -13,7 +13,7 @@ import {
   PeopleIcon,
   ClockIcon,
   LockIcon,
-  CardIcon,
+  CardIcon
 } from '../components/icons.jsx'
 import {
   getNotifications,
@@ -26,16 +26,12 @@ import {
 } from '../utils/notifications.js'
 import '../styles/Notifications.css'
 
-// =====================================================================
-// Notifications (/jobseeker/notifications and /company/notifications).
-// Newest first; unread ones are tinted with a dot. Clicking one marks it as read and opens its page
-// (an application, a job, the CV optimizer) — or stays here when it has no page.
-// Data: GET /api/notifications → { notifications, unread }.
-// =====================================================================
+// Notifications page for both roles (/jobseeker/notifications and /company/notifications).
+// Newest first. Clicking one marks it as read and opens its page if it has one.
 
-// Same type can mean different things per role (deadline), so icons are per role
+// Icon for each notification type. Split by role because "deadline" is different for each one.
 const TYPE_ICONS = {
-  jobseeker:{
+  jobseeker: {
     interview: <CalendarIcon />,
     new_matches: <BriefcaseIcon />,
     rejected: <XIcon />,
@@ -44,7 +40,7 @@ const TYPE_ICONS = {
     deadline: <BriefcaseIcon />,
     shortlisted: <StarIcon />
   },
-  company:{
+  company: {
     new_applicants: <PeopleIcon />,
     interview_reply: <CalendarIcon />,
     deadline: <ClockIcon />,
@@ -53,11 +49,12 @@ const TYPE_ICONS = {
   }
 }
 
-// What changes between the two roles
+// Things that are different for the job seeker and the company
 const ROLES = {
   jobseeker: {
     signin: '/signin?role=jobseeker',
-    emptyText: 'We will let you know here when a company updates one of your applications.',
+    emptyText:
+      'We will let you know here when a company updates one of your applications.',
     emptyLink: { to: '/jobseeker/jobs', label: 'Find jobs' }
   },
   company: {
@@ -67,16 +64,20 @@ const ROLES = {
   }
 }
 
-// One row. Unread rows and rows with a page are buttons; a read row with no page is plain text.
-function NotificationItem({ notification, role,onOpen }) {
+// One notification in the list. It is a button only if clicking it does something.
+function NotificationItem({ notification, role, onOpen }) {
   const unread = !notification.is_read
   const clickable = unread || notificationLink(notification, role)
   const Tag = clickable ? 'button' : 'div'
-  const reschedule = notification.title === 'Reschedule requested' ? ' nt-item--reschedule' : ''
+  // A reschedule request uses the same type as "interview confirmed", so we check the title to make it red
+  const reschedule =
+    notification.title === 'Reschedule requested' ? ' nt-item--reschedule' : ''
 
   return (
     <Tag
-      {...(clickable ? { type: 'button', onClick: () => onOpen(notification) } : {})}
+      {...(clickable
+        ? { type: 'button', onClick: () => onOpen(notification) }
+        : {})}
       className={`nt-item nt-item--${notification.type}${reschedule}${unread ? ' nt-item--unread' : ''}${clickable ? ' nt-item--clickable' : ''}`}
     >
       <span className="nt-item__icon" aria-hidden="true">
@@ -106,11 +107,11 @@ export default function Notifications({ role }) {
   const [unread, setUnread] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0) // "Try again" bumps this to load again
-  const [busy, setBusy] = useState(false) // "Mark all as read" is running
+  const [reloadKey, setReloadKey] = useState(0)
+  const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState(null)
 
-  // Load the signed-in user, then their notifications. No token or a bad token → Sign In; a company → its own home.
+  // Check who is signed in, then load their notifications
   useEffect(() => {
     if (!localStorage.getItem('token')) {
       navigate(cfg.signin, { replace: true })
@@ -138,13 +139,19 @@ export default function Notifications({ role }) {
       }
       if (ignore) return
 
+      // Wrong page for this user (a company opened the job seeker page or the opposite), send them to theirs
       const userRole = user.role === 'employer' ? 'company' : 'jobseeker'
       if (userRole !== role) {
-        navigate(userRole === 'company' ? '/company/notifications' : '/jobseeker/notifications', { replace: true })
+        navigate(
+          userRole === 'company'
+            ? '/company/notifications'
+            : '/jobseeker/notifications',
+          { replace: true }
+        )
         return
       }
 
-      // 2. Their notifications (newest first) + how many are unread
+      // 2. Load their notifications and the unread count
       try {
         const data = await getNotifications()
         if (!ignore) {
@@ -162,37 +169,45 @@ export default function Notifications({ role }) {
     return () => {
       ignore = true
     }
-  }, [navigate, reloadKey,role])
+  }, [navigate, reloadKey, role])
 
-  // New notifications while the page is open, load the list again quietly (no spinner)
+  // When the bell finds new notifications, reload the list without showing the spinner
   const refresh = useCallback(() => {
     getNotifications()
       .then((data) => {
         setNotifications(data.notifications)
         setUnread(data.unread)
       })
-      .catch(() => {}) 
+      .catch(() => {})
   }, [])
   useOnUnreadChecked(refresh)
 
-  // Clicked one: mark it as read (if it isn't), then open its page if it has one
+  // Click on a notification: mark it as read, then open its page if it has one
   async function openNotification(notification) {
     const link = notificationLink(notification, role)
     if (!notification.is_read) {
       try {
         await markNotificationRead(notification.id)
       } catch (err) {
-        setNotice({ type: 'error', text: err.error || 'Could not reach the server' })
+        setNotice({
+          type: 'error',
+          text: err.error || 'Could not reach the server'
+        })
         return
       }
       const left = Math.max(unread - 1, 0)
-      setNotifications((list) => list.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n)))
+      setNotifications((list) =>
+        list.map((n) =>
+          n.id === notification.id ? { ...n, is_read: true } : n
+        )
+      )
       setUnread(left)
       announceUnread(left)
     }
     if (link) navigate(link)
   }
 
+  // "Mark all as read" button
   async function markAllRead() {
     setBusy(true)
     setNotice(null)
@@ -202,12 +217,15 @@ export default function Notifications({ role }) {
       setUnread(0)
       announceUnread(0)
     } catch (err) {
-      setNotice({ type: 'error', text: err.error || 'Could not reach the server' })
+      setNotice({
+        type: 'error',
+        text: err.error || 'Could not reach the server'
+      })
     }
     setBusy(false)
   }
 
-  // ---------- What goes under the heading
+  // What to show under the heading: loading, error, empty, or the list
   let results
   if (loading) {
     results = (
@@ -221,7 +239,11 @@ export default function Notifications({ role }) {
       <div className="nt-state nt-state--error" role="alert">
         <h3>Could not load your notifications</h3>
         <p>{error}</p>
-        <button type="button" className="btn btn--outline" onClick={() => setReloadKey(reloadKey + 1)}>
+        <button
+          type="button"
+          className="btn btn--outline"
+          onClick={() => setReloadKey(reloadKey + 1)}
+        >
           Try again
         </button>
       </div>
@@ -233,7 +255,7 @@ export default function Notifications({ role }) {
           <BellIcon />
         </span>
         <h3>No notifications yet</h3>
-                <p>{cfg.emptyText}</p>
+        <p>{cfg.emptyText}</p>
         <Link to={cfg.emptyLink.to} className="btn btn--outline">
           {cfg.emptyLink.label}
         </Link>
@@ -244,7 +266,11 @@ export default function Notifications({ role }) {
       <ul className="nt-list">
         {notifications.map((notification) => (
           <li key={notification.id}>
-            <NotificationItem notification={notification} role={role} onOpen={openNotification} />
+            <NotificationItem
+              notification={notification}
+              role={role}
+              onOpen={openNotification}
+            />
           </li>
         ))}
       </ul>
@@ -258,10 +284,19 @@ export default function Notifications({ role }) {
       <header className="nt-head">
         <div>
           <h1 className="title">Notifications</h1>
-          {ready && <p className="muted">{unread ? `${unread} unread` : 'You are all caught up'}</p>}
+          {ready && (
+            <p className="muted">
+              {unread ? `${unread} unread` : 'You are all caught up'}
+            </p>
+          )}
         </div>
         {ready && notifications.length > 0 && (
-          <button type="button" className="btn btn--outline" onClick={markAllRead} disabled={busy || unread === 0}>
+          <button
+            type="button"
+            className="btn btn--outline"
+            onClick={markAllRead}
+            disabled={busy || unread === 0}
+          >
             {busy ? 'Marking…' : 'Mark all as read'}
           </button>
         )}
