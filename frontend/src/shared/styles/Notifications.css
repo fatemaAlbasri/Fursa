@@ -1,11 +1,5 @@
-/* ===== Notifications (job seeker) =====
-   Heading with the unread count + "Mark all as read", then one card holding every notification.
-   Uses the shared .title, .muted, .btn styles from index.css and the shared Notice.
-   Every class here starts with "nt-". Rules that change a shared class (.container) use two classes,
-   because index.css loads after this file and would win otherwise.
-
-   Row classes: nt-item--<type> (sets the icon tile colour) · nt-item--unread (tint + dot)
-                nt-item--clickable (button: hover + focus ring) */
+/* Notifications page (job seeker and company).
+   Every class starts with "nt-". The icon colour comes from nt-item--<type>. */
 
 /* colours used only on this page (status colours = the same as My applications) */
 .container.nt {
@@ -124,7 +118,8 @@
   color: var(--nt-blue);
 }
 
-/* Company (wireframe 16b). new_applicants + plan use the default teal tile */
+/* Notifications page (job seeker and company).
+   Every class starts with "nt-". The icon colour comes from nt-item--<type>. */
 .nt-item--interview_reply .nt-item__icon {
   background: var(--nt-purple-bg);
   color: var(--nt-purple);
@@ -138,7 +133,7 @@
   color: var(--nt-orange);
 }
 
-/* deadline + anything without its own colour: grey-blue */
+/* Grey blue */
 .nt-item--deadline .nt-item__icon,
 .nt-item--job_closed .nt-item__icon {
   color: var(--navy);
