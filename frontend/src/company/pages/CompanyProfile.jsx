@@ -178,7 +178,7 @@ export default function CompanyProfile() {
 
         <div className="cp-head__who">
           <h1>{company.name}</h1>
-          <p>{[company.industry, company.location, company.phone].filter(Boolean).join(' · ')}</p>
+          <p>Employer Account</p>
         </div>
         <button type="button" className="cp-logout" onClick={logout}>{LogoutIcon}Log out</button>
       </section>
