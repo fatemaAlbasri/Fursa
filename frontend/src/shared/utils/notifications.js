@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom'
 import { api } from '../api.js'
 import { formatShortDate } from '../../jobseeker/utils/applicationFormat.js'
 
-// API 
+// API
 export const getNotifications = () => api('/notifications')
 export const markNotificationRead = (id) => api(`/notifications/${id}/read`, { method: 'PATCH' })
 export const markAllNotificationsRead = () => api('/notifications/read-all', { method: 'PATCH' })
@@ -16,8 +16,8 @@ export function notificationLink(notification, role) {
   if (role === 'company'){
     if (type === 'new_applicants') return '/company/applicants'
     if (type === 'interview_reply') return `/company/jobs/${job_id}/applicants/${application_id}`
-    if (job_id) return `/company/jobs/${job_id}`   
-    return null                                    
+    if (job_id) return `/company/jobs/${job_id}`  
+    return null // plan: no plans page yet                                 
   }
   if (type === 'new_matches') return '/jobseeker/jobs'
   if (type === 'cv_ready') return '/jobseeker/cv-optimizer'
