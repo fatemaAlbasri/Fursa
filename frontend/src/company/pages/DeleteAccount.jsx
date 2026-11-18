@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../shared/api.js';
 import PasswordInput from '../../shared/components/PasswordInput.jsx';
+import { ButtonSpinner } from '../../shared/components/Loading.jsx';
 import '../styles/DeleteAccount.css';
 
 // =====================================================================
@@ -121,7 +122,7 @@ export default function DeleteAccount() {
         <div className="da-actions">
           <Link to="/company/profile" className="da-keep">Keep my account</Link>
           <button type="button" className="da-delete" onClick={remove} disabled={busy}>
-            {TrashIcon}{busy ? 'Deleting…' : 'Delete my account'}
+            {busy ? <><ButtonSpinner />Deleting…</> : <>{TrashIcon}Delete my account</>}
           </button>
         </div>
       </section>
