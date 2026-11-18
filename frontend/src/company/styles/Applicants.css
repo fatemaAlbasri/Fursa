@@ -85,6 +85,13 @@
   position: absolute; inset: 0; display: grid; place-items: center;
   font-weight: 700; font-size: 12px; color: #117a7c;
 }
+/* score ring fills from 0 to the score when it shows */
+.score-ring__fill { animation: score-ring-fill 1s ease-out; }
+@keyframes score-ring-fill { from { stroke-dashoffset: 125.66; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .score-ring__fill { animation: none; }
+}
 
 .ap-view {
   display: flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid #117a7c;

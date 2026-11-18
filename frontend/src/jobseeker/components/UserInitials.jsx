@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../shared/api.js'
 import { userInitials } from '../../shared/utils/jobFormat.js'
+import { USER_UPDATED_EVENT } from '../utils/profile.js'
 
 // "FA" for the avatar circle in the shared Navbar (<NavbarAccount avatar={<UserInitials />} />).
 // The circle itself is styled by the Navbar (.topbar__avatar in index.css).
@@ -20,6 +21,13 @@ export default function UserInitials() {
     return () => {
       ignore = true
     }
+  }, [])
+
+  // The Profile page saved a new name → show the new initials without reloading
+  useEffect(() => {
+    const update = (e) => setUser((current) => ({ ...current, ...e.detail }))
+    window.addEventListener(USER_UPDATED_EVENT, update)
+    return () => window.removeEventListener(USER_UPDATED_EVENT, update)
   }, [])
 
   // Still loading, not signed in, or no name → nothing to show

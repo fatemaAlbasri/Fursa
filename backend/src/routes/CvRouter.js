@@ -16,6 +16,9 @@ router.post('/', requireAuth, requireRole('seeker'), upload.single('cv'), CvCont
 // GET /api/cv  (logged-in seeker) → current CV
 router.get('/', requireAuth, requireRole('seeker'), CvController.current)
 
+// GET /api/cv/file  (logged-in seeker) → downloads their own current CV with its original file name
+router.get('/file', requireAuth, requireRole('seeker'), CvController.download)
+
 // AI CV Optimizer (logged-in seeker, always about the current CV)
 const seeker = [requireAuth, requireRole('seeker')]
 

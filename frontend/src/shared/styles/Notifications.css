@@ -1,0 +1,267 @@
+/* Notifications page (job seeker and company).
+   Every class starts with "nt-". The icon colour comes from nt-item--<type>. */
+
+/* colours used only on this page (status colours = the same as My applications) */
+.container.nt {
+  --nt-unread-bg: #f3f9f9;
+  --nt-unread-hover: #e9f4f4;
+  --nt-hover: #f8fbfb;
+  --nt-purple: #5235d6;
+  --nt-purple-bg: #efebff;
+  --nt-red: #d92d20;
+  --nt-red-bg: #fdecea;
+  --nt-green: #067647;
+  --nt-green-bg: #e3f6ec;
+  --nt-blue: #0b77b5;
+  --nt-blue-bg: #e0f2fe;
+  --nt-error-line: #f5c2bd;
+  --nt-orange: #b54708;
+  --nt-orange-bg: #fef3e2;
+}
+
+/* page body: narrower than the job lists, like the design */
+.container.nt {
+  max-width: 840px;
+  gap: 20px;
+}
+
+/* ---------- Heading ---------- */
+.nt-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.nt-head .muted {
+  margin-top: 4px;
+  font-size: 15px;
+}
+.nt-head .btn {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* ---------- The list (one card, rows split by lines) ---------- */
+.nt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+}
+.nt-list li + li {
+  border-top: 1px solid var(--gray);
+}
+
+.nt-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--white);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border: 0;
+}
+.nt-item--unread {
+  background: var(--nt-unread-bg);
+}
+.nt-item--clickable {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.nt-item--clickable:hover {
+  background: var(--nt-hover);
+}
+.nt-item--unread.nt-item--clickable:hover {
+  background: var(--nt-unread-hover);
+}
+.nt-item--clickable:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--focus);
+}
+
+/* icon tile: teal by default, coloured per type below */
+.nt-item__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--light);
+  color: var(--teal);
+}
+.nt-item__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.nt-item--interview .nt-item__icon {
+  background: var(--nt-purple-bg);
+  color: var(--nt-purple);
+}
+.nt-item--rejected .nt-item__icon {
+  background: var(--nt-red-bg);
+  color: var(--nt-red);
+}
+.nt-item--accepted .nt-item__icon {
+  background: var(--nt-green-bg);
+  color: var(--nt-green);
+}
+.nt-item--shortlisted .nt-item__icon {
+  background: var(--nt-blue-bg);
+  color: var(--nt-blue);
+}
+
+/* Company types (new_applicants and plan use the default teal) */
+.nt-item--interview_reply .nt-item__icon {
+  background: var(--nt-purple-bg);
+  color: var(--nt-purple);
+}
+.nt-item--reschedule .nt-item__icon {
+  background: var(--nt-red-bg);
+  color: var(--nt-red);
+}
+.nt--company .nt-item--deadline .nt-item__icon {
+  background: var(--nt-orange-bg);
+  color: var(--nt-orange);
+}
+
+/* Grey blue */
+.nt-item--deadline .nt-item__icon,
+.nt-item--job_closed .nt-item__icon {
+  color: var(--navy);
+}
+
+.nt-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.nt-item__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.nt-item__message {
+  font-size: 14px;
+  color: var(--slate);
+  overflow-wrap: anywhere;
+}
+.nt-item__time {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #8a9bab;
+}
+
+/* unread dot on the right */
+.nt-item__dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  flex-shrink: 0;
+}
+
+/* text for screen readers only */
+.nt-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Loading / empty / error (same look as My applications) ---------- */
+.nt-state {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 16px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--slate);
+  font-size: 14px;
+}
+.nt-state h3 {
+  font-size: 17px;
+  color: var(--navy);
+}
+.nt-state .btn {
+  margin-top: 6px;
+}
+.nt-state__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--light);
+  color: var(--teal);
+}
+.nt-state__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.nt-state--error {
+  background: var(--nt-red-bg);
+  border-color: var(--nt-error-line);
+}
+.nt-state--error h3 {
+  color: var(--error);
+}
+.nt-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--light);
+  border-top-color: var(--teal);
+  animation: nt-spin 0.8s linear infinite;
+}
+@keyframes nt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Phones: smaller title and rows; the button drops under the heading ---------- */
+@media (max-width: 520px) {
+  .nt-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .nt-head .title {
+    font-size: 24px;
+  }
+  .nt-head .btn {
+    margin-top: 0;
+  }
+  .nt-item {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .nt-item__icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nt-item--clickable {
+    transition: none;
+  }
+  .nt-spinner {
+    animation-duration: 2s;
+  }
+}

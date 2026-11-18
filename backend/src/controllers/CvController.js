@@ -1,5 +1,6 @@
+const path = require('path')
 const db = require('../config/db')
-const { fileUrl, removeFiles } = require('../middleware/upload')
+const { fileUrl, removeFiles, UPLOADS_DIR } = require('../middleware/upload')
 const { parseCv, saveParsedCv, saveCvEmbedding } = require('../services/cvParser')
 const { rescoreSeeker } = require('../services/matching')
 
@@ -78,6 +79,29 @@ async function current(req, res, next) {
   }
 }
 
+// The seeker's own current CV file, sent with the name it was uploaded with (not the random saved name)
+async function download(req, res, next) {
+  try {
+    const { rows } = await db.query(
+      'SELECT file_name, file_url FROM resumes WHERE seeker_id = $1 AND is_current',
+      [req.user.id]
+    )
+    const resume = rows[0]
+    if (!resume) return res.status(404).json({ error: 'You have not uploaded a CV yet' })
+
+    // file_url is "/uploads/cv/<file>": only the base name is used, so the path can't leave the CV folder
+    const filePath = path.join(UPLOADS_DIR, 'cv', path.basename(resume.file_url))
+    res.download(filePath, resume.file_name, (err) => {
+      if (!err) return
+      if (res.headersSent) return console.error('CV download failed:', err.message)
+      if (err.code === 'ENOENT' || err.status === 404) return res.status(404).json({ error: 'Your CV file could not be found. Please upload it again.' })
+      next(err)
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
 async function loadResume(seekerId) {
   const { rows } = await db.query(
     `SELECT id, file_name, file_url, parsed_experience, parsed_languages,
@@ -88,4 +112,4 @@ async function loadResume(seekerId) {
   return rows[0] || null
 }
 
-module.exports = { parse, upload, current }
+module.exports = { parse, upload, current, download }
