@@ -121,8 +121,7 @@ export default function Payment() {
 
   return (
     <main className="container pay">
-      <Link to="/company/plans" className="pay-back">← Back</Link>
-
+      
       {error && <p className="field__error" role="alert">{error}</p>}
 
       {plan && (
