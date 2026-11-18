@@ -280,7 +280,9 @@ export default function CompanyProfile() {
       {/* current plan */}
       {plan && (
         <section className="cp-plan" aria-label="Current plan">
-          <span className="cp-plan__icon"><TrendIcon /></span>
+          <span className="cp-plan__icon">
+            <TrendIcon />
+          </span>
           <div className="cp-plan__text">
             <p className="cp-plan__kicker">CURRENT PLAN</p>
             <p className="cp-plan__title">
@@ -304,7 +306,7 @@ export default function CompanyProfile() {
               )}
             </div>
           </div>
-          {/* no plans page yet, so it can't be clicked */}
+          {/* disabled until we have a plans page */}
           <span
             className="cp-plan__change"
             aria-disabled="true"
@@ -315,7 +317,7 @@ export default function CompanyProfile() {
         </section>
       )}
 
-      {/* HR contact */}
+      {/* company details */}
       <section className="cp-card">
         <div className="cp-card__head">
           <h2>Company details</h2>
@@ -408,7 +410,7 @@ export default function CompanyProfile() {
         )}
       </section>
 
-      {/* ---------- HR contact (login) ---------- */}
+      {/* HR contact */}
       <section className="cp-card">
         <div className="cp-card__head">
           <h2>HR contact</h2>

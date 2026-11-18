@@ -53,17 +53,20 @@
   color: var(--white);
   font-weight: 600;
 }
-/* on the profile page → teal button + ring */
+
+/* active profile link */
 .cnav__profile.active,
 .cnav__profile.active:hover {
   background: var(--teal);
-  animation: cnav-ring-in .5s ease-out;
+  animation: cnav-profile-in 0.5s ease-out;
 }
-
-/* the colour turns from dark blue to teal and the ring draws in */
-@keyframes cnav-ring-in {
-  from { background: #24506f;  }
-  to   { background: var(--teal); }
+@keyframes cnav-profile-in {
+  from {
+    background: #24506f;
+  }
+  to {
+    background: var(--teal);
+  }
 }
 
 .cnav__avatar {
