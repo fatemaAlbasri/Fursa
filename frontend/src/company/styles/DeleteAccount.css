@@ -63,6 +63,56 @@
 }
 .da-home:hover { background: #0e6466; }
 
+/* ===== Animation ===== */
+
+/* the card comes in */
+.da-card, .da-done { animation: fade-up .4s ease backwards; }
+
+/* warning icon shakes once, as a warning */
+.da-head__icon { animation: da-shake .6s .35s ease both; }
+@keyframes da-shake {
+  0%, 100% { transform: none; }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(3deg); }
+}
+
+/* the "What will be deleted" list items come in one after another */
+.da-lost__item { animation: fade-up .3s ease backwards; }
+.da-lost__item:nth-child(2) { animation-delay: .25s; }
+.da-lost__item:nth-child(3) { animation-delay: .33s; }
+.da-lost__item:nth-child(4) { animation-delay: .41s; }
+.da-lost__item:nth-child(5) { animation-delay: .49s; }
+
+/* wrong password → the message shakes */
+.da-card .field__error { animation: da-nudge .35s ease; }
+@keyframes da-nudge {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+}
+
+/* buttons lift slightly on hover */
+.da-keep, .da-delete, .da-home { transition: transform .15s, box-shadow .15s, background .15s; }
+.da-keep:hover, .da-delete:hover:not(:disabled), .da-home:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 59, 86, .1);
+}
+.da-delete:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(180, 35, 24, .25); }
+
+/* after deleting: the check pops in, then a soft wave goes out once */
+.da-done__icon { animation: da-pop .5s .2s cubic-bezier(.34, 1.56, .64, 1) backwards, da-wave 1s .7s ease-out; }
+@keyframes da-pop {
+  from { opacity: 0; transform: scale(.5); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes da-wave {
+  from { box-shadow: 0 0 0 0 rgba(91, 113, 134, .35); }
+  to   { box-shadow: 0 0 0 16px rgba(91, 113, 134, 0); }
+}
+
 @media (max-width: 640px) {
   .da-card { padding: 22px; }
 }
