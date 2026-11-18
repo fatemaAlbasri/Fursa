@@ -501,7 +501,7 @@ const closeJob = async (req, res, next) => {
       return res.status(409).json({ error: 'This job is already closed.' })
     }
 
-    // Close it + tell the company (same notification as autoCloseJobs, so the bell and page show it)
+    // Close the job and add a "Job closed" notification for the company
     await db.query(
       `WITH closed AS (
          UPDATE jobs SET status = 'closed' WHERE id = $1
