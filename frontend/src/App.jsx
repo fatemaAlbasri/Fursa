@@ -14,6 +14,8 @@ import RejectApplicants from './company/pages/RejectApplicants.jsx';
 import Applicants from './company/pages/Applicants.jsx';
 import ApplicantView from './company/pages/ApplicantView.jsx';
 import CompanyHome from './company/pages/CompanyHome.jsx';
+import CompanyProfile from './company/pages/CompanyProfile.jsx';
+import DeleteAccount from './company/pages/DeleteAccount.jsx';
 
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
 import JobDetails from './jobseeker/pages/JobDetails.jsx';
@@ -57,7 +59,7 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
       {/* Change password: same page for both roles, each with its own "Back to profile" link
-          (temporary: points to the role's home until the profile pages exist) */}
+          (job seeker: temporary, points to the home page until the seeker profile exists) */}
       <Route
         element={
           <Layout
@@ -78,7 +80,7 @@ export default function App() {
         element={
           <Layout
             right={
-              <Link to="/company" className="back-link">
+              <Link to="/company/profile" className="back-link">
                 ← Back to profile
               </Link>
             }
@@ -89,6 +91,7 @@ export default function App() {
           path="/company/change-password"
           element={<ChangePassword role="company" />}
         />
+        <Route path="/company/delete-account" element={<DeleteAccount />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 
@@ -131,6 +134,7 @@ export default function App() {
         <Route path="jobs/:id/applicants/:appId" element={<ApplicantView />} />
         <Route path="applicants" element={<Applicants />} />
         <Route path="notifications" element={<Notifications role="company" />} />
+        <Route path="profile" element={<CompanyProfile />} />
       </Route>
     </Routes>
   )

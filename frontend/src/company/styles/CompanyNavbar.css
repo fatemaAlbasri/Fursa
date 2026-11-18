@@ -53,6 +53,22 @@
   color: var(--white);
   font-weight: 600;
 }
+
+/* active profile link */
+.cnav__profile.active,
+.cnav__profile.active:hover {
+  background: var(--teal);
+  animation: cnav-profile-in 0.5s ease-out;
+}
+@keyframes cnav-profile-in {
+  from {
+    background: #24506f;
+  }
+  to {
+    background: var(--teal);
+  }
+}
+
 .cnav__avatar {
   width: 38px;
   height: 38px;
