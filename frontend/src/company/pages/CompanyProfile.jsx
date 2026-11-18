@@ -30,9 +30,9 @@ const PencilIcon = (
 );
 
 // A small grey box: label on top, value under it
-function Info({ label, children }) {
+function Info({ label, children, wide }) {
   return (
-    <div className="cp-info">
+    <div className={`cp-info${wide ? ' cp-info--wide' : ''}`}>
       <span className="cp-info__label">{label}</span>
       <span className="cp-info__value">{children || '—'}</span>
     </div>
@@ -224,15 +224,15 @@ export default function CompanyProfile() {
               <Field label="Location" error={errors.location}>
                 <input name="location" value={form.location} onChange={change} />
               </Field>
-              <Field label="Website" error={errors.website}>
-                <input name="website" value={form.website} onChange={change} placeholder="https://" />
-              </Field>
               <Field label="Company phone" error={errors.phone}>
                 <div className="phone">
                   <span className="phone__code">+973</span>
                   <input name="phone" type="tel" inputMode="numeric" maxLength={9} placeholder="1XXX XXXX"
                     value={form.phone} onChange={change} />
                 </div>
+              </Field>
+              <Field label="Website" error={errors.website}>
+                <input name="website" value={form.website} onChange={change} placeholder="https://" />
               </Field>
             </div>
             <Field label="About the company" error={errors.about}>
@@ -246,14 +246,13 @@ export default function CompanyProfile() {
               <Info label="Company name">{company.name}</Info>
               <Info label="Industry">{company.industry}</Info>
               <Info label="Location">{company.location}</Info>
-              <Info label="Website">
-                {/* old websites can be saved without https:// → add it, or the link opens inside Fursa */}
+              <Info label="Company phone">{company.phone}</Info>
+              <Info label="Website" wide>
                 {company.website && (
                   <a href={/^https?:\/\//.test(company.website) ? company.website : `https://${company.website}`}
                     target="_blank" rel="noreferrer">{company.website.replace(/^https?:\/\//, '')}</a>
                 )}
               </Info>
-              <Info label="Company phone">{company.phone}</Info>
             </div>
             <div className="cp-info">
               <span className="cp-info__label">About the company</span>
