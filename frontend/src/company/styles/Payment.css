@@ -33,9 +33,12 @@
 .pay-receipt input { width: 18px; height: 18px; margin: 0; accent-color: #117a7c; }
 
 .pay-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
   min-height: 54px; border-radius: 12px; border: 0; background: #117a7c; color: var(--white);
   font: inherit; font-weight: 700; font-size: 17px; cursor: pointer;
+  transition: transform .15s, box-shadow .15s, background .15s;
 }
+
 .pay-btn:hover:not(:disabled) { background: #0e6466; }
 .pay-btn:disabled { opacity: .6; cursor: not-allowed; }
 .pay-pilot { padding: 12px 14px; border-radius: 12px; background: #fef3e2; color: #93370d; font-size: 13px; font-weight: 600; }
@@ -72,6 +75,63 @@
   background: #117a7c; color: var(--white); font-weight: 700;
 }
 .pay-done__next:hover { background: #0e6466; }
+
+/* animations */
+.pay-form, .pay-summary { animation: fade-up .4s ease backwards; }
+.pay-summary { animation-delay: .1s; }
+
+/* summary lines come in one after another */
+.pay-summary__list li { animation: fade-up .3s ease backwards; }
+.pay-summary__list li:nth-child(1) { animation-delay: .25s; }
+.pay-summary__list li:nth-child(2) { animation-delay: .32s; }
+.pay-summary__list li:nth-child(3) { animation-delay: .39s; }
+.pay-summary__list li:nth-child(4) { animation-delay: .46s; }
+.pay-summary__list li:nth-child(5) { animation-delay: .53s; }
+.pay-summary__total { animation: pay-pop .4s .55s ease backwards; }
+
+/* hover effect */
+.pay-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(17, 122, 124, .25); }
+
+/* shake on card errors */
+.pay-form .field__error { animation: pay-nudge .35s ease; }
+
+/* payment successful */
+.pay-done { animation: fade-up .4s ease backwards; }
+.pay-done__icon {
+  position: relative;
+  animation: pay-pop .5s .15s cubic-bezier(.34, 1.56, .64, 1) backwards;
+}
+.pay-done__icon::after {
+  content: ''; position: absolute; inset: 0; border-radius: 999px;
+  animation: pay-ring 1.2s .6s ease-out;
+}
+.pay-check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: pay-draw .45s .55s ease-out forwards;
+}
+.pay-done h1, .pay-done p, .pay-done__next { animation: fade-up .35s ease backwards; }
+.pay-done h1 { animation-delay: .7s; }
+.pay-done p { animation-delay: .8s; }
+.pay-done__next { animation-delay: .9s; }
+
+@keyframes pay-pop {
+  from { opacity: 0; transform: scale(.5); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pay-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pay-ring {
+  from { box-shadow: 0 0 0 0 rgba(6, 118, 71, .35); }
+  to { box-shadow: 0 0 0 22px rgba(6, 118, 71, 0); }
+}
+@keyframes pay-nudge {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+}
 
 @media (max-width: 640px) {
   .pay-form, .pay-summary { padding: 22px; }

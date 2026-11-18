@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api } from '../../shared/api.js';
 import { formatDeadline } from '../../shared/utils/jobFormat.js';
 import { planFeatures, formatBHD } from '../data/plans.js';
+import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx';
 import '../styles/Payment.css';
 
 // =====================================================================
@@ -20,8 +21,8 @@ const CardIcon = (
   </svg>
 );
 const CheckIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-    <path d="M5 12l5 5 9-10" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path className="pay-check" d="M5 12l5 5 9-10" pathLength="1" />
   </svg>
 );
 
@@ -123,7 +124,7 @@ export default function Payment() {
     <main className="container pay">
       
       {error && <p className="field__error" role="alert">{error}</p>}
-
+      {!plan && !error && <Loading text="Loading your order…" />}
       {plan && (
         <div className="pay-body">
           {/* ---------- Card form ---------- */}
@@ -160,7 +161,7 @@ export default function Payment() {
             </label>
 
             <button type="button" className="pay-btn" onClick={pay} disabled={busy}>
-              {busy ? 'Paying…' : `Pay ${formatBHD(plan.total_bhd)}`}
+              {busy ? <><ButtonSpinner />Processing payment…</> : `Pay ${formatBHD(plan.total_bhd)}`}
             </button>
             <p className="pay-pilot">Pilot version: payment is simulated. No real card is charged.</p>
           </section>
