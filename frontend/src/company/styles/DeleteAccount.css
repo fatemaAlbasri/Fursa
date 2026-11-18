@@ -36,12 +36,13 @@
 /* buttons */
 .da-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .da-keep, .da-delete {
+  flex: 1 1 0; min-width: 180px;
   display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; border-radius: 12px;
   font: inherit; font-weight: 700;
 }
-.da-keep { flex: 1 1 160px; border: 1px solid #cbd5df; color: #102a3d; }
+.da-keep { border: 1px solid #cbd5df; color: #102a3d; }
 .da-keep:hover { background: #f4fafa; }
-.da-delete { flex: 2 1 220px; border: 0; background: #b42318; color: var(--white); cursor: pointer; }
+.da-delete { border: 0; background: #b42318; color: var(--white); cursor: pointer; }
 .da-delete:hover:not(:disabled) { background: #912018; }
 .da-delete:disabled { opacity: .6; cursor: not-allowed; }
 .da-delete svg { width: 18px; height: 18px; }
