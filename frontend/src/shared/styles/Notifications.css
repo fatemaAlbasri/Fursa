@@ -118,8 +118,7 @@
   color: var(--nt-blue);
 }
 
-/* Notifications page (job seeker and company).
-   Every class starts with "nt-". The icon colour comes from nt-item--<type>. */
+/* Company types (new_applicants and plan use the default teal) */
 .nt-item--interview_reply .nt-item__icon {
   background: var(--nt-purple-bg);
   color: var(--nt-purple);
