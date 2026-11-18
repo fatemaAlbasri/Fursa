@@ -104,6 +104,11 @@ export default function CompanyProfile() {
       .catch(() => {}); // no active plan → the plan box is hidden
   }, []);
 
+  // a new message (saved / error) → scroll to the top so it's seen
+  useEffect(() => {
+    if (notice) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [notice]);
+
   if (!profile) {
   return (
     <main className="container cp">
