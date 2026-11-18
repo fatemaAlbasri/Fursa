@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import {useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import Notice from '../components/Notice.jsx'
@@ -21,7 +21,8 @@ import {
   markAllNotificationsRead,
   notificationLink,
   timeAgo,
-  announceUnread
+  announceUnread,
+  useOnUnreadChecked
 } from '../utils/notifications.js'
 import '../styles/Notifications.css'
 
@@ -162,6 +163,17 @@ export default function Notifications({ role }) {
       ignore = true
     }
   }, [navigate, reloadKey,role])
+
+  // New notifications while the page is open, load the list again quietly (no spinner)
+  const refresh = useCallback(() => {
+    getNotifications()
+      .then((data) => {
+        setNotifications(data.notifications)
+        setUnread(data.unread)
+      })
+      .catch(() => {}) 
+  }, [])
+  useOnUnreadChecked(refresh)
 
   // Clicked one: mark it as read (if it isn't), then open its page if it has one
   async function openNotification(notification) {

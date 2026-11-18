@@ -65,6 +65,16 @@ const UNREAD_EVENT = 'fursa:notifications-unread'
 export const announceUnread = (count) =>
   window.dispatchEvent(new CustomEvent(UNREAD_EVENT, { detail: count }))
 
+// The bell just asked the server → the Notifications page (if open) loads its list again
+const CHECKED_EVENT = 'fursa:notifications-checked'
+
+export function useOnUnreadChecked(callback) {
+  useEffect(() => {
+    window.addEventListener(CHECKED_EVENT, callback)
+    return () => window.removeEventListener(CHECKED_EVENT, callback)
+  }, [callback])
+}
+
 const CHECK_EVERY = 30 * 1000
 
 export function useUnreadCount() {
@@ -75,7 +85,10 @@ export function useUnreadCount() {
   const load = () => {
     if (!localStorage.getItem('token') || document.hidden) return
     api('/notifications/unread-count')
-      .then((data) => setUnread(data.unread))
+      .then((data) => {
+        setUnread(data.unread)
+        window.dispatchEvent(new Event(CHECKED_EVENT))
+      })
       .catch(() => setUnread(0))
   }
 
