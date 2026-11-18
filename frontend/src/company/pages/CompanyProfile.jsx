@@ -23,6 +23,11 @@ const TrashIcon = (
     <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
   </svg>
 );
+const PencilIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 20h4L19 9l-4-4L4 16z" />
+  </svg>
+);
 
 // A small grey box: label on top, value under it
 function Info({ label, children }) {
@@ -164,7 +169,13 @@ export default function CompanyProfile() {
     <main className="container cp">
       {/* ---------- Company card + Log out ---------- */}
       <section className="cp-head">
-        <CompanyLogo job={{ company_logo: company.logo_url, company_name: company.name, company_id: company.id }} className="cp-logo" />
+        <div className="cp-logo-wrap">
+          <CompanyLogo job={{ company_logo: company.logo_url, company_name: company.name, company_id: company.id }} className="cp-logo" />
+          <button type="button" className="cp-logo-edit" aria-label="Change logo" title="Change logo"
+    onClick={() => logoInput.current.click()}>{PencilIcon}</button>
+          <input ref={logoInput} type="file" accept="image/*" hidden onChange={changeLogo} />
+        </div>
+
         <div className="cp-head__who">
           <h1>{company.name}</h1>
           <p>{[company.industry, company.location, company.phone].filter(Boolean).join(' · ')}</p>
@@ -243,14 +254,6 @@ export default function CompanyProfile() {
                 )}
               </Info>
               <Info label="Company phone">{company.phone}</Info>
-            </div>
-            <div className="cp-info cp-info--row">
-              <div>
-                <span className="cp-info__label">Logo</span>
-                <span className="cp-info__value">{company.logo_url ? company.logo_url.split('/').pop() : 'No logo yet'}</span>
-              </div>
-              <button type="button" className="cp-link" onClick={() => logoInput.current.click()}>Change logo</button>
-              <input ref={logoInput} type="file" accept="image/*" hidden onChange={changeLogo} />
             </div>
             <div className="cp-info">
               <span className="cp-info__label">About the company</span>
