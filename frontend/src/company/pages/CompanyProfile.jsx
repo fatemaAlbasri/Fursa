@@ -8,8 +8,8 @@ import '../styles/CompanyProfile.css';
 
 // =====================================================================
 // Company profile (/company/profile).
-// Wireframe "16 · Company profile": company card + Log out, current plan,
-// Company details (Edit + Change logo), HR contact (Edit) + Change password / Delete my account.
+// Wireframe "16 · Company profile": company card (logo + pencil, Log out), current plan,
+// Company details (Edit), HR contact (Edit) + Change password / Delete my account.
 // =====================================================================
 
 // icons
@@ -28,8 +28,23 @@ const PencilIcon = (
     <path d="M4 20h4L19 9l-4-4L4 16z" />
   </svg>
 );
+const BriefcaseIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V4h6v3" />
+  </svg>
+);
+const CalendarIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" />
+  </svg>
+);
+const TrendIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" />
+  </svg>
+);
 
-// A small grey box: label on top, value under it
+// A small grey box: label on top, value under it (wide = takes the full row)
 function Info({ label, children, wide }) {
   return (
     <div className={`cp-info${wide ? ' cp-info--wide' : ''}`}>
@@ -61,12 +76,15 @@ const detailsForm = (c) => ({
 });
 const contactForm = (p) => ({ firstName: p.first_name, lastName: p.last_name, email: p.email });
 
+// "2026-10-03T…" → "Oct 2026"
+const monthYear = (date) => new Date(date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+
 export default function CompanyProfile() {
   const navigate = useNavigate();
   const logoInput = useRef(null);
 
   // ---------- Page state ----------
-  const [profile, setProfile] = useState(null); // { first_name, last_name, email, company }
+  const [profile, setProfile] = useState(null); // { first_name, last_name, email, created_at, company }
   const [plan, setPlan] = useState(null); // GET /plans/mine (null = no plan)
   const [editing, setEditing] = useState(null); // null | 'details' | 'contact'
   const [form, setForm] = useState({});
@@ -167,36 +185,47 @@ export default function CompanyProfile() {
 
   return (
     <main className="container cp">
-      {/* ---------- Company card + Log out ---------- */}
-      <section className="cp-head">
-        <div className="cp-logo-wrap">
-          <CompanyLogo job={{ company_logo: company.logo_url, company_name: company.name, company_id: company.id }} className="cp-logo" />
-          <button type="button" className="cp-logo-edit" aria-label="Change logo" title="Change logo"
-    onClick={() => logoInput.current.click()}>{PencilIcon}</button>
-          <input ref={logoInput} type="file" accept="image/*" hidden onChange={changeLogo} />
+      {/* ---------- Company card: gradient strip, logo + pencil, name, Log out ---------- */}
+      <section className="cp-hero" aria-label="Company">
+        <div className="cp-hero__banner" />
+        <div className="cp-hero__body">
+          <div className="cp-logo-wrap">
+            <CompanyLogo job={{ company_logo: company.logo_url, company_name: company.name, company_id: company.id }} className="cp-logo" />
+            <button type="button" className="cp-logo-edit" aria-label="Change logo" title="Change logo"
+              onClick={() => logoInput.current.click()}>{PencilIcon}</button>
+            <input ref={logoInput} type="file" accept="image/*" hidden onChange={changeLogo} />
+          </div>
+          <div className="cp-hero__text">
+            <h1>{company.name}</h1>
+            <p className="cp-meta">
+              <span>{BriefcaseIcon}Employer account</span>
+              {profile.created_at && <span>{CalendarIcon}Member since {monthYear(profile.created_at)}</span>}
+            </p>
+          </div>
+          <button type="button" className="btn btn--outline cp-logout" onClick={logout}>{LogoutIcon}Log out</button>
         </div>
-
-        <div className="cp-head__who">
-          <h1>{company.name}</h1>
-          <p>Employer Account</p>
-        </div>
-        <button type="button" className="cp-logout" onClick={logout}>{LogoutIcon}Log out</button>
       </section>
 
       {/* ---------- Current plan ---------- */}
       {plan && (
-        <section className="cp-plan">
+        <section className="cp-plan" aria-label="Current plan">
+          <span className="cp-plan__icon">{TrendIcon}</span>
           <div className="cp-plan__text">
             <p className="cp-plan__kicker">CURRENT PLAN</p>
-            <p className="cp-plan__name">
-              {plan.plan.name} · {plan.plan.price_bhd ? `${formatSalary(plan.plan.price_bhd)} / month` : 'Free'}
+            <p className="cp-plan__title">
+              <span className="cp-plan__name">{plan.plan.name}</span>
+              <span className="cp-plan__price">
+                {plan.plan.price_bhd ? `${formatSalary(plan.plan.price_bhd)} / month` : 'Free'}
+              </span>
             </p>
-            <p className="cp-plan__usage">
-              {plan.usage.max_active_jobs == null
-                ? `${plan.usage.active_jobs} active jobs · no limit`
-                : `${plan.usage.active_jobs} of ${plan.usage.max_active_jobs} active jobs used`}
-              {plan.subscription.renews_at && ` · Renews ${formatDeadline(plan.subscription.renews_at)}`}
-            </p>
+            <div className="cp-plan__chips">
+              <span>
+                {plan.usage.max_active_jobs == null
+                  ? `${plan.usage.active_jobs} active jobs · no limit`
+                  : `${plan.usage.active_jobs} of ${plan.usage.max_active_jobs} active jobs used`}
+              </span>
+              {plan.subscription.renews_at && <span>Renews {formatDeadline(plan.subscription.renews_at)}</span>}
+            </div>
           </div>
           {/* no plans page yet, so it can't be clicked */}
           <span className="cp-plan__change" aria-disabled="true" title="Change plan — coming soon">Change plan</span>
@@ -248,6 +277,7 @@ export default function CompanyProfile() {
               <Info label="Location">{company.location}</Info>
               <Info label="Company phone">{company.phone}</Info>
               <Info label="Website" wide>
+                {/* old websites can be saved without https:// → add it, or the link opens inside Fursa */}
                 {company.website && (
                   <a href={/^https?:\/\//.test(company.website) ? company.website : `https://${company.website}`}
                     target="_blank" rel="noreferrer">{company.website.replace(/^https?:\/\//, '')}</a>

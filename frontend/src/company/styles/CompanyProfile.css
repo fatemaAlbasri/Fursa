@@ -8,6 +8,30 @@
   background: var(--navy); color: var(--white); border-radius: 20px; padding: 24px;
   display: flex; flex-wrap: wrap; gap: 18px; align-items: center;
 }
+
+/* logo + pencil button in the corner */
+.cp-logo-wrap { position: relative; flex-shrink: 0; }
+.cp-logo-edit {
+  position: absolute; right: -6px; bottom: -6px; width: 30px; height: 30px; border-radius: 999px;
+  background: #117a7c; color: var(--white); border: 2px solid var(--white);
+  display: grid; place-items: center; cursor: pointer; padding: 0;
+}
+.cp-logo-edit svg { width: 15px; height: 15px; }
+.cp-logo-edit:hover { background: #0e6466; }
+
+/* Website takes the full row */
+.cp-info--wide { grid-column: 1 / -1; }
+
+/* replace the old .cp-logout and .cp-logout:hover */
+.cp-logout { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.cp-logout svg { width: 18px; height: 18px; }
+
+.cp-logout:hover { background: rgba(255, 255, 255, .12); border-color: var(--white); }
+
+
+/* Change password on the left, Delete on the right */
+.cp-links { justify-content: space-between; }
+
 /* logo image, or the first letter in a white box (CompanyLogo adds cp-logo--0…3) */
 .cp-logo {
   width: 72px; height: 72px; border-radius: 18px; background: var(--white); color: #117a7c; object-fit: contain;
@@ -16,12 +40,7 @@
 .cp-head__who { flex: 1 1 240px; }
 .cp-head__who h1 { font-size: 26px; font-weight: 700; }
 .cp-head__who p { color: #c5d3de; }
-.cp-logout {
-  display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 12px;
-  border: 1px solid #f97066; background: transparent; color: #fda29b; font: inherit; font-weight: 700; cursor: pointer;
-}
 .cp-logout svg { width: 18px; height: 18px; }
-.cp-logout:hover { background: rgba(249, 112, 102, .12); }
 
 /* ===== Current plan (teal) ===== */
 .cp-plan {
@@ -54,14 +73,11 @@
 
 /* grey box: label on top, value under it */
 .cp-info { padding: 12px 14px; border-radius: 12px; background: #f4fafa; display: flex; flex-direction: column; min-width: 0; }
-.cp-info--row { flex-direction: row; justify-content: space-between; align-items: center; gap: 12px; }
-.cp-info--row > div { display: flex; flex-direction: column; min-width: 0; }
 .cp-info__label { font-size: 12px; color: #5b7186; font-weight: 600; }
 .cp-info__value { font-weight: 600; overflow-wrap: anywhere; }
 .cp-info__text { white-space: pre-line; }
 .cp-info a, .cp-link { color: #117a7c; font-weight: 700; }
 .cp-info a:hover, .cp-link:hover { color: #0e6466; }
-.cp-link { border: 0; background: none; font: inherit; font-weight: 700; cursor: pointer; padding: 0; }
 
 /* ===== Buttons ===== */
 .cp-links, .cp-actions { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -76,7 +92,7 @@
 .cp-btn--teal { border-color: #117a7c; background: #117a7c; color: var(--white); font-weight: 700; }
 .cp-btn--teal:hover:not(:disabled) { background: #0e6466; }
 .cp-btn--danger { border-color: #f7b4ae; color: #b42318; font-weight: 700; }
-.cp-btn--danger:hover { background: #fff4f2; }
+.cp-btn--danger:hover:not(:disabled) { background: #fef3f2; border-color: #f97066; }
 
 @media (max-width: 640px) {
   .cp-grid { grid-template-columns: 1fr; }
