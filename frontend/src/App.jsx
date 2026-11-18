@@ -12,6 +12,7 @@ import PostJob from './company/pages/PostJob.jsx';
 import JobView from './company/pages/JobView.jsx';
 import RejectApplicants from './company/pages/RejectApplicants.jsx';
 import Applicants from './company/pages/Applicants.jsx';
+import ApplicantView from './company/pages/ApplicantView.jsx';
 import CompanyHome from './company/pages/CompanyHome.jsx';
 import CompanyProfile from './company/pages/CompanyProfile.jsx';
 import DeleteAccount from './company/pages/DeleteAccount.jsx';
@@ -27,7 +28,10 @@ import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx';
 import CvReport from './jobseeker/pages/CvReport.jsx';
 import MyApplications from './jobseeker/pages/MyApplications.jsx';
 import ApplicationDetails from './jobseeker/pages/ApplicationDetails.jsx';
+import Notifications from './shared/pages/Notifications.jsx';
+import Profile from './jobseeker/pages/Profile.jsx';
 import UserInitials from './jobseeker/components/UserInitials.jsx';
+import NotificationBell from './shared/components/NotificationBell.jsx';
 import { NavbarAccount } from './shared/components/Navbar.jsx';
 import { HomeIcon, BuildingIcon, SparkleIcon, FileIcon } from './shared/components/icons.jsx';
 
@@ -62,7 +66,7 @@ export default function App() {
         element={
           <Layout
             right={
-              <Link to="/jobseeker" className="back-link">
+              <Link to="/jobseeker/profile" className="back-link">
                 ← Back to profile
               </Link>
             }
@@ -127,7 +131,7 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* Job seeker pages: shared Navbar (Jobs for you and Companies work so far) + bell / profile */}
-      <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} />} />}>
+      <Route element={<Layout links={SEEKER_LINKS} right={<NavbarAccount avatar={<UserInitials />} bell={<NotificationBell to="/jobseeker/notifications" />} to="/jobseeker/profile"/>} />}>
 
         <Route path="/jobseeker/jobs" element={<JobsForYou />} />
         <Route path="/jobseeker/jobs/all" element={<AllJobs />} />
@@ -143,6 +147,10 @@ export default function App() {
         <Route path="/jobseeker/applications" element={<MyApplications />} />
         {/* :id = the application's real id, e.g. /jobseeker/applications/5 */}
         <Route path="/jobseeker/applications/:id" element={<ApplicationDetails />} />
+        {/* Notifications: newest first, mark as read, opens the related page */}
+        <Route path="/jobseeker/notifications" element={<Notifications role="jobseeker" />} />
+        {/* Profile: personal details, skills, preferences, CV and account */}
+        <Route path="/jobseeker/profile" element={<Profile />} />
       </Route>
       {/* Job seeker home = Jobs for you (Sign in / Sign up send seekers to /jobseeker) */}
       <Route
@@ -157,7 +165,10 @@ export default function App() {
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView startEditing />} />
         <Route path="jobs/:id/reject" element={<RejectApplicants />} />
+        {/* one applicant: :id = job id, :appId = application id */}
+        <Route path="jobs/:id/applicants/:appId" element={<ApplicantView />} />
         <Route path="applicants" element={<Applicants />} />
+        <Route path="notifications" element={<Notifications role="company" />} />
         <Route path="profile" element={<CompanyProfile />} />
       </Route>
     </Routes>

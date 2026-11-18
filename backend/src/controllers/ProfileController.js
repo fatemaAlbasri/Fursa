@@ -50,7 +50,7 @@ const getProfile = async (req, res, next) => {
   try {
     const id = req.user.id
     const { rows: users } = await db.query(
-      'SELECT id, first_name, last_name, email, role FROM users WHERE id = $1',
+      'SELECT id, first_name, last_name, email, role, created_at FROM users WHERE id = $1',
       [id]
     )
     if (!users[0]) return res.status(404).json({ error: 'Account not found' })

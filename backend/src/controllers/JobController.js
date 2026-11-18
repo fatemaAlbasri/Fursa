@@ -1,5 +1,6 @@
 const db = require('../config/db')
 const { saveJobEmbedding, rescoreJob } = require('../services/matching')
+const { cleanCvText } = require('../services/cvOptimizer')
 const { inTransaction } = require('../config/transaction')
 
 // Runs in the background: the job is still scored without the CV component if embedding fails
@@ -500,7 +501,21 @@ const closeJob = async (req, res, next) => {
       return res.status(409).json({ error: 'This job is already closed.' })
     }
 
-    await db.query(`UPDATE jobs SET status = 'closed' WHERE id = $1`, [jobId])
+    // Close the job and add a "Job closed" notification for the company
+    await db.query(
+      `WITH closed AS (
+         UPDATE jobs SET status = 'closed' WHERE id = $1
+         RETURNING id, title
+       )
+       INSERT INTO notifications (user_id, job_id, type, title, message)
+       SELECT $2, closed.id, 'job_closed',
+              LEFT('Job closed: ' || closed.title, 150),
+              (SELECT COUNT(*) FROM applications a
+                WHERE a.job_id = closed.id AND a.status IN ('applied', 'shortlisted', 'interview'))
+                || ' applicants are waiting for a decision.'
+         FROM closed`,
+      [jobId, req.user.id]
+    )
 
     const updated = await loadJob(jobId)
     updated.stats = await jobStats(jobId)
@@ -587,6 +602,15 @@ const moveApplication = async (
     'UPDATE applications SET status = $2, rejection_reason = $3 WHERE id = $1',
     [app.id, to, to === 'rejected' ? reason : null]
   )
+  // rejected after an interview → the interview is over
+  if (to === 'rejected' && app.status === 'interview') {
+    await client.query(
+      `UPDATE interviews SET status = 'done'
+        WHERE id = (SELECT id FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1)`,
+      [app.id]
+    )
+  }
+
   await client.query(
     `INSERT INTO application_history (application_id, changed_by, from_status, to_status)
      VALUES ($1, $2, $3, $4)`,
@@ -613,15 +637,16 @@ const getOneApplicant = async (req, res, next) => {
       `SELECT a.id, a.status, a.rejection_reason, a.applied_at,
               u.first_name, u.last_name, u.email, sp.phone,
               sp.major, sp.years_experience,
-              r.file_name AS cv_file_name, r.file_url AS cv_url,
+              r.file_name AS cv_file_name, r.file_url AS cv_url, r.parsed_text AS cv_text,
               j.title AS job_title, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
-              m.score, m.tier, COALESCE(m.is_qualified, true) AS is_qualified,
+              m.score, COALESCE(m.is_qualified, true) AS is_qualified,
               -- Rank #: 1 + how many applicants of this job scored higher
               CASE WHEN m.score IS NULL THEN NULL ELSE
                 (SELECT COUNT(*) + 1 FROM applications a2
                    JOIN match_scores m2 ON m2.job_id = a2.job_id AND m2.seeker_id = a2.seeker_id
                   WHERE a2.job_id = a.job_id AND m2.score > m.score)::int
               END AS rank,
+              (SELECT COUNT(*) FROM applications WHERE job_id = a.job_id)::int AS total_applicants,
               -- "Why this score": every job skill, must-have or not, in the CV or not
               COALESCE((SELECT json_agg(json_build_object(
                           'name', s.name, 'required', js.is_required, 'has', ss.skill_id IS NOT NULL)
@@ -643,27 +668,57 @@ const getOneApplicant = async (req, res, next) => {
     if (rows.length === 0)
       return res.status(404).json({ error: 'Applicant not found' })
 
-    // interview (null if none yet); confirmed,reschedule_requested 
-    const { rows: interviews } = await db.query(
-      `SELECT id, scheduled_at, type, location_or_link, note_to_applicant, employer_notes, status
-         FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1`,
-      [appId]
-    )
-    const { rows: history } = await db.query(
-      `SELECT from_status, to_status, changed_at
-         FROM application_history WHERE application_id = $1 ORDER BY changed_at, id`,
-      [appId]
-    )
+    // these don't depend on each other so run them at the same time
+    const [{ rows: interviews }, { rows: history }, { rows: nav }] =
+      await Promise.all([
+        // latest interview, null if there isn't one yet
+        db.query(
+          `SELECT id, scheduled_at, type, location_or_link, note_to_applicant, employer_notes, status
+           FROM interviews WHERE application_id = $1 ORDER BY id DESC LIMIT 1`,
+          [appId]
+        ),
+        db.query(
+          `SELECT from_status, to_status, changed_at
+           FROM application_history WHERE application_id = $1 ORDER BY changed_at, id`,
+          [appId]
+        ),
+        // previous / next applicant, same order as the applicants list
+        db.query(
+          `SELECT position, prev_id, next_id FROM (
+           SELECT a.id,
+                  (ROW_NUMBER() OVER w)::int AS position,
+                  LAG(a.id)  OVER w AS prev_id,
+                  LEAD(a.id) OVER w AS next_id
+             FROM applications a
+             LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+            WHERE a.job_id = $1
+           WINDOW w AS (ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id)
+         ) t
+         WHERE id = $2`,
+          [jobId, appId]
+        )
+      ])
 
-    res.json({ applicant: rows[0], interview: interviews[0] || null, history })
+    // cv text for the highlighted view, null if the file couldn't be read
+    const applicant = {
+      ...rows[0],
+      cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null
+    }
+
+    res.json({
+      applicant,
+      interview: interviews[0] || null,
+      history,
+      nav: nav[0]
+    })
   } catch (err) {
     next(err)
   }
 }
 
 // PATCH /api/jobs/mine/:id/applicants/:appId  { status, reason? } (company)
-// shortlisted (also Undo from rejected) 
-// rejected (reason required) 
+// shortlisted (also Undo from rejected)
+// rejected (reason required)
 // accepted (after interview)
 const updateOneApplicant = async (req, res, next) => {
   try {
@@ -696,8 +751,16 @@ const updateOneApplicant = async (req, res, next) => {
   }
 }
 
+// Interview time in Bahrain, e.g. "20 Oct, 10:00 AM" (used in the seeker's notification)
+// Some Node versions put a narrow no-break space before AM/PM; make it a normal one.
+const formatInterviewTime = (when) => {
+  const day = when.toLocaleDateString('en-GB', { timeZone: 'Asia/Bahrain', day: 'numeric', month: 'short' })
+  const time = when.toLocaleTimeString('en-US', { timeZone: 'Asia/Bahrain', hour: 'numeric', minute: '2-digit' })
+  return `${day}, ${time}`.replace(/\s/g, ' ')
+}
+
 // POST /api/jobs/mine/:id/applicants/:appId/interview { date, time, type, location, note? } (company)
-// shortlisted → schedules it and moves to "interview" 
+// shortlisted → schedules it and moves to "interview"
 // already "interview" → reschedules it
 const scheduleInterview = async (req, res, next) => {
   try {
@@ -737,12 +800,18 @@ const scheduleInterview = async (req, res, next) => {
         await notifySeeker(client, app, [
           'interview',
           'Interview rescheduled',
-          `${app.company_name} changed your interview time for ${app.title}.`
+          `${app.company_name} moved your interview for ${app.title} to ${formatInterviewTime(scheduledAt)}.`
         ])
         return 'rescheduled'
       }
 
-      await moveApplication(client, app, 'interview', req.user.id)
+      // notify: false → the notice below has the interview date, the generic one doesn't
+      await moveApplication(client, app, 'interview', req.user.id, { notify: false })
+      await notifySeeker(client, app, [
+        'interview',
+        'Interview scheduled',
+        `${app.company_name} invited you to an interview for ${app.title} on ${formatInterviewTime(scheduledAt)}.`
+      ])
       await client.query(
         `INSERT INTO interviews (application_id, scheduled_at, type, location_or_link, note_to_applicant)
          VALUES ($1, $2, $3, $4, $5)`,
@@ -803,7 +872,7 @@ const getApplicants = async (req, res, next) => {
          JOIN users u ON u.id = a.seeker_id
          LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
         WHERE a.job_id = $1 AND c.user_id = $2
-        ORDER BY m.score DESC NULLS LAST, a.applied_at`,
+        ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id`,
       [jobId, req.user.id]
     )
     res.json({ applicants: rows })

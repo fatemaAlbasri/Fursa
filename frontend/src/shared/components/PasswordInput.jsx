@@ -2,13 +2,15 @@ import { useState } from 'react';
 
 // Password box with an eye button to show / hide the password.
 // readOnly until the user clicks in it stops the browser from auto-filling saved passwords.
-export default function PasswordInput({ name = 'password', value, onChange, placeholder }) {
+// `id` (optional) links the box to its <label htmlFor>.
+export default function PasswordInput({ name = 'password', value, onChange, placeholder, id }) {
   const [show, setShow] = useState(false);
   const [locked, setLocked] = useState(true);
 
   return (
     <div className="password">
       <input
+        id={id}
         name={name}
         type={show ? 'text' : 'password'}
         placeholder={placeholder}
