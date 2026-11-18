@@ -95,7 +95,7 @@ export default function App() {
         />
         <Route path="/company/delete-account" element={<DeleteAccount />} />
       </Route>
-      {/* Change plan: logo + "Employer" and a back link (no employer menu, like the wireframe) */}
+      {/* plans page: just the logo and a back link */}
       <Route
         element={
           <Layout
@@ -110,7 +110,7 @@ export default function App() {
       >
         <Route path="/company/plans" element={<Plans />} />
       </Route>
-      {/* Payment: logo + "Secure checkout" */}
+      {/* payment page */}
       <Route
         element={
           <Layout
