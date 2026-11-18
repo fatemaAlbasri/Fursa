@@ -295,7 +295,7 @@ export default function CompanyProfile() {
       {/* ---------- HR contact (login) ---------- */}
       <section className="cp-card">
         <div className="cp-card__head">
-          <h2>HR contact (login)</h2>
+          <h2>HR contact</h2>
           {editing !== 'contact' && <button type="button" className="cp-edit" onClick={() => startEdit('contact')}>Edit</button>}
         </div>
 
