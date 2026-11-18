@@ -4,6 +4,7 @@ import { api } from '../../shared/api.js';
 import { formatSalary, formatDeadline } from '../../shared/utils/jobFormat.js';
 import CompanyLogo from '../../jobseeker/components/CompanyLogo.jsx';
 import Notice from '../../shared/components/Notice.jsx';
+import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx';
 import '../styles/CompanyProfile.css';
 
 // =====================================================================
@@ -91,6 +92,7 @@ export default function CompanyProfile() {
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(null); // { type: 'success' | 'error', text }
+  const [uploading, setUploading] = useState(false);
 
   // ---------- Load from the backend ----------
   useEffect(() => {
@@ -103,12 +105,12 @@ export default function CompanyProfile() {
   }, []);
 
   if (!profile) {
-    return (
-      <main className="container cp">
-        <Notice notice={notice} />
-      </main>
-    );
-  }
+  return (
+    <main className="container cp">
+      {notice ? <Notice notice={notice} /> : <Loading text="Loading your profile…" />}
+    </main>
+  );
+}
 
   const company = profile.company || {};
 
@@ -155,14 +157,17 @@ export default function CompanyProfile() {
     const file = e.target.files[0];
     e.target.value = ''; // picking the same file again still works
     if (!file) return;
+    setUploading(true);
     const body = new FormData();
     body.append('logo', file);
     try {
       const data = await api('/profile/company/logo', { method: 'PUT', body });
       setProfile({ ...profile, company: { ...company, logo_url: data.logo_url } });
       setNotice({ type: 'success', text: 'Logo changed.' });
-    } catch (err) {
+        } catch (err) {
       setNotice({ type: 'error', text: err.error || 'Could not change the logo.' });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -178,7 +183,7 @@ export default function CompanyProfile() {
     <div className="cp-actions">
       <button type="button" className="cp-btn" onClick={cancelEdit} disabled={busy}>Cancel</button>
       <button type="button" className="cp-btn cp-btn--teal" onClick={save} disabled={busy}>
-        {busy ? 'Saving…' : 'Save'}
+        {busy ? <><ButtonSpinner />Saving…</> : 'Save'}
       </button>
     </div>
   );
@@ -191,8 +196,8 @@ export default function CompanyProfile() {
         <div className="cp-hero__body">
           <div className="cp-logo-wrap">
             <CompanyLogo job={{ company_logo: company.logo_url, company_name: company.name, company_id: company.id }} className="cp-logo" />
-            <button type="button" className="cp-logo-edit" aria-label="Change logo" title="Change logo"
-              onClick={() => logoInput.current.click()}>{PencilIcon}</button>
+            <button type="button" className="cp-logo-edit" aria-label="Change logo" title="Change logo" disabled={uploading} onClick={() => logoInput.current.click()}> {uploading ? <ButtonSpinner /> : PencilIcon}
+            </button>
             <input ref={logoInput} type="file" accept="image/*" hidden onChange={changeLogo} />
           </div>
           <div className="cp-hero__text">
