@@ -16,6 +16,8 @@ import ApplicantView from './company/pages/ApplicantView.jsx';
 import CompanyHome from './company/pages/CompanyHome.jsx';
 import CompanyProfile from './company/pages/CompanyProfile.jsx';
 import DeleteAccount from './company/pages/DeleteAccount.jsx';
+import Plans from './company/pages/Plans.jsx';
+import Payment from './company/pages/Payment.jsx';
 
 import JobsForYou from './jobseeker/pages/JobsForYou.jsx';
 import JobDetails from './jobseeker/pages/JobDetails.jsx';
@@ -92,6 +94,34 @@ export default function App() {
           element={<ChangePassword role="company" />}
         />
         <Route path="/company/delete-account" element={<DeleteAccount />} />
+      </Route>
+      {/* plans page: just the logo and a back link */}
+      <Route
+        element={
+          <Layout
+            tag="Employer"
+            right={
+              <Link to="/company/profile" className="back-link">
+                ← Back
+              </Link>
+            }
+          />
+        }
+      >
+        <Route path="/company/plans" element={<Plans />} />
+      </Route>
+      {/* payment page */}
+      <Route
+        element={
+          <Layout
+            right={
+              <Link to="/company/plans" className="back-link">← Back</Link>
+            }
+          />
+        }
+      >
+        {/* :planId = the plan's real id, e.g. /company/payment/2 */}
+        <Route path="/company/payment/:planId" element={<Payment />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
 

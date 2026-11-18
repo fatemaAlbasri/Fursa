@@ -306,14 +306,9 @@ export default function CompanyProfile() {
               )}
             </div>
           </div>
-          {/* disabled until we have a plans page */}
-          <span
-            className="cp-plan__change"
-            aria-disabled="true"
-            title="Change plan — coming soon"
-          >
+          <Link to="/company/plans" className="cp-plan__change">
             Change plan
-          </span>
+          </Link>
         </section>
       )}
 

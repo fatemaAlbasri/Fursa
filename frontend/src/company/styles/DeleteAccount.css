@@ -114,8 +114,13 @@
   color: var(--da-teal);
   flex-shrink: 0;
 }
-.da-alt b {
+.da-alt a {
   color: var(--da-teal);
+  font-weight: 700;
+}
+.da-alt a:hover {
+  color: var(--da-teal-hover);
+  text-decoration: underline;
 }
 
 /* shake on wrong password */

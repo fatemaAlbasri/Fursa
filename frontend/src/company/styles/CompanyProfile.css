@@ -204,8 +204,9 @@
   background: var(--cp-teal);
   color: var(--white);
   font-weight: 700;
-  opacity: 0.6;
-  cursor: not-allowed;
+}
+.cp-plan__change:hover {
+  background: var(--cp-teal-hover);
 }
 
 /* cards */

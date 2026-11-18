@@ -77,10 +77,9 @@ export default function DeleteAccount() {
           ))}
         </div>
 
-        {/* just text for now, no plans page yet */}
         <p className="da-alt">
           <InfoIcon />
-          <span>Only want to stop paying? You can <b>change your plan instead.</b></span>
+          <span>Only want to stop paying? You can <Link to="/company/plans">change your plan instead.</Link></span>
         </p>
 
         <div className="field">
