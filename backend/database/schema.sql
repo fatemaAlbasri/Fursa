@@ -70,7 +70,7 @@ CREATE TABLE skills (
 );
 
 -- "React" and "react" are the same skill
-CREATE UNIQUE INDEX skills_name_key ON skills (lower(trim(name)));
+CREATE UNIQUE INDEX skills_name_lower_key ON skills (lower(trim(name)));
 
 
 CREATE TABLE seeker_skills (
