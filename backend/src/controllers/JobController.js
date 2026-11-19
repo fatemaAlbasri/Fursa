@@ -868,21 +868,24 @@ const getApplicants = async (req, res, next) => {
     if (!jobId) {
       return res.status(400).json({ error: 'Invalid job id' })
     }
+    
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
 
     const { rows } = await db.query(
       `SELECT a.id, a.status, a.applied_at, u.first_name, u.last_name,
-              m.score, COALESCE(m.is_qualified, true) AS is_qualified,
-              COALESCE(m.breakdown->'missing', '[]') AS missing
+              CASE WHEN $3 THEN m.score END AS score,
+              COALESCE(m.is_qualified, true) AS is_qualified,
+              CASE WHEN $4 THEN COALESCE(m.breakdown->'missing', '[]') ELSE '[]' END AS missing
          FROM applications a
          JOIN jobs j ON j.id = a.job_id
          JOIN companies c ON c.id = j.company_id
          JOIN users u ON u.id = a.seeker_id
          LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
         WHERE a.job_id = $1 AND c.user_id = $2
-        ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id`,
-      [jobId, req.user.id]
+        ORDER BY CASE WHEN $3 THEN m.score END DESC NULLS LAST, a.applied_at, a.id`,
+      [jobId, req.user.id, features.ai_ranking, features.match_reasons]
     )
-    res.json({ applicants: rows })
+    res.json({ applicants: rows, features })
   } catch (err) {
     next(err)
   }
