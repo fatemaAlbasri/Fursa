@@ -63,9 +63,9 @@ async function rescoreJob(jobId) {
   for (const seeker of rows) await scorePair(seeker.user_id, jobId)
 }
 
-// After a job is scored: tell seekers it's a strong match for (80%+).
-// Skips seekers who already applied or were already told about this job,
-// so editing the job never sends the same notification twice.
+// Tells seekers about a job they are a strong match for (80% or more)
+// Skips anyone who already applied or was already told about this job,
+// so editing a job doesn't send the same notification again
 async function notifyNewMatches(jobId) {
   await db.query(
     `INSERT INTO notifications (user_id, job_id, type, title, message)
