@@ -192,6 +192,15 @@ async function createReview(req, res, next) {
           [rows[0].id, s.section, s.before, s.after, s.reason, s.points, i === 0]
         )
       }
+      // Lets the seeker know the review is ready, in case they left the page while it was running
+      await client.query(
+        `INSERT INTO notifications (user_id, type, title, message) VALUES ($1, 'cv_ready', $2, $3)`,
+        [
+          req.user.id,
+          'Your CV review is ready',
+          `Your CV scored ${result.strength}/100. Open the AI CV Optimizer to see how to improve it.`
+        ]
+      )
       await client.query('COMMIT')
     } catch (err) {
       await client.query('ROLLBACK')

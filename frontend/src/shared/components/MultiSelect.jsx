@@ -1,19 +1,14 @@
 import { useState } from 'react';
-
-// Suggested skills — the same list employers use when posting a job, so these match exactly.
-// The user can also type a skill that isn't listed. Later this will come from the backend: GET /api/skills
-export const SKILLS = [
-  'JavaScript', 'React', 'Node.js', 'SQL', 'PostgreSQL', 'Python', 'Java', 'C#',
-  'HTML', 'CSS', 'Git', 'Networking', 'Excel', 'Power BI', 'Data Analysis',
-  'UI/UX Design', 'Communication', 'English', 'Arabic',
-];
+import { useSkills } from '../utils/skills.js';
 
 const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 
 // A "pick many" box: choose from the list or type your own (Enter). Used for Skills and Languages.
 // showChips=false hides the chips inside the box (when the parent lists the picked items itself).
-// options = the suggestions to show (skills by default; the job form passes LANGUAGES for Language).
-export default function MultiSelect({ value, onChange, showChips = true, id, placeholder, options: suggestions = SKILLS }) {
+// options = the suggestions to show. Without it, the skills list from the backend is used
+export default function MultiSelect({ value, onChange, showChips = true, id, placeholder, options: optionsProp }) {
+  const skills = useSkills();
+  const suggestions = optionsProp ?? skills;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 

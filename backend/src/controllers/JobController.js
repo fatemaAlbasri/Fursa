@@ -1,6 +1,7 @@
 const db = require('../config/db')
-const { saveJobEmbedding, rescoreJob } = require('../services/matching')
+const { saveJobEmbedding, rescoreJob, notifyNewMatches } = require('../services/matching')
 const { cleanCvText } = require('../services/cvOptimizer')
+const { skillIds } = require('../services/skills')
 const { inTransaction } = require('../config/transaction')
 
 // Runs in the background: the job is still scored without the CV component if embedding fails
@@ -8,6 +9,7 @@ const scoreOpenJob = (jobId) =>
   saveJobEmbedding(jobId)
     .catch((err) => console.error('Job embedding failed:', err.message))
     .then(() => rescoreJob(jobId))
+    .then(() => notifyNewMatches(jobId))
     .catch((err) => console.error('Scoring failed:', err.message))
 
 // GET /api/jobs → view all jobs (jobseeker)
@@ -270,7 +272,7 @@ const planLimitError = (max) => ({
   error: `Your plan allows ${max} active job(s). Upgrade your plan or save it as a draft.`
 })
 
-// The company's plan features (has_bulk_actions, has_ai_ranking...)
+// Reads the company's plan features
 const loadPlanFeatures = async (companyUserId) => {
   const { rows } = await db.query(
     `SELECT p.has_ai_ranking, p.has_match_reasons, p.has_bulk_actions, p.has_hiring_summary
@@ -283,19 +285,23 @@ const loadPlanFeatures = async (companyUserId) => {
   return rows[0] || {}
 }
 
-// Adds any skill that isn't in the skills table yet, then links all of them to the job
+// Same names the Plans page uses, so the frontend knows what's locked
+const featuresOut = (f) => ({
+  ai_ranking: Boolean(f.has_ai_ranking),
+  match_reasons: Boolean(f.has_match_reasons),
+  bulk_actions: Boolean(f.has_bulk_actions),
+  hiring_summary: Boolean(f.has_hiring_summary)
+})
+
+// Saves the job's skills. New skill names are added to the skills list
 const saveJobSkills = async (client, jobId, skills) => {
-  const names = skills.map((s) => s.name)
-  const required = skills.filter((s) => s.is_required).map((s) => s.name)
+  const allIds = await skillIds(client, skills.map((s) => s.name))
+  const requiredIds = await skillIds(client, skills.filter((s) => s.is_required).map((s) => s.name))
 
   await client.query(
-    `INSERT INTO skills (name) SELECT unnest($1::text[]) ON CONFLICT (name) DO NOTHING`,
-    [names]
-  )
-  await client.query(
     `INSERT INTO job_skills (job_id, skill_id, is_required)
-     SELECT $1, id, name = ANY($3::text[]) FROM skills WHERE name = ANY($2::text[])`,
-    [jobId, names, required]
+     SELECT $1, id, id = ANY($3::int[]) FROM unnest($2::int[]) AS id`,
+    [jobId, allIds, requiredIds]
   )
 }
 
@@ -633,6 +639,8 @@ const getOneApplicant = async (req, res, next) => {
     const appId = parseAppId(req)
     if (!jobId || !appId) return res.status(400).json({ error: 'Invalid id' })
 
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
+
     const { rows } = await db.query(
       `SELECT a.id, a.status, a.rejection_reason, a.applied_at,
               u.first_name, u.last_name, u.email, sp.phone,
@@ -692,10 +700,10 @@ const getOneApplicant = async (req, res, next) => {
              FROM applications a
              LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
             WHERE a.job_id = $1
-           WINDOW w AS (ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id)
+           WINDOW w AS (ORDER BY CASE WHEN $3 THEN m.score END DESC NULLS LAST, a.applied_at, a.id)
          ) t
          WHERE id = $2`,
-          [jobId, appId]
+          [jobId, appId, features.ai_ranking]
         )
       ])
 
@@ -705,11 +713,19 @@ const getOneApplicant = async (req, res, next) => {
       cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null
     }
 
+// Free plan: no score, rank or match reasons
+    if (!features.ai_ranking) {
+      applicant.score = null
+      applicant.rank = null
+    }
+    if (!features.match_reasons) applicant.skills = []
+
     res.json({
       applicant,
       interview: interviews[0] || null,
       history,
-      nav: nav[0]
+      nav: nav[0],
+      features
     })
   } catch (err) {
     next(err)
@@ -862,20 +878,23 @@ const getApplicants = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid job id' })
     }
 
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
+
     const { rows } = await db.query(
       `SELECT a.id, a.status, a.applied_at, u.first_name, u.last_name,
-              m.score, COALESCE(m.is_qualified, true) AS is_qualified,
-              COALESCE(m.breakdown->'missing', '[]') AS missing
+              CASE WHEN $3 THEN m.score END AS score,
+              COALESCE(m.is_qualified, true) AS is_qualified,
+              CASE WHEN $4 THEN COALESCE(m.breakdown->'missing', '[]') ELSE '[]' END AS missing
          FROM applications a
          JOIN jobs j ON j.id = a.job_id
          JOIN companies c ON c.id = j.company_id
          JOIN users u ON u.id = a.seeker_id
          LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
         WHERE a.job_id = $1 AND c.user_id = $2
-        ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id`,
-      [jobId, req.user.id]
+        ORDER BY CASE WHEN $3 THEN m.score END DESC NULLS LAST, a.applied_at, a.id`,
+      [jobId, req.user.id, features.ai_ranking, features.match_reasons]
     )
-    res.json({ applicants: rows })
+    res.json({ applicants: rows, features })
   } catch (err) {
     next(err)
   }
@@ -897,8 +916,8 @@ const updateApplicants = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid status' })
 
     // Free plan has no bulk actions (Plans page)
-    const features = await loadPlanFeatures(req.user.id)
-    if (!features.has_bulk_actions) {
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
+    if (!features.bulk_actions) {
       return res.status(403).json({
         error: 'Bulk shortlist / reject is on the Starter and Growth plans. Upgrade to use it.'
       })
@@ -926,6 +945,141 @@ const updateApplicants = async (req, res, next) => {
       updated,
       skipped: ids.filter((id) => !updated.includes(id)),
       status
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// Hiring summary rules. Starting values, change them after testing with real data
+const SUMMARY_MIN_APPLICANTS = 5 // fewer applicants is too early to judge
+const SUMMARY_SHORTLIST_DAYS = 7 // first shortlist within a week is on track
+const SUMMARY_LOW_SHARE = 0.6 // over 60% low matches needs attention
+
+// whole days between two dates, null if one is missing
+const daysBetween = (from, to) =>
+  from && to ? Math.max(0, Math.round((new Date(to) - new Date(from)) / 86400000)) : null
+
+// The status shown at the top of the summary
+const pickVerdict = ({ funnel, quality, speed, daysOpen }) => {
+  if (funnel.applied < SUMMARY_MIN_APPLICANTS) {
+    return { status: 'just_started', message: 'Not enough applicants yet to judge. Check back in a few days.' }
+  }
+  if (funnel.hired > 0) {
+    const days = speed.time_to_hire_days
+    return {
+      status: 'on_track',
+      message: days === null ? 'You already hired someone.' : `You already hired someone in ${days} days.`
+    }
+  }
+  const scored = quality.strong + quality.good + quality.low
+  if (scored > 0 && quality.low / scored > SUMMARY_LOW_SHARE) {
+    return { status: 'needs_attention', message: 'Most applicants are a low match. See the tip below.' }
+  }
+  if (speed.first_shortlist_days !== null && speed.first_shortlist_days <= SUMMARY_SHORTLIST_DAYS) {
+    return { status: 'on_track', message: 'You shortlisted quickly. Keep moving applicants forward.' }
+  }
+  if (speed.first_shortlist_days === null && daysOpen <= SUMMARY_SHORTLIST_DAYS) {
+    return { status: 'on_track', message: 'Applicants are coming in. Start shortlisting the best matches.' }
+  }
+  return { status: 'needs_attention', message: 'Shortlisting is slow. Review your applicants.' }
+}
+
+// GET /api/jobs/mine/:id/summary  hiring summary for one job (company, Growth plan)
+const getJobSummary = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) return res.status(400).json({ error: 'Invalid job id' })
+
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
+    if (!features.hiring_summary) {
+      return res.status(403).json({
+        error: 'The hiring summary is on the Growth plan. Upgrade to use it.',
+        upgrade: true
+      })
+    }
+
+    // the job must belong to this company
+    const { rows: jobs } = await db.query(
+      `SELECT j.id, j.title, j.status, j.created_at
+         FROM jobs j
+         JOIN companies c ON c.id = j.company_id
+        WHERE j.id = $1 AND c.user_id = $2`,
+      [jobId, req.user.id]
+    )
+    if (jobs.length === 0) return res.status(404).json({ error: 'Job not found' })
+    const job = jobs[0]
+
+    // these don't depend on each other so run them at the same time
+    const [{ rows: f }, { rows: q }, { rows: t }, { rows: missing }] = await Promise.all([
+      // how many applicants reached each stage, even if they were rejected later
+      db.query(
+        `SELECT COUNT(*)::int AS applied,
+                COUNT(*) FILTER (WHERE a.status IN ('shortlisted','interview','accepted')
+                  OR EXISTS (SELECT 1 FROM application_history h WHERE h.application_id = a.id
+                              AND h.to_status IN ('shortlisted','interview','accepted')))::int AS shortlisted,
+                COUNT(*) FILTER (WHERE a.status IN ('interview','accepted')
+                  OR EXISTS (SELECT 1 FROM application_history h WHERE h.application_id = a.id
+                              AND h.to_status IN ('interview','accepted')))::int AS interview,
+                COUNT(*) FILTER (WHERE a.status = 'accepted'
+                  OR EXISTS (SELECT 1 FROM application_history h WHERE h.application_id = a.id
+                              AND h.to_status = 'accepted'))::int AS hired
+           FROM applications a
+          WHERE a.job_id = $1`,
+        [jobId]
+      ),
+      // average match and how many strong, good and low matches
+      db.query(
+        `SELECT ROUND(AVG(m.score))::int AS average_score,
+                COUNT(*) FILTER (WHERE m.tier = 'strong')::int AS strong,
+                COUNT(*) FILTER (WHERE m.tier = 'good')::int AS good,
+                COUNT(*) FILTER (WHERE m.tier = 'low')::int AS low
+           FROM applications a
+           JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+          WHERE a.job_id = $1`,
+        [jobId]
+      ),
+      // when the first applicant reached each stage
+      db.query(
+        `SELECT MIN(h.changed_at) FILTER (WHERE h.to_status = 'shortlisted') AS first_shortlist_at,
+                MIN(h.changed_at) FILTER (WHERE h.to_status = 'interview') AS first_interview_at,
+                MIN(h.changed_at) FILTER (WHERE h.to_status = 'accepted') AS first_hire_at
+           FROM application_history h
+           JOIN applications a ON a.id = h.application_id
+          WHERE a.job_id = $1`,
+        [jobId]
+      ),
+      // the must-have skill most applicants are missing
+      db.query(
+        `SELECT s.name, COUNT(*)::int AS count
+           FROM applications a
+           JOIN job_skills js ON js.job_id = a.job_id AND js.is_required
+           JOIN skills s ON s.id = js.skill_id
+           LEFT JOIN seeker_skills ss ON ss.seeker_id = a.seeker_id AND ss.skill_id = js.skill_id
+          WHERE a.job_id = $1 AND ss.skill_id IS NULL
+          GROUP BY s.name
+          ORDER BY count DESC, s.name
+          LIMIT 1`,
+        [jobId]
+      )
+    ])
+
+    const funnel = f[0]
+    const quality = q[0]
+    const speed = {
+      first_shortlist_days: daysBetween(job.created_at, t[0].first_shortlist_at),
+      first_interview_days: daysBetween(job.created_at, t[0].first_interview_at),
+      time_to_hire_days: daysBetween(job.created_at, t[0].first_hire_at)
+    }
+    const daysOpen = daysBetween(job.created_at, new Date())
+
+    res.json({
+      job,
+      verdict: pickVerdict({ funnel, quality, speed, daysOpen }),
+      funnel,
+      speed,
+      quality,
+      tip: missing[0] ? { ...missing[0], of: funnel.applied } : null
     })
   } catch (err) {
     next(err)
@@ -1060,6 +1214,7 @@ module.exports = {
   closeJob,
   getApplicants,
   updateApplicants,
+  getJobSummary,
   applyToJob,
   getOneApplicant,
   updateOneApplicant,

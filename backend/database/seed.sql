@@ -10,11 +10,15 @@ INSERT INTO plans (id, name, price_bhd_month, max_active_jobs, has_ai_ranking, h
  (2, 'Starter', 15.000, 2,    true,  true,  true,  false),
  (3, 'Growth',  35.000, NULL, true,  true,  true,  true);
 
--- ---------- Skills ----------
+-- ---------- Skills (a starter list, users can add more) ----------
 INSERT INTO skills (id, name) VALUES
  (1,'JavaScript'),(2,'React'),(3,'SQL'),(4,'HTML'),(5,'CSS'),(6,'Git'),(7,'Node.js'),
  (8,'Python'),(9,'Excel'),(10,'Power BI'),(11,'Networking'),(12,'English'),(13,'Arabic'),
- (14,'Customer Service'),(15,'Java');
+ (14,'Customer Service'),(15,'Java'),
+ (16,'TypeScript'),(17,'Express'),(18,'PostgreSQL'),(19,'MySQL'),(20,'MongoDB'),
+ (21,'C#'),(22,'C++'),(23,'PHP'),(24,'Linux'),(25,'Tableau'),(26,'Data Analysis'),
+ (27,'Machine Learning'),(28,'UI/UX Design'),(29,'Figma'),(30,'Communication'),
+ (31,'Project Management'),(32,'Accounting');
 
 -- ---------- Users (1 admin, 4 employers, 6 seekers) ----------
 INSERT INTO users (id, first_name, last_name, email, password_hash, role) VALUES

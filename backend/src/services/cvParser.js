@@ -4,18 +4,14 @@ const { PDFParse } = require('pdf-parse')
 const WordExtractor = require('word-extractor')
 const db = require('../config/db')
 const { extractWithAi, embedText, aiEnabled } = require('./cvAi')
+const { listSkills } = require('./skills')
+
+// Skill names to look for in a CV (the whole skills list, not just the top 200)
+const knownSkillNames = () => listSkills(1000)
 
 // Same options as the dropdowns on the sign up page, so the form can be pre-filled
 const MAJORS = ['Computer Science', 'Information Systems', 'Computer Engineering', 'Business', 'Accounting']
 const STATUSES = ['Graduated', 'Final year student', 'Student']
-
-// Matched on top of the names already in the skills table
-const KNOWN_SKILLS = [
-  'JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'PostgreSQL', 'MySQL', 'MongoDB',
-  'Python', 'Java', 'C#', 'C++', 'PHP', 'HTML', 'CSS', 'Git', 'Networking', 'Linux', 'Excel',
-  'Power BI', 'Tableau', 'Data Analysis', 'Machine Learning', 'UI/UX Design', 'Figma',
-  'Communication', 'Customer Service', 'Project Management', 'Accounting', 'English', 'Arabic'
-]
 
 const SPOKEN_LANGUAGES = [
   'English', 'Arabic', 'French', 'German', 'Spanish', 'Hindi', 'Urdu', 'Persian', 'Farsi',
@@ -113,13 +109,7 @@ function parseWithRules(text, knownSkills) {
   }
 }
 
-
 // Parse a CV file: AI first, rules as fallback
-async function knownSkillNames() {
-  const { rows } = await db.query('SELECT name FROM skills ORDER BY name')
-  return [...new Set([...rows.map((r) => r.name), ...KNOWN_SKILLS])]
-}
-
 function normalize(info, knownSkills) {
   const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null)
   const list = (v) => [...new Set((Array.isArray(v) ? v : []).map(str).filter(Boolean))]

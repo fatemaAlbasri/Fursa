@@ -3,6 +3,7 @@ const db = require('../config/db')
 const { inTransaction } = require('../config/transaction')
 const { fileUrl, removeFiles, UPLOADS_DIR } = require('../middleware/upload')
 const { rescoreSeeker } = require('../services/matching')
+const { skillIds } = require('../services/skills')
 const { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone } = require('../utils/fields')
 
 const fieldErrors = (res, fields) =>
@@ -152,15 +153,12 @@ const updateSeekerSkills = async (req, res, next) => {
 
   try {
     const saved = await inTransaction(async (client) => {
-      await client.query(
-        'INSERT INTO skills (name) SELECT unnest($1::text[]) ON CONFLICT (name) DO NOTHING',
-        [skills]
-      )
+      const ids = await skillIds(client, skills)
+      // replace the seeker's skills with the new list
       await client.query('DELETE FROM seeker_skills WHERE seeker_id = $1', [req.user.id])
       await client.query(
-        `INSERT INTO seeker_skills (seeker_id, skill_id)
-         SELECT $1, id FROM skills WHERE name = ANY($2::text[])`,
-        [req.user.id, skills]
+        `INSERT INTO seeker_skills (seeker_id, skill_id) SELECT $1, unnest($2::int[])`,
+        [req.user.id, ids]
       )
       const { rows } = await client.query(
         `SELECT s.id, s.name FROM seeker_skills ss JOIN skills s ON s.id = ss.skill_id

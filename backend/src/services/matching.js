@@ -63,4 +63,25 @@ async function rescoreJob(jobId) {
   for (const seeker of rows) await scorePair(seeker.user_id, jobId)
 }
 
-module.exports = { saveJobEmbedding, rescoreSeeker, rescoreJob }
+// Tells seekers about a job they are a strong match for (80% or more)
+// Skips anyone who already applied or was already told about this job,
+// so editing a job doesn't send the same notification again
+async function notifyNewMatches(jobId) {
+  await db.query(
+    `INSERT INTO notifications (user_id, job_id, type, title, message)
+     SELECT ms.seeker_id, j.id, 'new_matches',
+            'A new job matches your profile',
+            j.title || ' at ' || c.name || ' is a ' || ms.score || '% match for you.'
+       FROM match_scores ms
+       JOIN jobs j ON j.id = ms.job_id
+       JOIN companies c ON c.id = j.company_id
+      WHERE ms.job_id = $1 AND j.status = 'open' AND ms.tier = 'strong'
+        AND NOT EXISTS (SELECT 1 FROM applications a
+                         WHERE a.job_id = j.id AND a.seeker_id = ms.seeker_id)
+        AND NOT EXISTS (SELECT 1 FROM notifications n
+                         WHERE n.user_id = ms.seeker_id AND n.job_id = j.id AND n.type = 'new_matches')`,
+    [jobId]
+  )
+}
+
+module.exports = { saveJobEmbedding, rescoreSeeker, rescoreJob, notifyNewMatches }

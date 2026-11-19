@@ -6,6 +6,7 @@ const { signToken } = require('../middleware/auth')
 const { fileUrl, removeFiles } = require('../middleware/upload')
 const { saveParsedCv } = require('../services/cvParser')
 const { rescoreSeeker } = require('../services/matching')
+const { skillIds } = require('../services/skills')
 const { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone } = require('../utils/fields')
 
 // The frontend says 'jobseeker' / 'company', the database says 'seeker' / 'employer'
@@ -70,15 +71,11 @@ async function createSeeker(client, userId, body, phone, skills, cv) {
     ]
   )
 
-  // Add any skill that isn't in the skills table yet, then link all of them
+  // Links the seeker's skills. New skill names are added to the skills list
+  const ids = await skillIds(client, skills)
   await client.query(
-    `INSERT INTO skills (name) SELECT unnest($1::text[]) ON CONFLICT (name) DO NOTHING`,
-    [skills]
-  )
-  await client.query(
-    `INSERT INTO seeker_skills (seeker_id, skill_id)
-     SELECT $1, id FROM skills WHERE name = ANY($2::text[])`,
-    [userId, skills]
+    `INSERT INTO seeker_skills (seeker_id, skill_id) SELECT $1, unnest($2::int[])`,
+    [userId, ids]
   )
 
   if (cv) {
