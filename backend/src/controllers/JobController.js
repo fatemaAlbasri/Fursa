@@ -954,109 +954,134 @@ const updateApplicants = async (req, res, next) => {
   }
 }
 
-// GET /api/jobs/mine/:id/summary → hiring summary for one job (company, Growth plan)
-// Where applicants are in the pipeline, the best matches, the must-have skills most
-// applicants are missing, and how long hiring is taking.
+// Hiring report rules (starting values, easy to tune)
+const REPORT_MIN_APPLICANTS = 5 // fewer than this = too early to judge
+const REPORT_SHORTLIST_DAYS = 7 // a first shortlist within this many days = on track
+const REPORT_LOW_SHARE = 0.6    // more than 60% low matches = needs attention
+
+// whole days between two dates, null if one is missing
+const daysBetween = (from, to) =>
+  from && to ? Math.max(0, Math.round((new Date(to) - new Date(from)) / 86400000)) : null
+
+// The verdict at the top of the report: on_track / needs_attention / just_started
+const pickVerdict = ({ funnel, quality, speed, daysOpen }) => {
+  if (funnel.applied < REPORT_MIN_APPLICANTS) {
+    return { status: 'just_started', message: 'Not enough applicants yet to judge. Check back in a few days.' }
+  }
+  if (funnel.hired > 0) {
+    return { status: 'on_track', message: `You already hired someone in ${speed.time_to_hire_days} days.` }
+  }
+  const scored = quality.strong + quality.good + quality.low
+  if (scored > 0 && quality.low / scored > REPORT_LOW_SHARE) {
+    return { status: 'needs_attention', message: 'Most applicants are a low match. See the tip below.' }
+  }
+  if (speed.first_shortlist_days !== null && speed.first_shortlist_days <= REPORT_SHORTLIST_DAYS) {
+    return { status: 'on_track', message: 'You shortlisted quickly. Keep moving applicants forward.' }
+  }
+  if (speed.first_shortlist_days === null && daysOpen <= REPORT_SHORTLIST_DAYS) {
+    return { status: 'on_track', message: 'Applicants are coming in. Start shortlisting the best matches.' }
+  }
+  return { status: 'needs_attention', message: 'Shortlisting is slow. Review your applicants.' }
+}
+
+// GET /api/jobs/mine/:id/summary → hiring report for one job (company, Growth plan)
+// verdict + where applicants drop off + how fast hiring is + the must-have holding people back
 const getJobSummary = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
     if (!jobId) return res.status(400).json({ error: 'Invalid job id' })
 
-    // only the Growth plan has the hiring summary
+    // only the Growth plan has the hiring report
     const features = featuresOut(await loadPlanFeatures(req.user.id))
     if (!features.hiring_summary) {
       return res.status(403).json({
-        error: 'The hiring summary is on the Growth plan. Upgrade to use it.'
+        error: 'The hiring report is on the Growth plan. Upgrade to use it.',
+        upgrade: true
       })
     }
 
     // the job must belong to this company
     const { rows: jobs } = await db.query(
-      `SELECT j.id, j.title, j.status, j.created_at, j.deadline
+      `SELECT j.id, j.title, j.status, j.created_at
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
         WHERE j.id = $1 AND c.user_id = $2`,
       [jobId, req.user.id]
     )
     if (jobs.length === 0) return res.status(404).json({ error: 'Job not found' })
+    const job = jobs[0]
 
     // these don't depend on each other so run them at the same time
-    const [{ rows: counts }, { rows: top }, { rows: missing }, { rows: timing }] =
-      await Promise.all([
-        // pipeline: how many applicants in each status + qualified / average score
-        db.query(
-          `SELECT COUNT(*)::int AS total,
-                  COUNT(*) FILTER (WHERE a.status = 'applied')::int AS applied,
-                  COUNT(*) FILTER (WHERE a.status = 'shortlisted')::int AS shortlisted,
-                  COUNT(*) FILTER (WHERE a.status = 'interview')::int AS interview,
-                  COUNT(*) FILTER (WHERE a.status = 'accepted')::int AS accepted,
-                  COUNT(*) FILTER (WHERE a.status = 'rejected')::int AS rejected,
-                  COUNT(*) FILTER (WHERE COALESCE(m.is_qualified, true))::int AS qualified,
-                  ROUND(AVG(m.score))::int AS average_score
-             FROM applications a
-             LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
-            WHERE a.job_id = $1`,
-          [jobId]
-        ),
-        // the 3 best matches that are still in the running
-        db.query(
-          `SELECT a.id, u.first_name, u.last_name, a.status, m.score
-             FROM applications a
-             JOIN users u ON u.id = a.seeker_id
-             JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
-            WHERE a.job_id = $1 AND a.status <> 'rejected'
-            ORDER BY m.score DESC, a.applied_at, a.id
-            LIMIT 3`,
-          [jobId]
-        ),
-        // must-have skills applicants don't have, most common first
-        db.query(
-          `SELECT s.name, COUNT(*)::int AS count
-             FROM applications a
-             JOIN job_skills js ON js.job_id = a.job_id AND js.is_required
-             JOIN skills s ON s.id = js.skill_id
-             LEFT JOIN seeker_skills ss ON ss.seeker_id = a.seeker_id AND ss.skill_id = js.skill_id
-            WHERE a.job_id = $1 AND ss.skill_id IS NULL
-            GROUP BY s.name
-            ORDER BY count DESC, s.name
-            LIMIT 5`,
-          [jobId]
-        ),
-        // when the first applicant arrived and when the company first shortlisted someone
-        db.query(
-          `SELECT (SELECT MIN(applied_at) FROM applications WHERE job_id = $1) AS first_applied_at,
-                  (SELECT MIN(h.changed_at)
-                     FROM application_history h
-                     JOIN applications a ON a.id = h.application_id
-                    WHERE a.job_id = $1 AND h.to_status = 'shortlisted') AS first_shortlisted_at`,
-          [jobId]
-        )
-      ])
+    const [{ rows: f }, { rows: q }, { rows: t }, { rows: missing }] = await Promise.all([
+      // funnel: how many applicants REACHED each stage (even if they were rejected later)
+      db.query(
+        `SELECT COUNT(*)::int AS applied,
+                COUNT(*) FILTER (WHERE a.status IN ('shortlisted','interview','accepted')
+                  OR EXISTS (SELECT 1 FROM application_history h WHERE h.application_id = a.id
+                              AND h.to_status IN ('shortlisted','interview','accepted')))::int AS shortlisted,
+                COUNT(*) FILTER (WHERE a.status IN ('interview','accepted')
+                  OR EXISTS (SELECT 1 FROM application_history h WHERE h.application_id = a.id
+                              AND h.to_status IN ('interview','accepted')))::int AS interview,
+                COUNT(*) FILTER (WHERE a.status = 'accepted'
+                  OR EXISTS (SELECT 1 FROM application_history h WHERE h.application_id = a.id
+                              AND h.to_status = 'accepted'))::int AS hired
+           FROM applications a
+          WHERE a.job_id = $1`,
+        [jobId]
+      ),
+      // quality: average match and how many strong / good / low
+      db.query(
+        `SELECT ROUND(AVG(m.score))::int AS average_score,
+                COUNT(*) FILTER (WHERE m.tier = 'strong')::int AS strong,
+                COUNT(*) FILTER (WHERE m.tier = 'good')::int AS good,
+                COUNT(*) FILTER (WHERE m.tier = 'low')::int AS low
+           FROM applications a
+           JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+          WHERE a.job_id = $1`,
+        [jobId]
+      ),
+      // timeline: the first time anyone reached each stage
+      db.query(
+        `SELECT MIN(h.changed_at) FILTER (WHERE h.to_status = 'shortlisted') AS first_shortlist_at,
+                MIN(h.changed_at) FILTER (WHERE h.to_status = 'interview') AS first_interview_at,
+                MIN(h.changed_at) FILTER (WHERE h.to_status = 'accepted') AS first_hire_at
+           FROM application_history h
+           JOIN applications a ON a.id = h.application_id
+          WHERE a.job_id = $1`,
+        [jobId]
+      ),
+      // tip: the must-have skill the most applicants don't have
+      db.query(
+        `SELECT s.name, COUNT(*)::int AS count
+           FROM applications a
+           JOIN job_skills js ON js.job_id = a.job_id AND js.is_required
+           JOIN skills s ON s.id = js.skill_id
+           LEFT JOIN seeker_skills ss ON ss.seeker_id = a.seeker_id AND ss.skill_id = js.skill_id
+          WHERE a.job_id = $1 AND ss.skill_id IS NULL
+          GROUP BY s.name
+          ORDER BY count DESC, s.name
+          LIMIT 1`,
+        [jobId]
+      )
+    ])
 
-    const job = jobs[0]
-    const c = counts[0]
-    // whole days between two dates, null if one is missing
-    const daysBetween = (from, to) =>
-      from && to ? Math.max(0, Math.round((new Date(to) - new Date(from)) / 86400000)) : null
+    const funnel = f[0]
+    const quality = q[0]
+    const speed = {
+      posted_at: job.created_at,
+      first_shortlist_days: daysBetween(job.created_at, t[0].first_shortlist_at),
+      first_interview_days: daysBetween(job.created_at, t[0].first_interview_at),
+      time_to_hire_days: daysBetween(job.created_at, t[0].first_hire_at)
+    }
+    const daysOpen = daysBetween(job.created_at, new Date())
 
     res.json({
       job,
-      pipeline: {
-        total: c.total,
-        applied: c.applied,
-        shortlisted: c.shortlisted,
-        interview: c.interview,
-        accepted: c.accepted,
-        rejected: c.rejected
-      },
-      qualified: c.qualified,
-      not_qualified: c.total - c.qualified,
-      average_score: c.average_score,
-      top_applicants: top,
-      missing_must_haves: missing,
-      days_open: daysBetween(job.created_at, new Date()),
-      days_to_first_shortlist: daysBetween(job.created_at, timing[0].first_shortlisted_at),
-      first_applied_at: timing[0].first_applied_at
+      verdict: pickVerdict({ funnel, quality, speed, daysOpen }),
+      funnel,
+      speed,
+      quality,
+      tip: missing[0] ? { ...missing[0], of: funnel.applied } : null
     })
   } catch (err) {
     next(err)
