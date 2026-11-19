@@ -160,7 +160,6 @@ const updateSeekerSkills = async (req, res, next) => {
         `INSERT INTO seeker_skills (seeker_id, skill_id) SELECT $1, unnest($2::int[])`,
         [req.user.id, ids]
       )
-
       const { rows } = await client.query(
         `SELECT s.id, s.name FROM seeker_skills ss JOIN skills s ON s.id = ss.skill_id
           WHERE ss.seeker_id = $1 ORDER BY s.name`,

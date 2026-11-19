@@ -71,7 +71,7 @@ async function createSeeker(client, userId, body, phone, skills, cv) {
     ]
   )
 
-  // Get each skill's id (new skills are added to the list), then link them to the seeker
+  // Links the seeker's skills. New skill names are added to the skills list
   const ids = await skillIds(client, skills)
   await client.query(
     `INSERT INTO seeker_skills (seeker_id, skill_id) SELECT $1, unnest($2::int[])`,
