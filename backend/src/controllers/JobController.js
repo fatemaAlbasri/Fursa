@@ -1,6 +1,7 @@
 const db = require('../config/db')
 const { saveJobEmbedding, rescoreJob, notifyNewMatches } = require('../services/matching')
 const { cleanCvText } = require('../services/cvOptimizer')
+const { skillIds } = require('../services/skills')
 const { inTransaction } = require('../config/transaction')
 
 // Runs in the background: the job is still scored without the CV component if embedding fails
@@ -291,19 +292,15 @@ const featuresOut = (f) => ({
   hiring_summary: Boolean(f.has_hiring_summary)
 })
 
-// Adds any skill that isn't in the skills table yet, then links all of them to the job
+// Links the job's skills (new skills are added to the list); must-haves get is_required = true
 const saveJobSkills = async (client, jobId, skills) => {
-  const names = skills.map((s) => s.name)
-  const required = skills.filter((s) => s.is_required).map((s) => s.name)
+  const allIds = await skillIds(client, skills.map((s) => s.name))
+  const requiredIds = await skillIds(client, skills.filter((s) => s.is_required).map((s) => s.name))
 
   await client.query(
-    `INSERT INTO skills (name) SELECT unnest($1::text[]) ON CONFLICT (name) DO NOTHING`,
-    [names]
-  )
-  await client.query(
     `INSERT INTO job_skills (job_id, skill_id, is_required)
-     SELECT $1, id, name = ANY($3::text[]) FROM skills WHERE name = ANY($2::text[])`,
-    [jobId, names, required]
+     SELECT $1, id, id = ANY($3::int[]) FROM unnest($2::int[]) AS id`,
+    [jobId, allIds, requiredIds]
   )
 }
 
