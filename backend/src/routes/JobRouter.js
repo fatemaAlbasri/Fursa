@@ -22,6 +22,9 @@ router.patch('/mine/:id/applicants', requireAuth, requireRole('employer'), JobCo
 
 const employer = [requireAuth, requireRole('employer')]
 
+// GET /api/jobs/mine/:id/summary  (company, Growth plan) → hiring summary
+router.get('/mine/:id/summary', employer, JobController.getJobSummary)
+
 // GET /api/jobs/mine/:id/applicants/:appId  (company) 
 router.get('/mine/:id/applicants/:appId', employer, JobController.getOneApplicant)
 
