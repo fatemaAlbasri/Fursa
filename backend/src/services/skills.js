@@ -1,18 +1,21 @@
 const db = require('../config/db')
 
-// The ONE place that reads and saves skill names.
-// Names are matched ignoring case/spaces, so "react " and "React" are the same skill.
+// Every page reads and saves skill names through this file, so "react " and "React" are always treated as the same skill
 
+// Trims each name and drops repeats, ignoring case
 const cleanNames = (names) => {
   const seen = new Map()
   for (const n of names) {
-    const name = String(n ?? '').trim().replace(/\s+/g, ' ')
-    if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name)
+    const name = String(n ?? '')
+      .trim()
+      .replace(/\s+/g, ' ')
+    if (name && !seen.has(name.toLowerCase()))
+      seen.set(name.toLowerCase(), name)
   }
   return [...seen.values()]
 }
 
-// All skill names, most used first (by jobs + seekers), then A–Z
+// Skill names for the dropdowns, most used first
 async function listSkills(limit = 200) {
   const { rows } = await db.query(
     `SELECT s.name
@@ -26,8 +29,8 @@ async function listSkills(limit = 200) {
   return rows.map((r) => r.name)
 }
 
-// Adds names that don't exist yet (keeps the existing spelling for the ones that do)
-// and returns their ids, e.g. ['react', 'SQL'] → [2, 3]
+// Returns the ids of these skills, adding any that aren't saved yet.
+// Existing skills keep their spelling: ['react', 'SQL'] gives the ids of React and SQL
 async function skillIds(client, names) {
   const list = cleanNames(names)
   if (list.length === 0) return []
@@ -36,10 +39,10 @@ async function skillIds(client, names) {
     [list]
   )
   const { rows } = await client.query(
-    `SELECT id FROM skills WHERE lower(name) = ANY($1::text[])`,
+    `SELECT id FROM skills WHERE lower(trim(name)) = ANY($1::text[])`,
     [list.map((n) => n.toLowerCase())]
   )
   return rows.map((r) => r.id)
 }
 
-module.exports = { cleanNames, listSkills, skillIds }
+module.exports = { listSkills, skillIds }
