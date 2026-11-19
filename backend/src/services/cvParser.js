@@ -6,6 +6,7 @@ const db = require('../config/db')
 const { extractWithAi, embedText, aiEnabled } = require('./cvAi')
 const { listSkills } = require('./skills')
 
+// Skill names to look for in a CV (the whole skills list, not just the top 200)
 const knownSkillNames = () => listSkills(1000)
 
 // Same options as the dropdowns on the sign up page, so the form can be pre-filled
