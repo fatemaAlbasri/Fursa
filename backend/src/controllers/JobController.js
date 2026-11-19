@@ -967,7 +967,11 @@ const pickVerdict = ({ funnel, quality, speed, daysOpen }) => {
     return { status: 'just_started', message: 'Not enough applicants yet to judge. Check back in a few days.' }
   }
   if (funnel.hired > 0) {
-    return { status: 'on_track', message: `You already hired someone in ${speed.time_to_hire_days} days.` }
+    const days = speed.time_to_hire_days
+    return {
+      status: 'on_track',
+      message: days === null ? 'You already hired someone.' : `You already  in ${days} days.`
+    }
   }
   const scored = quality.strong + quality.good + quality.low
   if (scored > 0 && quality.low / scored > REPORT_LOW_SHARE) {
