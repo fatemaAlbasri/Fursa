@@ -272,7 +272,7 @@ const planLimitError = (max) => ({
   error: `Your plan allows ${max} active job(s). Upgrade your plan or save it as a draft.`
 })
 
-// The company's plan features (has_bulk_actions, has_ai_ranking...)
+// Reads the company's plan features
 const loadPlanFeatures = async (companyUserId) => {
   const { rows } = await db.query(
     `SELECT p.has_ai_ranking, p.has_match_reasons, p.has_bulk_actions, p.has_hiring_summary
@@ -284,7 +284,8 @@ const loadPlanFeatures = async (companyUserId) => {
   )
   return rows[0] || {}
 }
-// Same features in the shape the Plans page uses
+
+// Same names the Plans page uses, so the frontend knows what's locked
 const featuresOut = (f) => ({
   ai_ranking: Boolean(f.has_ai_ranking),
   match_reasons: Boolean(f.has_match_reasons),
@@ -292,7 +293,7 @@ const featuresOut = (f) => ({
   hiring_summary: Boolean(f.has_hiring_summary)
 })
 
-// Links the job's skills (new skills are added to the list); must-haves get is_required = true
+// Saves the job's skills. New skill names are added to the skills list
 const saveJobSkills = async (client, jobId, skills) => {
   const allIds = await skillIds(client, skills.map((s) => s.name))
   const requiredIds = await skillIds(client, skills.filter((s) => s.is_required).map((s) => s.name))
@@ -638,7 +639,6 @@ const getOneApplicant = async (req, res, next) => {
     const appId = parseAppId(req)
     if (!jobId || !appId) return res.status(400).json({ error: 'Invalid id' })
 
-    // what the company's plan includes (score / rank / match reasons)
     const features = featuresOut(await loadPlanFeatures(req.user.id))
 
     const { rows } = await db.query(
@@ -691,7 +691,6 @@ const getOneApplicant = async (req, res, next) => {
           [appId]
         ),
         // previous / next applicant, same order as the applicants list
-        // (no AI ranking → by application date, like getApplicants)
         db.query(
           `SELECT position, prev_id, next_id FROM (
            SELECT a.id,
@@ -714,7 +713,7 @@ const getOneApplicant = async (req, res, next) => {
       cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null
     }
 
-    // hide what the company's plan doesn't include
+// Free plan: no score, rank or match reasons
     if (!features.ai_ranking) {
       applicant.score = null
       applicant.rank = null
@@ -878,7 +877,7 @@ const getApplicants = async (req, res, next) => {
     if (!jobId) {
       return res.status(400).json({ error: 'Invalid job id' })
     }
-    
+
     const features = featuresOut(await loadPlanFeatures(req.user.id))
 
     const { rows } = await db.query(
@@ -917,8 +916,8 @@ const updateApplicants = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid status' })
 
     // Free plan has no bulk actions (Plans page)
-    const features = await loadPlanFeatures(req.user.id)
-    if (!features.has_bulk_actions) {
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
+    if (!features.bulk_actions) {
       return res.status(403).json({
         error: 'Bulk shortlist / reject is on the Starter and Growth plans. Upgrade to use it.'
       })
@@ -952,52 +951,50 @@ const updateApplicants = async (req, res, next) => {
   }
 }
 
-// Hiring report rules (starting values, easy to tune)
-const REPORT_MIN_APPLICANTS = 5 // fewer than this = too early to judge
-const REPORT_SHORTLIST_DAYS = 7 // a first shortlist within this many days = on track
-const REPORT_LOW_SHARE = 0.6    // more than 60% low matches = needs attention
+// Hiring summary rules. Starting values, change them after testing with real data
+const SUMMARY_MIN_APPLICANTS = 5 // fewer applicants is too early to judge
+const SUMMARY_SHORTLIST_DAYS = 7 // first shortlist within a week is on track
+const SUMMARY_LOW_SHARE = 0.6 // over 60% low matches needs attention
 
 // whole days between two dates, null if one is missing
 const daysBetween = (from, to) =>
   from && to ? Math.max(0, Math.round((new Date(to) - new Date(from)) / 86400000)) : null
 
-// The verdict at the top of the report: on_track / needs_attention / just_started
+// The status shown at the top of the summary
 const pickVerdict = ({ funnel, quality, speed, daysOpen }) => {
-  if (funnel.applied < REPORT_MIN_APPLICANTS) {
+  if (funnel.applied < SUMMARY_MIN_APPLICANTS) {
     return { status: 'just_started', message: 'Not enough applicants yet to judge. Check back in a few days.' }
   }
   if (funnel.hired > 0) {
     const days = speed.time_to_hire_days
     return {
       status: 'on_track',
-      message: days === null ? 'You already hired someone.' : `You already  in ${days} days.`
+      message: days === null ? 'You already hired someone.' : `You already hired someone in ${days} days.`
     }
   }
   const scored = quality.strong + quality.good + quality.low
-  if (scored > 0 && quality.low / scored > REPORT_LOW_SHARE) {
+  if (scored > 0 && quality.low / scored > SUMMARY_LOW_SHARE) {
     return { status: 'needs_attention', message: 'Most applicants are a low match. See the tip below.' }
   }
-  if (speed.first_shortlist_days !== null && speed.first_shortlist_days <= REPORT_SHORTLIST_DAYS) {
+  if (speed.first_shortlist_days !== null && speed.first_shortlist_days <= SUMMARY_SHORTLIST_DAYS) {
     return { status: 'on_track', message: 'You shortlisted quickly. Keep moving applicants forward.' }
   }
-  if (speed.first_shortlist_days === null && daysOpen <= REPORT_SHORTLIST_DAYS) {
+  if (speed.first_shortlist_days === null && daysOpen <= SUMMARY_SHORTLIST_DAYS) {
     return { status: 'on_track', message: 'Applicants are coming in. Start shortlisting the best matches.' }
   }
   return { status: 'needs_attention', message: 'Shortlisting is slow. Review your applicants.' }
 }
 
-// GET /api/jobs/mine/:id/summary → hiring report for one job (company, Growth plan)
-// verdict + where applicants drop off + how fast hiring is + the must-have holding people back
+// GET /api/jobs/mine/:id/summary  hiring summary for one job (company, Growth plan)
 const getJobSummary = async (req, res, next) => {
   try {
     const jobId = parseJobId(req)
     if (!jobId) return res.status(400).json({ error: 'Invalid job id' })
 
-    // only the Growth plan has the hiring report
     const features = featuresOut(await loadPlanFeatures(req.user.id))
     if (!features.hiring_summary) {
       return res.status(403).json({
-        error: 'The hiring report is on the Growth plan. Upgrade to use it.',
+        error: 'The hiring summary is on the Growth plan. Upgrade to use it.',
         upgrade: true
       })
     }
@@ -1015,7 +1012,7 @@ const getJobSummary = async (req, res, next) => {
 
     // these don't depend on each other so run them at the same time
     const [{ rows: f }, { rows: q }, { rows: t }, { rows: missing }] = await Promise.all([
-      // funnel: how many applicants REACHED each stage (even if they were rejected later)
+      // how many applicants reached each stage, even if they were rejected later
       db.query(
         `SELECT COUNT(*)::int AS applied,
                 COUNT(*) FILTER (WHERE a.status IN ('shortlisted','interview','accepted')
@@ -1031,7 +1028,7 @@ const getJobSummary = async (req, res, next) => {
           WHERE a.job_id = $1`,
         [jobId]
       ),
-      // quality: average match and how many strong / good / low
+      // average match and how many strong, good and low matches
       db.query(
         `SELECT ROUND(AVG(m.score))::int AS average_score,
                 COUNT(*) FILTER (WHERE m.tier = 'strong')::int AS strong,
@@ -1042,7 +1039,7 @@ const getJobSummary = async (req, res, next) => {
           WHERE a.job_id = $1`,
         [jobId]
       ),
-      // timeline: the first time anyone reached each stage
+      // when the first applicant reached each stage
       db.query(
         `SELECT MIN(h.changed_at) FILTER (WHERE h.to_status = 'shortlisted') AS first_shortlist_at,
                 MIN(h.changed_at) FILTER (WHERE h.to_status = 'interview') AS first_interview_at,
@@ -1052,7 +1049,7 @@ const getJobSummary = async (req, res, next) => {
           WHERE a.job_id = $1`,
         [jobId]
       ),
-      // tip: the must-have skill the most applicants don't have
+      // the must-have skill most applicants are missing
       db.query(
         `SELECT s.name, COUNT(*)::int AS count
            FROM applications a
@@ -1070,7 +1067,6 @@ const getJobSummary = async (req, res, next) => {
     const funnel = f[0]
     const quality = q[0]
     const speed = {
-      posted_at: job.created_at,
       first_shortlist_days: daysBetween(job.created_at, t[0].first_shortlist_at),
       first_interview_days: daysBetween(job.created_at, t[0].first_interview_at),
       time_to_hire_days: daysBetween(job.created_at, t[0].first_hire_at)
