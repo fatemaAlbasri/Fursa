@@ -282,6 +282,13 @@ const loadPlanFeatures = async (companyUserId) => {
   )
   return rows[0] || {}
 }
+// Same features in the shape the Plans page uses
+const featuresOut = (f) => ({
+  ai_ranking: Boolean(f.has_ai_ranking),
+  match_reasons: Boolean(f.has_match_reasons),
+  bulk_actions: Boolean(f.has_bulk_actions),
+  hiring_summary: Boolean(f.has_hiring_summary)
+})
 
 // Adds any skill that isn't in the skills table yet, then links all of them to the job
 const saveJobSkills = async (client, jobId, skills) => {
