@@ -1191,6 +1191,7 @@ module.exports = {
   closeJob,
   getApplicants,
   updateApplicants,
+  getJobSummary,
   applyToJob,
   getOneApplicant,
   updateOneApplicant,
