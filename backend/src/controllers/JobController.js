@@ -1,5 +1,5 @@
 const db = require('../config/db')
-const { saveJobEmbedding, rescoreJob } = require('../services/matching')
+const { saveJobEmbedding, rescoreJob, notifyNewMatches } = require('../services/matching')
 const { cleanCvText } = require('../services/cvOptimizer')
 const { inTransaction } = require('../config/transaction')
 
@@ -8,6 +8,7 @@ const scoreOpenJob = (jobId) =>
   saveJobEmbedding(jobId)
     .catch((err) => console.error('Job embedding failed:', err.message))
     .then(() => rescoreJob(jobId))
+    .then(() => notifyNewMatches(jobId))
     .catch((err) => console.error('Scoring failed:', err.message))
 
 // GET /api/jobs → view all jobs (jobseeker)
