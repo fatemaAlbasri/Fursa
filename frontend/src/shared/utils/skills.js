@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 
-// Used only if GET /api/skills fails (e.g. the server is down), so the dropdown is never empty
-export const FALLBACK_SKILLS = [
+// Shown if the skills can't be loaded, so the dropdown is never empty
+const FALLBACK_SKILLS = [
   'JavaScript', 'React', 'Node.js', 'SQL', 'PostgreSQL', 'Python', 'Java', 'C#',
   'HTML', 'CSS', 'Git', 'Networking', 'Excel', 'Power BI', 'Data Analysis',
   'UI/UX Design', 'Communication', 'English', 'Arabic',
@@ -12,7 +12,7 @@ export const FALLBACK_SKILLS = [
 let cache = null
 let request = null
 
-// The skills list from the backend (most used first)
+// Skill names from the backend, most used first
 export function useSkills() {
   const [skills, setSkills] = useState(cache || FALLBACK_SKILLS)
 
