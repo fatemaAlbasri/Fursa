@@ -640,6 +640,9 @@ const getOneApplicant = async (req, res, next) => {
     const appId = parseAppId(req)
     if (!jobId || !appId) return res.status(400).json({ error: 'Invalid id' })
 
+    // what the company's plan includes (score / rank / match reasons)
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
+
     const { rows } = await db.query(
       `SELECT a.id, a.status, a.rejection_reason, a.applied_at,
               u.first_name, u.last_name, u.email, sp.phone,
@@ -690,6 +693,7 @@ const getOneApplicant = async (req, res, next) => {
           [appId]
         ),
         // previous / next applicant, same order as the applicants list
+        // (no AI ranking → by application date, like getApplicants)
         db.query(
           `SELECT position, prev_id, next_id FROM (
            SELECT a.id,
@@ -699,10 +703,10 @@ const getOneApplicant = async (req, res, next) => {
              FROM applications a
              LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
             WHERE a.job_id = $1
-           WINDOW w AS (ORDER BY m.score DESC NULLS LAST, a.applied_at, a.id)
+           WINDOW w AS (ORDER BY CASE WHEN $3 THEN m.score END DESC NULLS LAST, a.applied_at, a.id)
          ) t
          WHERE id = $2`,
-          [jobId, appId]
+          [jobId, appId, features.ai_ranking]
         )
       ])
 
@@ -712,11 +716,19 @@ const getOneApplicant = async (req, res, next) => {
       cv_text: rows[0].cv_text ? cleanCvText(rows[0].cv_text) : null
     }
 
+    // hide what the company's plan doesn't include
+    if (!features.ai_ranking) {
+      applicant.score = null
+      applicant.rank = null
+    }
+    if (!features.match_reasons) applicant.skills = []
+
     res.json({
       applicant,
       interview: interviews[0] || null,
       history,
-      nav: nav[0]
+      nav: nav[0],
+      features
     })
   } catch (err) {
     next(err)
