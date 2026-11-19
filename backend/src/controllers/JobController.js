@@ -954,6 +954,115 @@ const updateApplicants = async (req, res, next) => {
   }
 }
 
+// GET /api/jobs/mine/:id/summary → hiring summary for one job (company, Growth plan)
+// Where applicants are in the pipeline, the best matches, the must-have skills most
+// applicants are missing, and how long hiring is taking.
+const getJobSummary = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) return res.status(400).json({ error: 'Invalid job id' })
+
+    // only the Growth plan has the hiring summary
+    const features = featuresOut(await loadPlanFeatures(req.user.id))
+    if (!features.hiring_summary) {
+      return res.status(403).json({
+        error: 'The hiring summary is on the Growth plan. Upgrade to use it.'
+      })
+    }
+
+    // the job must belong to this company
+    const { rows: jobs } = await db.query(
+      `SELECT j.id, j.title, j.status, j.created_at, j.deadline
+         FROM jobs j
+         JOIN companies c ON c.id = j.company_id
+        WHERE j.id = $1 AND c.user_id = $2`,
+      [jobId, req.user.id]
+    )
+    if (jobs.length === 0) return res.status(404).json({ error: 'Job not found' })
+
+    // these don't depend on each other so run them at the same time
+    const [{ rows: counts }, { rows: top }, { rows: missing }, { rows: timing }] =
+      await Promise.all([
+        // pipeline: how many applicants in each status + qualified / average score
+        db.query(
+          `SELECT COUNT(*)::int AS total,
+                  COUNT(*) FILTER (WHERE a.status = 'applied')::int AS applied,
+                  COUNT(*) FILTER (WHERE a.status = 'shortlisted')::int AS shortlisted,
+                  COUNT(*) FILTER (WHERE a.status = 'interview')::int AS interview,
+                  COUNT(*) FILTER (WHERE a.status = 'accepted')::int AS accepted,
+                  COUNT(*) FILTER (WHERE a.status = 'rejected')::int AS rejected,
+                  COUNT(*) FILTER (WHERE COALESCE(m.is_qualified, true))::int AS qualified,
+                  ROUND(AVG(m.score))::int AS average_score
+             FROM applications a
+             LEFT JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+            WHERE a.job_id = $1`,
+          [jobId]
+        ),
+        // the 3 best matches that are still in the running
+        db.query(
+          `SELECT a.id, u.first_name, u.last_name, a.status, m.score
+             FROM applications a
+             JOIN users u ON u.id = a.seeker_id
+             JOIN match_scores m ON m.job_id = a.job_id AND m.seeker_id = a.seeker_id
+            WHERE a.job_id = $1 AND a.status <> 'rejected'
+            ORDER BY m.score DESC, a.applied_at, a.id
+            LIMIT 3`,
+          [jobId]
+        ),
+        // must-have skills applicants don't have, most common first
+        db.query(
+          `SELECT s.name, COUNT(*)::int AS count
+             FROM applications a
+             JOIN job_skills js ON js.job_id = a.job_id AND js.is_required
+             JOIN skills s ON s.id = js.skill_id
+             LEFT JOIN seeker_skills ss ON ss.seeker_id = a.seeker_id AND ss.skill_id = js.skill_id
+            WHERE a.job_id = $1 AND ss.skill_id IS NULL
+            GROUP BY s.name
+            ORDER BY count DESC, s.name
+            LIMIT 5`,
+          [jobId]
+        ),
+        // when the first applicant arrived and when the company first shortlisted someone
+        db.query(
+          `SELECT (SELECT MIN(applied_at) FROM applications WHERE job_id = $1) AS first_applied_at,
+                  (SELECT MIN(h.changed_at)
+                     FROM application_history h
+                     JOIN applications a ON a.id = h.application_id
+                    WHERE a.job_id = $1 AND h.to_status = 'shortlisted') AS first_shortlisted_at`,
+          [jobId]
+        )
+      ])
+
+    const job = jobs[0]
+    const c = counts[0]
+    // whole days between two dates, null if one is missing
+    const daysBetween = (from, to) =>
+      from && to ? Math.max(0, Math.round((new Date(to) - new Date(from)) / 86400000)) : null
+
+    res.json({
+      job,
+      pipeline: {
+        total: c.total,
+        applied: c.applied,
+        shortlisted: c.shortlisted,
+        interview: c.interview,
+        accepted: c.accepted,
+        rejected: c.rejected
+      },
+      qualified: c.qualified,
+      not_qualified: c.total - c.qualified,
+      average_score: c.average_score,
+      top_applicants: top,
+      missing_must_haves: missing,
+      days_open: daysBetween(job.created_at, new Date()),
+      days_to_first_shortlist: daysBetween(job.created_at, timing[0].first_shortlisted_at),
+      first_applied_at: timing[0].first_applied_at
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // DELETE /api/jobs/mine/:id → delete job (company)
 const deleteJob = async (req, res, next) => {
   try {
