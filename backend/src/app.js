@@ -17,6 +17,7 @@ app.get('/', (req, res) => {
 
 // Require routes
 const authRoutes = require('./routes/AuthRouter')
+const skillRoutes = require('./routes/SkillRouter')
 const cvRoutes = require('./routes/CvRouter')
 const jobRoutes = require('./routes/JobRouter')
 const companyRoutes = require('./routes/CompanyRouter')
@@ -30,6 +31,7 @@ app.use('/uploads', express.static(UPLOADS_DIR))
 
 // use routes
 app.use('/api/auth', authRoutes)
+app.use('/api/skills', skillRoutes)
 app.use('/api/cv', cvRoutes)
 app.use('/api/jobs', jobRoutes)
 app.use('/api/companies', companyRoutes)
