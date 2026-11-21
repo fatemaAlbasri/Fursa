@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import JobForm from '../components/JobForm.jsx'
+import HiringSummary from '../components/HiringSummary.jsx'
 import { api } from '../../shared/api.js'
 import {
   formatJobType,
@@ -442,6 +443,8 @@ export default function JobView({ startEditing = false }) {
               </section>
             </aside>
           </div>
+          {/* Hiring summary: not for drafts (no applicants yet) */}
+          {!isDraft && <HiringSummary jobId={job.id} />}
         </>
       )}
       <ConfirmDialog
