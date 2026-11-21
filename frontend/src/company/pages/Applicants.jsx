@@ -37,6 +37,7 @@ export default function Applicants() {
   const [sort, setSort] = useState('score'); // 'score' | 'date'
   const [selected, setSelected] = useState([]); // ids of the ticked applicants
   const [error, setError] = useState('');
+  const [features, setFeatures] = useState(null); // the company's plan features (from the backend)
 
   const stats = countStats(applicants);
 
@@ -56,17 +57,32 @@ export default function Applicants() {
   useEffect(() => {
     if (!jobId) return;
     api(`/jobs/mine/${jobId}/applicants`)
-      .then((data) => setApplicants(data.applicants.map(toApplicant)))
+      .then((data) => {
+        setApplicants(data.applicants.map(toApplicant));
+        setFeatures(data.features);
+      })
       .catch((err) => setError(err.error || 'Could not load the applicants.'));
   }, [jobId]);
 
+  // ---------- What the plan allows ----------
+  // Free: no AI ranking (no Top 10, no scores, sorted by date), no match reasons, no bulk actions
+  const ranked = Boolean(features?.ai_ranking);
+  const reasons = Boolean(features?.match_reasons);
+  const bulk = Boolean(features?.bulk_actions);
+  const onFree = features && !ranked;
+
   // ---------- The list for the open tab ----------
-  const currentTab = TABS.find((t) => t.id === tab);
+  const tabs = TABS.filter((t) => ranked || t.id !== 'top'); // no Top 10 without AI ranking
+  const currentTab = tabs.find((t) => t.id === tab) || tabs.find((t) => t.id === 'all');
+  const sortBy = ranked ? sort : 'date'; // without scores the only order is by date
   let rows = applicants.filter(currentTab.show);
   rows = [...rows].sort((a, b) =>
-    sort === 'score' ? (b.score ?? -1) - (a.score ?? -1) : b.appliedOn.localeCompare(a.appliedOn) // newest first
+    sortBy === 'score' ? (b.score ?? -1) - (a.score ?? -1) : b.appliedOn.localeCompare(a.appliedOn) // newest first
   );
-  if (tab === 'top') rows = rows.slice(0, 10);
+  if (currentTab.id === 'top') rows = rows.slice(0, 10);
+
+  const appliedText = (date) =>
+    'Applied ' + new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
   // ---------- Ticking applicants ----------
   const allChecked = rows.length > 0 && rows.every((a) => selected.includes(a.id));
@@ -89,10 +105,8 @@ export default function Applicants() {
     if (selected.length === 0) return;
     try {
       const data = await api(`/jobs/mine/${jobId}/applicants`, { method: 'PATCH', body: { ids: selected, status: 'shortlisted' } });
-
+      // only the ones the backend actually moved (e.g. an accepted applicant is skipped)
       setApplicants(applicants.map((a) => (data.updated.includes(a.id) ? { ...a, status: 'Shortlisted' } : a)));
-
-      setApplicants(applicants.map((a) => (selected.includes(a.id) ? { ...a, status: 'Shortlisted' } : a)));
       setSelected([]);
     } catch (err) {
       setError(err.error || 'Could not shortlist. Try again.');
@@ -113,7 +127,9 @@ export default function Applicants() {
         <div>
           <Link to="/company/jobs" className="ap-back">← All jobs</Link>
           <h1>Applicants</h1>
-          <p className="ap-sub">Ranked by AI · you make every decision</p>
+          <p className="ap-sub">
+            {onFree ? 'Sorted by date applied' : 'Ranked by AI'} · you make every decision
+          </p>
         </div>
         <div className="ap-job">
           <label htmlFor="ap-jobpick">Job</label>
@@ -125,7 +141,20 @@ export default function Applicants() {
         </div>
       </div>
 
-      {error && <p className="field__error" role="alert">{error}</p>}
+      {onFree && (
+        <div className="ap-upgrade" role="note">
+          <span className="ap-upgrade__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />
+            </svg>
+          </span>
+          <p>
+            <b>You're on the Free plan.</b> Applicants are sorted by date. Upgrade to see AI match scores,
+            your Top 10 and the reason behind every score.
+          </p>
+          <Link to="/company/plans" className="ap-upgrade__link">See plans →</Link>
+        </div>
+      )}
 
       {/* ---------- Stat boxes ---------- */}
       <div className="ap-stats">
@@ -137,9 +166,9 @@ export default function Applicants() {
 
       {/* ---------- Tabs ---------- */}
       <div className="ap-tabs" role="tablist" aria-label="Applicant groups">
-        {TABS.map((t) => (
-          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id}
-            className={tab === t.id ? 'ap-tab ap-tab--on' : 'ap-tab'} onClick={() => changeTab(t.id)}>
+        {tabs.map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={currentTab.id === t.id}
+            className={currentTab.id === t.id ? 'ap-tab ap-tab--on' : 'ap-tab'} onClick={() => changeTab(t.id)}>
             {t.label(stats)}
           </button>
         ))}
@@ -149,33 +178,49 @@ export default function Applicants() {
       <section className="ap-list">
         {/* toolbar: select all · shortlist · reject · sort */}
         <div className="ap-toolbar">
-          <label className="ap-selectall">
-            <input type="checkbox" checked={allChecked} onChange={toggleAll} />
-            Select all <span>({selected.length} selected)</span>
-          </label>
-          <div className="ap-toolbar__right">
-            <button type="button" className="ap-btn ap-btn--teal" onClick={shortlistSelected}>Shortlist selected</button>
-            <button type="button" className="ap-btn ap-btn--reject" onClick={rejectSelected}>Reject selected</button>
-            <select aria-label="Sort by" value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="score">Sort: match score</option>
-              <option value="date">Sort: date applied</option>
-            </select>
-          </div>
+          {bulk ? (
+            <>
+              <label className="ap-selectall">
+                <input type="checkbox" checked={allChecked} onChange={toggleAll} />
+                Select all <span>({selected.length} selected)</span>
+              </label>
+              <div className="ap-toolbar__right">
+                <button type="button" className="ap-btn ap-btn--teal" onClick={shortlistSelected}>Shortlist selected</button>
+                <button type="button" className="ap-btn ap-btn--reject" onClick={rejectSelected}>Reject selected</button>
+                {ranked && (
+                  <select aria-label="Sort by" value={sort} onChange={(e) => setSort(e.target.value)}>
+                    <option value="score">Sort: match score</option>
+                    <option value="date">Sort: date applied</option>
+                  </select>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="ap-locked">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+              Bulk shortlist / reject is on the Starter plan. Open an applicant to decide one by one.
+            </p>
+          )}
         </div>
 
         {/* one row per applicant (scrolls sideways on small screens) */}
         <div className="ap-rows">
           {rows.map((a, i) => (
-            <div key={a.id} className="ap-row">
-              <input type="checkbox" aria-label={`Select ${a.name}`}
-                checked={selected.includes(a.id)} onChange={() => toggleOne(a.id)} />
-              <span className="ap-rank">#{i + 1}</span>
+            <div key={a.id} className={bulk ? 'ap-row' : 'ap-row ap-row--plain'}>
+              {bulk && (
+                <input type="checkbox" aria-label={`Select ${a.name}`}
+                  checked={selected.includes(a.id)} onChange={() => toggleOne(a.id)} />
+              )}
+              {ranked && <span className="ap-rank">#{i + 1}</span>}
               <span className="ap-avatar" style={{ background: a.color }}>{a.initials}</span>
               <div className="ap-who">
                 <b>{a.name}</b>
-                <span>{a.why}</span>
+                <span>{reasons ? a.why : appliedText(a.appliedOn)}</span>
               </div>
-              <ScoreRing score={a.score} />
+              {ranked && <ScoreRing score={a.score} />}
               <StatusPill status={a.status} />
               <Link to={`/company/jobs/${jobId}/applicants/${a.id}`} className="ap-view">View applicant</Link>
             </div>
