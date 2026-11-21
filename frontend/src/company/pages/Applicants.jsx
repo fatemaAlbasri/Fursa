@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../shared/api.js';
 import { toApplicant, countStats } from '../data/applicants.js';
 import StatusPill from '../../shared/components/StatusPill';
+import { LockIcon } from '../../shared/components/icons.jsx';
 import ScoreRing from '../components/ScoreRing.jsx';
 import '../styles/Applicants.css';
 
@@ -37,7 +38,7 @@ export default function Applicants() {
   const [sort, setSort] = useState('score'); // 'score' | 'date'
   const [selected, setSelected] = useState([]); // ids of the ticked applicants
   const [error, setError] = useState('');
-  const [features, setFeatures] = useState(null); // the company's plan features (from the backend)
+  const [features, setFeatures] = useState(null); // what the company's plan allows
 
   const stats = countStats(applicants);
 
@@ -64,17 +65,17 @@ export default function Applicants() {
       .catch((err) => setError(err.error || 'Could not load the applicants.'));
   }, [jobId]);
 
-  // ---------- What the plan allows ----------
-  // Free: no AI ranking (no Top 10, no scores, sorted by date), no match reasons, no bulk actions
+  // ---------- Plan limits ----------
+  // Free plan: no scores, no Top 10, no reasons, no bulk actions
   const ranked = Boolean(features?.ai_ranking);
   const reasons = Boolean(features?.match_reasons);
   const bulk = Boolean(features?.bulk_actions);
   const onFree = features && !ranked;
 
   // ---------- The list for the open tab ----------
-  const tabs = TABS.filter((t) => ranked || t.id !== 'top'); // no Top 10 without AI ranking
+  const tabs = TABS.filter((t) => ranked || t.id !== 'top'); // Top 10 needs AI ranking
   const currentTab = tabs.find((t) => t.id === tab) || tabs.find((t) => t.id === 'all');
-  const sortBy = ranked ? sort : 'date'; // without scores the only order is by date
+  const sortBy = ranked ? sort : 'date'; // no scores, so sort by date
   let rows = applicants.filter(currentTab.show);
   rows = [...rows].sort((a, b) =>
     sortBy === 'score' ? (b.score ?? -1) - (a.score ?? -1) : b.appliedOn.localeCompare(a.appliedOn) // newest first
@@ -105,7 +106,7 @@ export default function Applicants() {
     if (selected.length === 0) return;
     try {
       const data = await api(`/jobs/mine/${jobId}/applicants`, { method: 'PATCH', body: { ids: selected, status: 'shortlisted' } });
-      // only the ones the backend actually moved (e.g. an accepted applicant is skipped)
+      // the backend skips some, e.g. accepted applicants
       setApplicants(applicants.map((a) => (data.updated.includes(a.id) ? { ...a, status: 'Shortlisted' } : a)));
       setSelected([]);
     } catch (err) {
@@ -140,6 +141,8 @@ export default function Applicants() {
           </select>
         </div>
       </div>
+
+      {error && <p className="field__error" role="alert">{error}</p>}
 
       {onFree && (
         <div className="ap-upgrade" role="note">
@@ -197,10 +200,7 @@ export default function Applicants() {
             </>
           ) : (
             <p className="ap-locked">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="5" y="11" width="14" height="10" rx="2" />
-                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-              </svg>
+              <LockIcon />
               Bulk shortlist / reject is on the Starter plan. Open an applicant to decide one by one.
             </p>
           )}

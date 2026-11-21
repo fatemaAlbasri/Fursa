@@ -11,7 +11,7 @@ import {
 } from '../../shared/utils/jobFormat.js'
 import '../styles/CompanyJobs.css'
 
-// An open job past its deadline counts as closed (the auto-close job closes it soon anyway)
+// an open job past its deadline counts as closed
 const tabOf = (job) => {
   if (job.status === 'draft') return 'draft'
   if (job.status === 'closed' || daysLeft(job.deadline) < 0) return 'closed'
@@ -30,9 +30,9 @@ const shortDate = (d) =>
 export default function CompanyJobs() {
   const [jobs, setJobs] = useState(null)
   const [error, setError] = useState('')
-  const [closing, setClosing] = useState(null) // the job waiting for "Close this job?"
-  const [deleting, setDeleting] = useState(null) // the draft waiting for "Delete this draft?"
-  // The tab lives in the URL (?tab=draft) so "Back" and refresh keep it
+  const [closing, setClosing] = useState(null) // job to close (opens the dialog)
+  const [deleting, setDeleting] = useState(null) // draft to delete (opens the dialog)
+  // keep the tab in the url so back and refresh remember it
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = TABS.some((t) => t.id === searchParams.get('tab'))
     ? searchParams.get('tab')

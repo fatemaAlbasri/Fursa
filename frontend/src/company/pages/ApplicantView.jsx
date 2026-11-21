@@ -6,6 +6,7 @@ import { userInitials } from '../../shared/utils/jobFormat.js'
 import { STATUS_LABELS, avatarColor } from '../data/applicants.js'
 import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx'
 import StatusPill from '../../shared/components/StatusPill'
+import { LockIcon } from '../../shared/components/icons.jsx'
 import ScoreRing from '../components/ScoreRing.jsx'
 import '../styles/ApplicantView.css'
 
@@ -272,10 +273,9 @@ function ApplicantPage() {
   }
 
   const { applicant: a, interview, history, nav, features } = data
-  // Free plan: no AI score / rank, no match reasons (the backend already hides the data)
+  // free plan has no score and no skills match
   const ranked = Boolean(features?.ai_ranking)
   const reasons = Boolean(features?.match_reasons)
-
   const status = a.status
 
   // only show a match if it's an exact major match
@@ -512,10 +512,7 @@ function ApplicantPage() {
               </p>
             ) : (
               <p className="apd-locked">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <rect x="5" y="11" width="14" height="10" rx="2" />
-                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                </svg>
+                <LockIcon />
                 AI match details are on the Starter plan.{' '}
                 <Link to="/company/plans">See plans →</Link>
               </p>

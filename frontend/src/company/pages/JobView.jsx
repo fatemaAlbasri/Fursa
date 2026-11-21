@@ -76,7 +76,7 @@ function Info({ label, children }) {
   )
 }
 
-// One row in "Job details": label on the left, value on the right
+// one row in job details
 function Row({ label, children }) {
   return (
     <div className="jv-row">
@@ -92,7 +92,7 @@ export default function JobView({ startEditing = false }) {
   const navigate = useNavigate()
 
   const [job, setJob] = useState(null)
-  // "Post a job" sends { justPosted: true } → show the green bar on arrival
+  // coming from post a job, show the success message
   const [notice, setNotice] = useState(
     location.state?.justPosted
       ? {
@@ -145,7 +145,7 @@ export default function JobView({ startEditing = false }) {
       </div>
     )
   }
-  // A draft has nothing to show yet → open it straight in the edit form
+  // drafts open in edit mode
   if (job.status === 'draft' && !startEditing) {
     return <Navigate to={`/company/jobs/${id}/edit`} replace />
   }
@@ -157,7 +157,7 @@ export default function JobView({ startEditing = false }) {
   const left = Math.max(0, daysLeft(job.deadline))
 
   // Buttons
-  // status: 'draft' = keep it as a draft, 'open' = publish it / keep it live
+  // status is 'draft' or 'open'
   const saveChanges = (form, status) => {
     if (saving) return
     setSaving(true)
@@ -168,20 +168,20 @@ export default function JobView({ startEditing = false }) {
       .then((data) => {
         setJob(data.job)
         if (status === 'draft') {
-          // Draft saved → stay in the form
+          // draft saved, stay in the form
           setNotice({
             type: 'success',
             text: 'Draft saved. Publish it when you are ready.'
           })
         } else if (isDraft) {
-          // Draft just published → the job page with the green bar
+          // draft published
           setNotice({
             type: 'success',
             text: 'Your job is live. Job seekers who match can now see and apply.'
           })
           navigate(`/company/jobs/${id}`, { replace: true })
         } else {
-          // Live job saved → the job page with the green bar
+          // live job saved
           setNotice({
             type: 'success',
             text: 'Changes saved. Applicants have been re-ranked.'
@@ -219,12 +219,12 @@ export default function JobView({ startEditing = false }) {
       )
       .finally(() => {
         setSaving(false)
-        // the green/red bar is at the top of the page → scroll up so it's seen
+        // scroll up to show the message
         window.scrollTo({ top: 0, behavior: 'smooth' })
       })
   }
 
-  // "Back to your jobs" opens the tab this job is in
+  // back link opens the same tab this job is in
   const backTab = isDraft
     ? 'draft'
     : isClosed || daysLeft(job.deadline) < 0
@@ -241,7 +241,7 @@ export default function JobView({ startEditing = false }) {
 
       <Notice notice={notice} onClose={() => setNotice(null)} />
 
-      {/* ---------- Edit mode note (top of the page) ---------- */}
+      {/* ---------- Edit note ---------- */}
       {editing && (
         <p className="jv-warn" role="note">
           {InfoIcon}
@@ -251,7 +251,7 @@ export default function JobView({ startEditing = false }) {
         </p>
       )}
 
-      {/* ---------- Header card: title + stats (view and edit) ---------- */}
+      {/* ---------- Header ---------- */}
       <section className="jv-card jv-hero">
         <div className="jv-hero__top">
           <span className="jv-hero__logo" aria-hidden="true">
@@ -301,7 +301,7 @@ export default function JobView({ startEditing = false }) {
           )}
         </div>
 
-        {/* a draft has no applicants yet, so no numbers */}
+        {/* no stats for drafts */}
         {!isDraft && (
           <div className="jv-stats">
             <div className="jv-stat">
@@ -350,7 +350,7 @@ export default function JobView({ startEditing = false }) {
         /* =================== VIEW MODE =================== */
         <>
           <div className="jv-cols">
-            {/* ----- LEFT: one card with description, responsibilities, requirements ----- */}
+            {/* left side */}
             <section className="jv-card jv-main">
               <div className="jv-section">
                 <h2>Job description</h2>
@@ -404,7 +404,7 @@ export default function JobView({ startEditing = false }) {
               </div>
             </section>
 
-            {/* ----- RIGHT: manage first, then job details ----- */}
+            {/* right side */}
             <aside className="jv-side">
               <section className="jv-card">
                 <h2>Manage this job</h2>
@@ -450,7 +450,7 @@ export default function JobView({ startEditing = false }) {
             </aside>
           </div>
 
-          {/* Hiring summary: not for drafts (no applicants yet) */}
+          {/* hiring summary */}
           {!isDraft && <HiringSummary jobId={job.id} />}
         </>
       )}
