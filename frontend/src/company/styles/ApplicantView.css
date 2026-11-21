@@ -662,3 +662,7 @@ a.apd-nav__btn:hover {
     animation: none;
   }
 }
+/* Free plan: "AI match details are on the Starter plan" */
+.apd-locked { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font-size: 14px; color: #5B7186; }
+.apd-locked a { font-weight: 700; color: #117A7C; text-decoration: none; }
+.apd-locked a:hover { text-decoration: underline; }
