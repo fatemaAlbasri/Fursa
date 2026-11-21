@@ -8,12 +8,12 @@ import ChangePassword from './shared/pages/ChangePassword.jsx';
 import ResetPassword from './shared/pages/ResetPassword.jsx';
 
 import CompanyLayout from './company/CompanyLayout.jsx';
+import CompanyJobs from './company/pages/CompanyJobs.jsx';
 import PostJob from './company/pages/PostJob.jsx';
 import JobView from './company/pages/JobView.jsx';
 import RejectApplicants from './company/pages/RejectApplicants.jsx';
 import Applicants from './company/pages/Applicants.jsx';
 import ApplicantView from './company/pages/ApplicantView.jsx';
-import CompanyHome from './company/pages/CompanyHome.jsx';
 import CompanyProfile from './company/pages/CompanyProfile.jsx';
 import DeleteAccount from './company/pages/DeleteAccount.jsx';
 import Plans from './company/pages/Plans.jsx';
@@ -155,7 +155,8 @@ export default function App() {
 
       {/* Company (employer) pages — all share the employer top bar */}
       <Route path="/company" element={<CompanyLayout />}>
-        <Route index element={<CompanyHome />} />
+        <Route index element={<Navigate to="/company/jobs" replace />} />
+        <Route path="jobs" element={<CompanyJobs />} />
         <Route path="post-job" element={<PostJob />} />
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView startEditing />} />
