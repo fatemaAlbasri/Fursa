@@ -386,3 +386,19 @@ img.jfy-logo {
     animation-duration: 2s;
   }
 }
+
+/* match note under the job */
+.jfy-note { margin: 0; font-size: 13px; font-weight: 600; }
+.jfy-note--good { color: #067647; }
+.jfy-note--warn { color: #93370D; }
+.jfy-note--bad  { color: #B42318; }
+
+/* top 10 / applied badges */
+.jfy-badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.jfy-badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.jfy-badge--top { background: #E3F8EF; color: #067647; }
+.jfy-badge--applied { background: #EEF2F5; color: #3E5468; }
+.jfy-row__title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* not qualified: faded ring */
+.jfy-ring--low { opacity: .55; }
