@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams
+} from 'react-router-dom'
 import JobForm from '../components/JobForm.jsx'
 import HiringSummary from '../components/HiringSummary.jsx'
 import { api } from '../../shared/api.js'
@@ -46,6 +52,20 @@ const InfoIcon = (
   </svg>
 )
 
+const EyeIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
 // A small grey box: label on top, value under it
 function Info({ label, children }) {
   return (
@@ -55,13 +75,6 @@ function Info({ label, children }) {
     </div>
   )
 }
-
-const EyeIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-)
 
 // One row in "Job details": label on the left, value on the right
 function Row({ label, children }) {
@@ -79,15 +92,14 @@ export default function JobView({ startEditing = false }) {
   const navigate = useNavigate()
 
   const [job, setJob] = useState(null)
+  // "Post a job" sends { justPosted: true } → show the green bar on arrival
   const [notice, setNotice] = useState(
     location.state?.justPosted
       ? {
           type: 'success',
           text: 'Your job is live. Job seekers who match can now see and apply.'
         }
-      : location.state?.justSaved
-        ? { type: 'success', text: 'Changes saved.' }
-        : null
+      : null
   )
   const [confirm, setConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -126,12 +138,16 @@ export default function JobView({ startEditing = false }) {
           <span className="jv-popup__icon">{InfoIcon}</span>
           <h2 id="jv-popup-title">Job not found</h2>
           <p>This job doesn't exist, or it isn't one of your jobs.</p>
-          <Link to="/company/" className="btn btn--primary">
+          <Link to="/company/jobs" className="btn btn--primary">
             Back to your jobs
           </Link>
         </div>
       </div>
     )
+  }
+  // A draft has nothing to show yet → open it straight in the edit form
+  if (job.status === 'draft' && !startEditing) {
+    return <Navigate to={`/company/jobs/${id}/edit`} replace />
   }
 
   // Values worked out from the job
@@ -142,7 +158,7 @@ export default function JobView({ startEditing = false }) {
 
   // Buttons
   // status: 'draft' = keep it as a draft, 'open' = publish it / keep it live
-  const saveChanges = (form, status = isDraft ? 'draft' : 'open') => {
+  const saveChanges = (form, status) => {
     if (saving) return
     setSaving(true)
     api('/jobs/mine/' + id, {
@@ -151,45 +167,28 @@ export default function JobView({ startEditing = false }) {
     })
       .then((data) => {
         setJob(data.job)
-        setNotice({
-          type: 'success',
-          text:
-            status === 'draft'
-              ? 'Draft saved. Publish it when you are ready.'
-              : isDraft
-                ? 'Your job is live. Job seekers who match can now see and apply.'
-                : 'Changes saved. Applicants have been re-ranked.'
-        })
-
-        navigate(`/company/jobs/${id}`, {
-          replace: true,
-          state: { justSaved: true }
-        })
+        if (status === 'draft') {
+          // Draft saved → stay in the form
+          setNotice({
+            type: 'success',
+            text: 'Draft saved. Publish it when you are ready.'
+          })
+        } else if (isDraft) {
+          // Draft just published → the job page with the green bar
+          setNotice({
+            type: 'success',
+            text: 'Your job is live. Job seekers who match can now see and apply.'
+          })
+          navigate(`/company/jobs/${id}`, { replace: true })
+        } else {
+          // Live job saved → the job page with the green bar
+          setNotice({
+            type: 'success',
+            text: 'Changes saved. Applicants have been re-ranked.'
+          })
+          navigate(`/company/jobs/${id}`, { replace: true })
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' })
-      })
-      .catch((err) =>
-        setNotice({
-          type: 'error',
-          text: err.error || 'Something went wrong. Please try again.'
-        })
-      )
-      .finally(() => setSaving(false))
-  }
-
-  // Draft
-  const publishDraft = () => {
-    if (saving) return
-    setSaving(true)
-    api('/jobs/mine/' + id, {
-      method: 'PUT',
-      body: toJobBody(jobToForm(job), 'open')
-    })
-      .then((data) => {
-        setJob(data.job)
-        setNotice({
-          type: 'success',
-          text: 'Your job is live. Job seekers who match can now see and apply.'
-        })
       })
       .catch((err) =>
         setNotice({
@@ -218,62 +217,62 @@ export default function JobView({ startEditing = false }) {
           text: err.error || 'Something went wrong. Please try again.'
         })
       )
-      .finally(() => setSaving(false))
-  }
-
-  // Delete draft
-  const deleteDraft = () => {
-    setSaving(true)
-    api('/jobs/mine/' + id, { method: 'DELETE' })
-      .then(() => {
-        navigate('/company', { replace: true })
-      })
-      .catch((err) => {
-        setNotice({
-          type: 'error',
-          text: err.error || 'Something went wrong. Please try again.'
-        })
+      .finally(() => {
         setSaving(false)
+        // the green/red bar is at the top of the page → scroll up so it's seen
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       })
   }
 
-    return (
+  // "Back to your jobs" opens the tab this job is in
+  const backTab = isDraft
+    ? 'draft'
+    : isClosed || daysLeft(job.deadline) < 0
+      ? 'closed'
+      : 'active'
+  const backTo =
+    backTab === 'active' ? '/company/jobs' : `/company/jobs?tab=${backTab}`
+
+  return (
     <main className="jv">
-      <Link to="/company/jobs" className="jv-back">
+      <Link to={backTo} className="jv-back">
         ← Back to your jobs
       </Link>
 
       <Notice notice={notice} onClose={() => setNotice(null)} />
 
-      {/* ---------- Draft notice + Publish button (view mode only) ---------- */}
-      {!editing && isDraft && (
-        <div className="jv-draft" role="status">
+      {/* ---------- Edit mode note (top of the page) ---------- */}
+      {editing && (
+        <p className="jv-warn" role="note">
           {InfoIcon}
-          <span>
-            This job is a <b>draft</b>. Only you can see it. Publish it so job seekers can apply.
-          </span>
-          <button type="button" className="jv-btn jv-btn--primary" onClick={publishDraft} disabled={saving}>
-            {saving ? 'Publishing…' : 'Publish job'}
-          </button>
-        </div>
+          {isDraft
+            ? "You are editing a draft. Job seekers can't see it until you publish it."
+            : 'You are editing a live job. If you change the requirements, Fursa will re-rank all applicants.'}
+        </p>
       )}
 
       {/* ---------- Header card: title + stats (view and edit) ---------- */}
       <section className="jv-card jv-hero">
         <div className="jv-hero__top">
-          <span className="jv-hero__logo" aria-hidden="true"><BriefcaseIcon /></span>
+          <span className="jv-hero__logo" aria-hidden="true">
+            <BriefcaseIcon />
+          </span>
 
           <div className="jv-hero__text">
             <div className="jv-tags">
               <span className={`jv-tag jv-tag--${job.status}`}>
                 ● {isDraft ? 'Draft' : isClosed ? 'Closed' : 'Active'}
               </span>
-              {job.job_type && <span className="jv-tag">{formatJobType(job.job_type)}</span>}
-              {job.work_mode && <span className="jv-tag">{formatWorkMode(job.work_mode)}</span>}
+              {job.job_type && (
+                <span className="jv-tag">{formatJobType(job.job_type)}</span>
+              )}
+              {job.work_mode && (
+                <span className="jv-tag">{formatWorkMode(job.work_mode)}</span>
+              )}
             </div>
             <h1>{job.title}</h1>
             <p>
-              Posted {formatDeadline(job.created_at)}
+              {isDraft ? 'Created' : 'Posted'} {formatDeadline(job.created_at)}
               {job.deadline && ` · Deadline ${formatDeadline(job.deadline)}`}
             </p>
           </div>
@@ -290,46 +289,63 @@ export default function JobView({ startEditing = false }) {
                 Edit job
               </button>
               {!isDraft && (
-                <Link to="/company/applicants" state={{ jobId: job.id }} className="jv-btn jv-btn--primary">
-                  View applicants →
+                <Link
+                  to="/company/applicants"
+                  state={{ jobId: job.id }}
+                  className="jv-btn jv-btn--primary"
+                >
+                  View applicants
                 </Link>
               )}
             </div>
           )}
         </div>
 
-        <div className="jv-stats">
-          <div className="jv-stat"><b>{job.stats.applicants}</b><span>Applicants</span></div>
-          <div className="jv-stat jv-stat--good"><b>{job.stats.qualified}</b><span>Qualified</span></div>
-          <div className="jv-stat jv-stat--teal"><b>{job.stats.newCount}</b><span>New</span></div>
-          <div className="jv-stat jv-stat--warn"><b>{left}</b><span>Days left</span></div>
-        </div>
+        {/* a draft has no applicants yet, so no numbers */}
+        {!isDraft && (
+          <div className="jv-stats">
+            <div className="jv-stat">
+              <b>{job.stats.applicants}</b>
+              <span>Applicants</span>
+            </div>
+            <div className="jv-stat jv-stat--good">
+              <b>{job.stats.qualified}</b>
+              <span>Qualified</span>
+            </div>
+            <div className="jv-stat jv-stat--teal">
+              <b>{job.stats.newCount}</b>
+              <span>New</span>
+            </div>
+            <div className="jv-stat jv-stat--warn">
+              <b>{left}</b>
+              <span>Days left</span>
+            </div>
+          </div>
+        )}
       </section>
 
       {editing ? (
         /* =================== EDIT MODE =================== */
-        <>
-          <p className="jv-warn" role="note">
-            {InfoIcon}
-            {isDraft
-              ? "You are editing a draft. Job seekers can't see it until you publish it."
-              : 'You are editing a live job. If you change the requirements, Fursa will re-rank all applicants.'}
-          </p>
-
-          <JobForm
-            initial={jobToForm(job)}
-            stacked
-            edit
-            saving={saving}
-            submitLabel={isDraft ? 'Publish job' : 'Save changes'}
-            onSubmit={(form) => saveChanges(form, 'open')}
-            secondary={
-              isDraft
-                ? { label: 'Save draft', checkTitleOnly: true, onClick: (form) => saveChanges(form, 'draft') }
-                : { label: 'Cancel', onClick: () => navigate(`/company/jobs/${id}`) }
-            }
-          />
-        </>
+        <JobForm
+          initial={jobToForm(job)}
+          stacked
+          edit
+          saving={saving}
+          submitLabel={isDraft ? 'Publish job' : 'Save changes'}
+          onSubmit={(form) => saveChanges(form, 'open')}
+          secondary={
+            isDraft
+              ? {
+                  label: 'Save draft',
+                  checkTitleOnly: true,
+                  onClick: (form) => saveChanges(form, 'draft')
+                }
+              : {
+                  label: 'Cancel',
+                  onClick: () => navigate(`/company/jobs/${id}`)
+                }
+          }
+        />
       ) : (
         /* =================== VIEW MODE =================== */
         <>
@@ -345,7 +361,9 @@ export default function JobView({ startEditing = false }) {
                 <h2>Role &amp; responsibilities</h2>
                 {roles.length ? (
                   <ul className="jv-list">
-                    {roles.map((r) => <li key={r}>{r}</li>)}
+                    {roles.map((r) => (
+                      <li key={r}>{r}</li>
+                    ))}
                   </ul>
                 ) : (
                   <p className="jv-text">—</p>
@@ -355,11 +373,17 @@ export default function JobView({ startEditing = false }) {
               <div className="jv-section">
                 <h2>Requirements</h2>
                 <p className="jv-hint">
-                  Applicants missing a <b>must-have</b> go to the Not qualified tab.
+                  Applicants missing a <b>must-have</b> go to the Not qualified
+                  tab.
                 </p>
                 <div className="jv-skills">
                   {job.skills.map((s) => (
-                    <span key={s.name} className={s.is_required ? 'jv-skill jv-skill--must' : 'jv-skill'}>
+                    <span
+                      key={s.name}
+                      className={
+                        s.is_required ? 'jv-skill jv-skill--must' : 'jv-skill'
+                      }
+                    >
                       {s.name}
                       {s.is_required && <em>MUST</em>}
                     </span>
@@ -368,9 +392,13 @@ export default function JobView({ startEditing = false }) {
                 <div className="jv-req-grid">
                   <Info label="Major">
                     {job.field || 'Any major'}
-                    {job.field && job.major_must_have && <em className="jv-must">MUST</em>}
+                    {job.field && job.major_must_have && (
+                      <em className="jv-must">MUST</em>
+                    )}
                   </Info>
-                  <Info label="Experience">{formatExperience(job.min_years, job.max_years)}</Info>
+                  <Info label="Experience">
+                    {formatExperience(job.min_years, job.max_years)}
+                  </Info>
                   <Info label="Language">{job.language || '—'}</Info>
                 </div>
               </div>
@@ -380,47 +408,43 @@ export default function JobView({ startEditing = false }) {
             <aside className="jv-side">
               <section className="jv-card">
                 <h2>Manage this job</h2>
-                <p className="jv-sub">
-                  {isDraft ? 'Publish it or delete it' : 'Preview it or stop taking applicants'}
-                </p>
+                <p className="jv-sub">Preview it or stop taking applicants</p>
                 <div className="jv-manage">
-                  {isDraft ? (
-                    <button
-                      type="button"
-                      className="jv-btn jv-btn--danger"
-                      onClick={() => setConfirm('delete')}
-                      disabled={saving}
-                    >
-                      Delete draft
-                    </button>
-                  ) : (
-                    <>
-                      <Link to={`/jobseeker/jobs/${job.id}`} className="jv-btn jv-btn--outline">
-                        {EyeIcon}
-                        Preview as job seeker
-                      </Link>
-                      <button
-                        type="button"
-                        className="jv-btn jv-btn--danger"
-                        onClick={() => setConfirm('close')}
-                        disabled={isClosed}
-                      >
-                        <LockIcon />
-                        {isClosed ? 'Job closed' : 'Close this job'}
-                      </button>
-                    </>
-                  )}
+                  <Link
+                    to={`/company/jobs/${job.id}/preview`}
+                    className="jv-btn jv-btn--outline"
+                  >
+                    {EyeIcon}
+                    Preview as job seeker
+                  </Link>
+                  <button
+                    type="button"
+                    className="jv-btn jv-btn--danger"
+                    onClick={() => setConfirm('close')}
+                    disabled={isClosed}
+                  >
+                    <LockIcon />
+                    {isClosed ? 'Job closed' : 'Close this job'}
+                  </button>
                 </div>
               </section>
 
               <section className="jv-card">
                 <h2>Job details</h2>
                 <div className="jv-rows">
-                  <Row label="Job type">{job.job_type ? formatJobType(job.job_type) : '—'}</Row>
-                  <Row label="Work mode">{job.work_mode ? formatWorkMode(job.work_mode) : '—'}</Row>
+                  <Row label="Job type">
+                    {job.job_type ? formatJobType(job.job_type) : '—'}
+                  </Row>
+                  <Row label="Work mode">
+                    {job.work_mode ? formatWorkMode(job.work_mode) : '—'}
+                  </Row>
                   <Row label="Location">{job.location || '—'}</Row>
-                  <Row label="Deadline">{job.deadline ? formatDeadline(job.deadline) : '—'}</Row>
-                  <Row label="Salary">{job.salary ? `BHD ${job.salary} / month` : 'Hidden'}</Row>
+                  <Row label="Deadline">
+                    {job.deadline ? formatDeadline(job.deadline) : '—'}
+                  </Row>
+                  <Row label="Salary">
+                    {job.salary ? `BHD ${job.salary} / month` : 'Hidden'}
+                  </Row>
                 </div>
               </section>
             </aside>
@@ -430,20 +454,6 @@ export default function JobView({ startEditing = false }) {
           {!isDraft && <HiringSummary jobId={job.id} />}
         </>
       )}
-
-      <ConfirmDialog
-        open={confirm === 'delete'}
-        title="Delete this draft?"
-        message="This cannot be undone."
-        confirmLabel="Delete draft"
-        danger
-        busy={saving}
-        onConfirm={() => {
-          setConfirm(null)
-          deleteDraft()
-        }}
-        onCancel={() => setConfirm(null)}
-      />
 
       <ConfirmDialog
         open={confirm === 'close'}
@@ -460,4 +470,3 @@ export default function JobView({ startEditing = false }) {
     </main>
   )
 }
-
