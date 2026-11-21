@@ -33,13 +33,21 @@ const getJobs = async (req, res, next) => {
 }
 
 // GET /api/jobs/mine → view only their jobs (company)
+// applicants / qualified / newCount use the same rules as jobStats (the View job page)
 const getCompanyJobs = async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      `SELECT j.*, (SELECT COUNT(*)::int FROM applications a WHERE a.job_id = j.id) AS applicants
+      `SELECT j.*,
+              COUNT(a.id)::int AS applicants,
+              COUNT(a.id) FILTER (WHERE ms.is_qualified)::int AS qualified,
+              COUNT(a.id) FILTER (WHERE a.status = 'applied')::int AS "newCount",
+              COUNT(a.id) FILTER (WHERE a.applied_at >= now() - interval '7 days')::int AS "newThisWeek"
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
+         LEFT JOIN applications a ON a.job_id = j.id
+         LEFT JOIN match_scores ms ON ms.job_id = a.job_id AND ms.seeker_id = a.seeker_id
         WHERE c.user_id = $1
+        GROUP BY j.id
         ORDER BY j.created_at DESC`,
       [req.user.id]
     )
