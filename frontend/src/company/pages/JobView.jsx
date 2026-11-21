@@ -123,21 +123,24 @@ export default function JobView({ startEditing = false }) {
   const left = Math.max(0, daysLeft(job.deadline))
 
   // Buttons
-  // "Save changes" in the edit form
-  const saveChanges = (form) => {
+  // status: 'draft' = keep it as a draft, 'open' = publish it / keep it live
+  const saveChanges = (form, status = isDraft ? 'draft' : 'open') => {
     if (saving) return
     setSaving(true)
     api('/jobs/mine/' + id, {
       method: 'PUT',
-      body: toJobBody(form, job.status === 'draft' ? 'draft' : 'open')
+      body: toJobBody(form, status)
     })
       .then((data) => {
         setJob(data.job)
         setNotice({
           type: 'success',
-          text: isDraft
-            ? 'Draft saved. Publish it when you are ready.'
-            : 'Changes saved. Applicants have been re-ranked.'
+          text:
+            status === 'draft'
+              ? 'Draft saved. Publish it when you are ready.'
+              : isDraft
+                ? 'Your job is live. Job seekers who match can now see and apply.'
+                : 'Changes saved. Applicants have been re-ranked.'
         })
 
         navigate(`/company/jobs/${id}`, {
@@ -321,12 +324,20 @@ export default function JobView({ startEditing = false }) {
             stacked
             edit
             saving={saving}
-            submitLabel="Save changes"
-            onSubmit={saveChanges}
-            secondary={{
-              label: 'Cancel',
-              onClick: () => navigate(`/company/jobs/${id}`)
-            }}
+            submitLabel={isDraft ? 'Publish job' : 'Save changes'}
+            onSubmit={(form) => saveChanges(form, 'open')}
+            secondary={
+              isDraft
+                ? {
+                    label: 'Save draft',
+                    checkTitleOnly: true, // a draft only needs a title
+                    onClick: (form) => saveChanges(form, 'draft')
+                  }
+                : {
+                    label: 'Cancel',
+                    onClick: () => navigate(`/company/jobs/${id}`)
+                  }
+            }
           />
         </>
       ) : (

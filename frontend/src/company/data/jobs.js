@@ -79,13 +79,20 @@ export function experienceFromYears(min, max) {
   return found ? found[0] : EXPERIENCE[0]
 }
 
+// A draft can have empty (null) fields, so every text field falls back to ''
 export const jobToForm = (job) => ({
   ...job,
-  jobType: job.job_type,
-  workMode: job.work_mode,
+  title: job.title || '',
+  description: job.description || '',
+  responsibilities: job.responsibilities || '',
+  location: job.location || '',
+  language: job.language || '',
+  salary: job.salary ?? '',
+  jobType: job.job_type || '',
+  workMode: job.work_mode || '',
   major: job.field || '',
   majorMust: job.major_must_have,
   experience: experienceFromYears(job.min_years, job.max_years),
   deadline: toDateInput(job.deadline),
-  skills: job.skills.map((s) => ({ name: s.name, must: s.is_required })),
+  skills: (job.skills || []).map((s) => ({ name: s.name, must: s.is_required })),
 })
