@@ -15,15 +15,83 @@ import '../styles/JobDetails.css'
 
 // ---------- Small icons used on this page ----------
 const FileIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
     <path d="M14 3v5h5" />
   </svg>
 )
 const GlobeIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
     <circle cx="12" cy="12" r="9" />
     <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
+  </svg>
+)
+
+const EyeIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+const PinIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+    <circle cx="12" cy="10" r="2.5" />
+  </svg>
+)
+const BagIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+  </svg>
+)
+const LockIcon = (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <rect x="5" y="11" width="14" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
   </svg>
 )
 
@@ -31,7 +99,8 @@ const GlobeIcon = (
 const isValidId = (id) => Number.isInteger(Number(id)) && Number(id) > 0
 
 // "www.company.bh" → "https://www.company.bh" so the link opens the real site
-const websiteUrl = (site) => (/^https?:\/\//i.test(site) ? site : `https://${site}`)
+const websiteUrl = (site) =>
+  /^https?:\/\//i.test(site) ? site : `https://${site}`
 
 // "shortlisted" → "Shortlisted"
 const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
@@ -43,13 +112,17 @@ function Requirement({ label, value, ok }) {
       <span className="jd-req__label">{label}</span>
       <span className="jd-req__value">
         {value}
-        {ok && <span className="jd-req__ok" aria-label="You meet this">✓</span>}
+        {ok && (
+          <span className="jd-req__ok" aria-label="You meet this">
+            ✓
+          </span>
+        )}
       </span>
     </div>
   )
 }
 
-export default function JobDetails() {
+export default function JobDetails({ preview = false }) {
   const { id } = useParams() // the job id from the URL
   const navigate = useNavigate()
 
@@ -65,7 +138,9 @@ export default function JobDetails() {
   // Load the signed-in user, then this job. No token or a bad token → Sign In.
   useEffect(() => {
     if (!localStorage.getItem('token')) {
-      navigate('/signin?role=jobseeker', { replace: true })
+      navigate(preview ? '/signin?role=company' : '/signin?role=jobseeker', {
+        replace: true
+      })
       return
     }
     let ignore = false // stops a late answer from updating the page after leaving it
@@ -91,8 +166,13 @@ export default function JobDetails() {
       }
       if (ignore) return
       // A company opened the job seeker page: send them to their own home
-      if (user.role === 'employer') {
+      if (!preview && user.role === 'employer') {
         navigate('/company', { replace: true })
+        return
+      }
+      // only companies can open the preview
+      if (preview && user.role !== 'employer') {
+        navigate('/jobseeker/jobs', { replace: true })
         return
       }
 
@@ -104,10 +184,10 @@ export default function JobDetails() {
 
       // 3. The job + the seeker's info for it
       try {
-        const data = await api(`/jobs/${id}`)
+        const data = await api(preview ? `/jobs/mine/${id}` : `/jobs/${id}`)
         if (ignore) return
         setJob(data.job)
-        setMe(data.me)
+        setMe(preview ? null : data.me) // no seeker in preview → no match info
         setStatus('ready')
       } catch (err) {
         if (ignore) return
@@ -126,9 +206,10 @@ export default function JobDetails() {
     return () => {
       ignore = true
     }
-  }, [id, navigate, reloadKey])
+  }, [id, navigate, reloadKey, preview])
 
-  const backLink = (
+  // In preview the "Exit preview" button takes the company back, so no back link there
+  const backLink = preview ? null : (
     <Link to="/jobseeker/jobs" className="jd-back">
       ← Back to jobs
     </Link>
@@ -153,8 +234,11 @@ export default function JobDetails() {
         <div className="jd-card jd-state">
           <h2>Job not found</h2>
           <p>This job doesn't exist, or it is closed or past its deadline.</p>
-          <Link to="/jobseeker/jobs" className="btn btn--primary">
-            See open jobs
+          <Link
+            to={preview ? '/company/jobs' : '/jobseeker/jobs'}
+            className="btn btn--primary"
+          >
+            {preview ? 'Back to your jobs' : 'See open jobs'}
           </Link>
         </div>
       </main>
@@ -167,7 +251,11 @@ export default function JobDetails() {
         <div className="jd-card jd-state jd-state--error" role="alert">
           <h2>Could not load this job</h2>
           <p>{error}</p>
-          <button type="button" className="btn btn--outline" onClick={() => setReloadKey(reloadKey + 1)}>
+          <button
+            type="button"
+            className="btn btn--outline"
+            onClick={() => setReloadKey(reloadKey + 1)}
+          >
             Try again
           </button>
         </div>
@@ -184,8 +272,24 @@ export default function JobDetails() {
   const mySkillIds = me?.skill_ids || []
 
   // ✓ only when we can be sure from the seeker's profile
-  const majorOk = Boolean(me?.major && job.field && me.major.trim().toLowerCase() === job.field.trim().toLowerCase())
-  const experienceOk = me?.years_experience != null && Number(me.years_experience) >= job.min_years
+  const majorOk =
+    preview ||
+    Boolean(
+      me?.major &&
+      job.field &&
+      me.major.trim().toLowerCase() === job.field.trim().toLowerCase()
+    )
+  const experienceOk =
+    preview ||
+    (me?.years_experience != null &&
+      Number(me.years_experience) >= job.min_years)
+
+  // Skill status: true = has it, false = missing, null = can't tell.
+  // Preview example: every skill "has it" except the last one, so both looks are shown.
+  const skillStatus = (skill, index) => {
+    if (preview) return skills.length < 2 || index < skills.length - 1
+    return me ? mySkillIds.includes(skill.id) : null
+  }
 
   // Apply with the CV from the seeker's profile
   const handleApply = async () => {
@@ -210,20 +314,59 @@ export default function JobDetails() {
     <main className="container jd">
       {backLink}
 
+      {preview && (
+        <div className="jd-preview" role="note">
+          <span className="jd-preview__icon">{EyeIcon}</span>
+          <div className="jd-preview__text">
+            <b>Preview mode</b>
+            <span>
+              This is how job seekers see your job. Applying is turned off here.
+              {job.status === 'draft' &&
+                ' This job is a draft, so job seekers can’t see it yet.'}
+            </span>
+          </div>
+          <Link to={`/company/jobs/${id}`} className="jd-preview__exit">
+            Exit preview
+          </Link>
+        </div>
+      )}
+
       {/* ---------- Header ---------- */}
       <section className="jd-card jd-hero">
         <CompanyLogo job={job} className="jd-logo" />
         <div className="jd-hero__text">
           <h1>{job.title}</h1>
           <p className="jd-hero__company">
-            {job.company_name} · {job.location}
+            {preview ? (
+              <span>{job.company_name}</span>
+            ) : (
+              <Link
+                to={`/jobseeker/companies/${job.company_id}`}
+                className="jd-hero__link"
+              >
+                {job.company_name}
+              </Link>
+            )}{' '}
+            · {job.location}
           </p>
           <div className="jd-tags">
-            <span className={job.job_type === 'internship' ? 'jd-tag jd-tag--internship' : 'jd-tag'}>
+            <span
+              className={
+                job.job_type === 'internship'
+                  ? 'jd-tag jd-tag--internship'
+                  : 'jd-tag'
+              }
+            >
+              {BagIcon}
               {formatJobType(job.job_type)}
             </span>
-            <span className="jd-tag jd-tag--plain">{formatWorkMode(job.work_mode)}</span>
-            <span className="jd-tag jd-tag--plain">{salary ? `${salary} / month` : 'Salary not shown'}</span>
+            <span className="jd-tag">
+              {PinIcon}
+              {formatWorkMode(job.work_mode)}
+            </span>
+            <span className="jd-tag jd-tag--plain">
+              {salary ? `${salary} / month` : 'Salary not shown'}
+            </span>
             <span className="jd-tag jd-tag--deadline">
               Deadline {formatDeadline(job.deadline)}
               {left && ` · ${left}`}
@@ -232,13 +375,32 @@ export default function JobDetails() {
         </div>
 
         {/* Match ring: only when the backend has a score for this seeker and job */}
-        {me?.match_score != null && (
-          <div className="jd-ring" style={{ '--score': me.match_score }} aria-label={`${me.match_score}% match`}>
+        {/* Seeker: their real score. Preview: an example, so the company sees where it shows */}
+        {preview ? (
+          <div
+            className="jd-ring jd-ring--example"
+            style={{ '--score': 85 }}
+            aria-label="Example match score. Each job seeker sees their own score here."
+            title="Each job seeker sees their own match score here"
+          >
             <div className="jd-ring__inner">
-              <span className="jd-ring__value">{me.match_score}%</span>
-              <span className="jd-ring__label">match</span>
+              <span className="jd-ring__value">85%</span>
+              <span className="jd-ring__label">example</span>
             </div>
           </div>
+        ) : (
+          me?.match_score != null && (
+            <div
+              className="jd-ring"
+              style={{ '--score': me.match_score }}
+              aria-label={`${me.match_score}% match`}
+            >
+              <div className="jd-ring__inner">
+                <span className="jd-ring__value">{me.match_score}%</span>
+                <span className="jd-ring__label">match</span>
+              </div>
+            </div>
+          )
         )}
       </section>
 
@@ -263,21 +425,35 @@ export default function JobDetails() {
 
           <section className="jd-card">
             <h2 className="jd-card__title">Requirements &amp; your match</h2>
+            {preview && (
+              <p className="jd-note jd-note--teal">
+                Each job seeker sees this with their own skills. Below is an
+                example.
+              </p>
+            )}
 
             {skills.length > 0 && (
               <div className="jd-skills">
-                {skills.map((skill) => {
-                  // me is null when the seeker has no profile yet → we can't compare
-                  const has = me ? mySkillIds.includes(skill.id) : null
-                  const boxClass = has === null ? 'jd-skill' : has ? 'jd-skill jd-skill--have' : 'jd-skill jd-skill--missing'
+                {skills.map((skill, index) => {
+                  const has = skillStatus(skill, index)
+                  const boxClass =
+                    has === null
+                      ? 'jd-skill'
+                      : has
+                        ? 'jd-skill jd-skill--have'
+                        : 'jd-skill jd-skill--missing'
                   return (
                     <div key={skill.id} className={boxClass}>
                       <span className="jd-skill__name">
                         {skill.name}
-                        {skill.is_required && <span className="jd-must">Must-have</span>}
+                        {skill.is_required && (
+                          <span className="jd-must">Must-have</span>
+                        )}
                       </span>
                       {has !== null && (
-                        <span className="jd-skill__status">{has ? '✓ You have it' : '– Not in your skills'}</span>
+                        <span className="jd-skill__status">
+                          {has ? '✓ You have it' : '– Not in your skills'}
+                        </span>
                       )}
                     </div>
                   )
@@ -293,10 +469,24 @@ export default function JobDetails() {
                   ok={majorOk}
                 />
               )}
-              <Requirement label="Experience" value={formatExperience(job.min_years, job.max_years)} ok={experienceOk} />
-              {job.language && <Requirement label="Language" value={job.language} ok={false} />}
+              <Requirement
+                label="Experience"
+                value={formatExperience(job.min_years, job.max_years)}
+                ok={experienceOk}
+              />
+              {job.language && (
+                <Requirement
+                  label="Language"
+                  value={job.language}
+                  ok={preview}
+                />
+              )}
             </div>
-            {job.language && <p className="jd-note">Languages aren't checked against your profile yet.</p>}
+            {job.language && !preview && (
+              <p className="jd-note">
+                Languages aren't checked against your profile yet.
+              </p>
+            )}
           </section>
         </div>
 
@@ -305,9 +495,30 @@ export default function JobDetails() {
           <section className="jd-card jd-apply">
             <h2 className="jd-card__title">Apply for this job</h2>
 
-            {me?.application_status ? (
+            {preview ? (
+              // preview: show what a seeker sees, but the button does nothing
+              <>
+                <div className="jd-cv">
+                  {FileIcon}
+                  <div>
+                    <p className="jd-cv__name">their_cv.pdf</p>
+                    <p className="jd-cv__sub">
+                      Job seekers apply with the CV from their profile
+                    </p>
+                  </div>
+                </div>
+                <button type="button" className="btn btn--block" disabled>
+                  Apply with my CV
+                </button>
+                <p className="jd-apply__off">
+                  {LockIcon} Turned off in preview
+                </p>
+              </>
+            ) : me?.application_status ? (
               // Already applied (from the backend) → show where the application is
-              <p className="jd-apply__status">You applied · {capitalize(me.application_status)}</p>
+              <p className="jd-apply__status">
+                You applied · {capitalize(me.application_status)}
+              </p>
             ) : (
               <>
                 <div className="jd-cv">
@@ -324,14 +535,20 @@ export default function JobDetails() {
                     </div>
                   )}
                 </div>
-                {/* No application endpoint in the backend yet → the button stays disabled */}
-                <button type="button" className="btn btn--block"  disabled={!me?.cv_file_name || applying}
-                  onClick={handleApply}>
-                {applying ? 'Sending…' : 'Apply with my CV'}
+                <button
+                  type="button"
+                  className="btn btn--block"
+                  disabled={!me?.cv_file_name || applying}
+                  onClick={handleApply}
+                >
+                  {applying ? 'Sending…' : 'Apply with my CV'}
                 </button>
                 {applyError && (
-                  <p className="jd-apply__note" role="alert">{applyError}</p>
-                )}</>
+                  <p className="jd-apply__note" role="alert">
+                    {applyError}
+                  </p>
+                )}
+              </>
             )}
           </section>
 
@@ -340,7 +557,9 @@ export default function JobDetails() {
             <p className="jd-company__meta">
               {job.company_industry} · {job.company_location}
             </p>
-            {job.company_about && <p className="jd-text">{job.company_about}</p>}
+            {job.company_about && (
+              <p className="jd-text">{job.company_about}</p>
+            )}
             {job.company_website && (
               <a
                 href={websiteUrl(job.company_website)}
@@ -351,6 +570,25 @@ export default function JobDetails() {
                 {GlobeIcon}
                 {job.company_website}
               </a>
+            )}
+            {preview ? (
+              // preview: looks the same, but does nothing
+              <button
+                type="button"
+                className="jd-company__btn jd-company__btn--off"
+                disabled
+                title="Not available in preview"
+              >
+                {LockIcon}
+                View company page
+              </button>
+            ) : (
+              <Link
+                to={`/jobseeker/companies/${job.company_id}`}
+                className="jd-company__btn"
+              >
+                View company page
+              </Link>
             )}
           </section>
         </aside>
