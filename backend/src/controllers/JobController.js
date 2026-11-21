@@ -15,9 +15,28 @@ const scoreOpenJob = (jobId) =>
 // GET /api/jobs → view all jobs (jobseeker)
 const getJobs = async (req, res, next) => {
   try {
+    // missing skills are worked out from the seeker's current skills
     const { rows } = await db.query(
       `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo,
-              ms.score AS match_score
+              ms.score AS match_score,
+              ms.is_qualified,
+              (SELECT COUNT(*)::int FROM job_skills js WHERE js.job_id = j.id) AS skills_total,
+              ARRAY(SELECT s.name
+                      FROM job_skills js
+                      JOIN skills s ON s.id = js.skill_id
+                     WHERE js.job_id = j.id
+                       AND NOT EXISTS (SELECT 1 FROM seeker_skills ss
+                                        WHERE ss.seeker_id = $1 AND ss.skill_id = js.skill_id)
+                     ORDER BY js.is_required DESC, s.name) AS missing_skills,
+              ARRAY(SELECT s.name
+                      FROM job_skills js
+                      JOIN skills s ON s.id = js.skill_id
+                     WHERE js.job_id = j.id AND js.is_required
+                       AND NOT EXISTS (SELECT 1 FROM seeker_skills ss
+                                        WHERE ss.seeker_id = $1 AND ss.skill_id = js.skill_id)
+                     ORDER BY s.name) AS missing_required,
+              EXISTS (SELECT 1 FROM applications a
+                       WHERE a.job_id = j.id AND a.seeker_id = $1) AS applied
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
          LEFT JOIN match_scores ms ON ms.job_id = j.id AND ms.seeker_id = $1
