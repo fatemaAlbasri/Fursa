@@ -14,7 +14,7 @@ import {
 import { toJobBody, jobToForm } from '../data/jobs.js'
 import Notice from '../../shared/components/Notice.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
-
+import { BriefcaseIcon, LockIcon } from '../../shared/components/icons.jsx'
 import '../styles/JobView.css'
 
 // icons
@@ -52,6 +52,23 @@ function Info({ label, children }) {
     <div className="jv-info">
       <span className="jv-info__label">{label}</span>
       <span className="jv-info__value">{children}</span>
+    </div>
+  )
+}
+
+const EyeIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
+// One row in "Job details": label on the left, value on the right
+function Row({ label, children }) {
+  return (
+    <div className="jv-row">
+      <span className="jv-row__label">{label}</span>
+      <span className="jv-row__value">{children}</span>
     </div>
   )
 }
@@ -220,8 +237,8 @@ export default function JobView({ startEditing = false }) {
       })
   }
 
-  return (
-    <main className="container container--wide jv">
+    return (
+    <main className="jv">
       <Link to="/company/jobs" className="jv-back">
         ← Back to your jobs
       </Link>
@@ -233,85 +250,65 @@ export default function JobView({ startEditing = false }) {
         <div className="jv-draft" role="status">
           {InfoIcon}
           <span>
-            This job is a <b>draft</b>. Only you can see it. Publish it so job
-            seekers can apply.
+            This job is a <b>draft</b>. Only you can see it. Publish it so job seekers can apply.
           </span>
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={publishDraft}
-            disabled={saving}
-          >
+          <button type="button" className="jv-btn jv-btn--primary" onClick={publishDraft} disabled={saving}>
             {saving ? 'Publishing…' : 'Publish job'}
           </button>
         </div>
       )}
 
-      {/* ---------- Header ---------- */}
-      <section className="jv-hero">
-        <div className="jv-hero__text">
-          <div className="jv-tags">
-            <span className={`jv-tag jv-tag--${job.status}`}>
-              {isDraft ? 'Draft' : isClosed ? 'Closed' : 'Active'}
-            </span>
-            <span className="jv-tag">{formatJobType(job.job_type)}</span>
-            <span className="jv-tag">{formatWorkMode(job.work_mode)}</span>
+      {/* ---------- Header card: title + stats (view and edit) ---------- */}
+      <section className="jv-card jv-hero">
+        <div className="jv-hero__top">
+          <span className="jv-hero__logo" aria-hidden="true"><BriefcaseIcon /></span>
+
+          <div className="jv-hero__text">
+            <div className="jv-tags">
+              <span className={`jv-tag jv-tag--${job.status}`}>
+                ● {isDraft ? 'Draft' : isClosed ? 'Closed' : 'Active'}
+              </span>
+              {job.job_type && <span className="jv-tag">{formatJobType(job.job_type)}</span>}
+              {job.work_mode && <span className="jv-tag">{formatWorkMode(job.work_mode)}</span>}
+            </div>
+            <h1>{job.title}</h1>
+            <p>
+              Posted {formatDeadline(job.created_at)}
+              {job.deadline && ` · Deadline ${formatDeadline(job.deadline)}`}
+            </p>
           </div>
 
-          <h1>{job.title}</h1>
-
-          <p>
-            <Link to="/company/profile" className="jv-company">
-              {job.company_name || 'Your company'}
-            </Link>{' '}
-            · Posted {formatDeadline(job.created_at)} · Deadline{' '}
-            {formatDeadline(job.deadline)}
-          </p>
+          {!editing && (
+            <div className="jv-hero__actions">
+              <button
+                type="button"
+                className="jv-btn jv-btn--outline"
+                onClick={() => navigate(`/company/jobs/${id}/edit`)}
+                disabled={isClosed}
+              >
+                {PencilIcon}
+                Edit job
+              </button>
+              {!isDraft && (
+                <Link to="/company/applicants" state={{ jobId: job.id }} className="jv-btn jv-btn--primary">
+                  View applicants →
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* header buttons (view mode only) */}
-        {!editing && (
-          <div className="jv-hero__actions">
-            <button
-              type="button"
-              className="btn btn--white"
-              onClick={() => navigate(`/company/jobs/${id}/edit`)}
-              disabled={isClosed}
-            >
-              {PencilIcon}
-              Edit job
-            </button>
-            <Link to="/company/applicants" className="btn btn--primary">
-              View applicants
-            </Link>
-          </div>
-        )}
+        <div className="jv-stats">
+          <div className="jv-stat"><b>{job.stats.applicants}</b><span>Applicants</span></div>
+          <div className="jv-stat jv-stat--good"><b>{job.stats.qualified}</b><span>Qualified</span></div>
+          <div className="jv-stat jv-stat--teal"><b>{job.stats.newCount}</b><span>New</span></div>
+          <div className="jv-stat jv-stat--warn"><b>{left}</b><span>Days left</span></div>
+        </div>
       </section>
-
-      {/* ---------- Stat boxes (view and edit) ---------- */}
-      <div className="jv-stats">
-        <div className="jv-stat">
-          <b>{job.stats.applicants}</b>
-          <span>Applicants</span>
-        </div>
-        <div className="jv-stat jv-stat--good">
-          <b>{job.stats.qualified}</b>
-          <span>Qualified</span>
-        </div>
-        <div className="jv-stat jv-stat--teal">
-          <b>{job.stats.newCount}</b>
-          <span>New</span>
-        </div>
-        <div className="jv-stat jv-stat--danger">
-          <b>{left}</b>
-          <span>Days left</span>
-        </div>
-      </div>
 
       {editing ? (
         /* =================== EDIT MODE =================== */
         <>
-          {/* orange note */}
           <p className="jv-warn" role="note">
             {InfoIcon}
             {isDraft
@@ -319,7 +316,6 @@ export default function JobView({ startEditing = false }) {
               : 'You are editing a live job. If you change the requirements, Fursa will re-rank all applicants.'}
           </p>
 
-          {/* same form as "Post a job", filled with this job */}
           <JobForm
             initial={jobToForm(job)}
             stacked
@@ -329,15 +325,8 @@ export default function JobView({ startEditing = false }) {
             onSubmit={(form) => saveChanges(form, 'open')}
             secondary={
               isDraft
-                ? {
-                    label: 'Save draft',
-                    checkTitleOnly: true, // a draft only needs a title
-                    onClick: (form) => saveChanges(form, 'draft')
-                  }
-                : {
-                    label: 'Cancel',
-                    onClick: () => navigate(`/company/jobs/${id}`)
-                  }
+                ? { label: 'Save draft', checkTitleOnly: true, onClick: (form) => saveChanges(form, 'draft') }
+                : { label: 'Cancel', onClick: () => navigate(`/company/jobs/${id}`) }
             }
           />
         </>
@@ -345,108 +334,103 @@ export default function JobView({ startEditing = false }) {
         /* =================== VIEW MODE =================== */
         <>
           <div className="jv-cols">
-            {/* ----- LEFT column: description, responsibilities, requirements ----- */}
-            <div className="jv-stack">
-              <section className="card jv-card">
+            {/* ----- LEFT: one card with description, responsibilities, requirements ----- */}
+            <section className="jv-card jv-main">
+              <div className="jv-section">
                 <h2>Job description</h2>
-                <p className="jv-text">{job.description}</p>
-              </section>
+                <p className="jv-text">{job.description || '—'}</p>
+              </div>
 
-              <section className="card jv-card">
+              <div className="jv-section">
                 <h2>Role &amp; responsibilities</h2>
-                <ul className="jv-list">
-                  {roles.map((r) => (
-                    <li key={r}>{r}</li>
-                  ))}
-                </ul>
-              </section>
+                {roles.length ? (
+                  <ul className="jv-list">
+                    {roles.map((r) => <li key={r}>{r}</li>)}
+                  </ul>
+                ) : (
+                  <p className="jv-text">—</p>
+                )}
+              </div>
 
-              <section className="card jv-card">
+              <div className="jv-section">
                 <h2>Requirements</h2>
-                <p className="hint">
-                  Applicants missing a <b>must-have</b> go to the Not qualified
-                  tab.
+                <p className="jv-hint">
+                  Applicants missing a <b>must-have</b> go to the Not qualified tab.
                 </p>
-
-                {/* skills: must-have skills are filled teal with a MUST label */}
                 <div className="jv-skills">
                   {job.skills.map((s) => (
-                    <span
-                      key={s.name}
-                      className={
-                        s.is_required ? 'jv-skill jv-skill--must' : 'jv-skill'
-                      }
-                    >
+                    <span key={s.name} className={s.is_required ? 'jv-skill jv-skill--must' : 'jv-skill'}>
                       {s.name}
                       {s.is_required && <em>MUST</em>}
                     </span>
                   ))}
                 </div>
-
                 <div className="jv-req-grid">
                   <Info label="Major">
                     {job.field || 'Any major'}
-                    {job.field && job.major_must_have && (
-                      <em className="jv-must">MUST</em>
-                    )}
+                    {job.field && job.major_must_have && <em className="jv-must">MUST</em>}
                   </Info>
-                  <Info label="Experience">
-                    {formatExperience(job.min_years, job.max_years)}
-                  </Info>
-                  <Info label="Language">{job.language}</Info>
+                  <Info label="Experience">{formatExperience(job.min_years, job.max_years)}</Info>
+                  <Info label="Language">{job.language || '—'}</Info>
                 </div>
-              </section>
-            </div>
+              </div>
+            </section>
 
-            {/* ----- RIGHT column: job details, then manage ----- */}
+            {/* ----- RIGHT: manage first, then job details ----- */}
             <aside className="jv-side">
-              <section className="card jv-card">
-                <h2>Job details</h2>
-                <Info label="Job type">{formatJobType(job.job_type)}</Info>
-                <Info label="Work mode">{formatWorkMode(job.work_mode)}</Info>
-                <Info label="Location">{job.location}</Info>
-                <Info label="Deadline">{formatDeadline(job.deadline)}</Info>
-                <Info label="Salary">
-                  {job.salary ? `BHD ${job.salary} / month` : 'Hidden'}
-                </Info>
-              </section>
-
-              <section className="card jv-card">
-                <h2>Manage</h2>
-                {isDraft ? (
-                  <button
-                    type="button"
-                    className="btn jv-close"
-                    onClick={() => setConfirm('delete')}
-                    disabled={saving}
-                  >
-                    Delete draft
-                  </button>
-                ) : (
-                  <>
-                    <Link
-                      to={`/jobseeker/jobs/${job.id}`}
-                      className="btn jv-preview"
-                    >
-                      Preview as job seeker
-                    </Link>
+              <section className="jv-card">
+                <h2>Manage this job</h2>
+                <p className="jv-sub">
+                  {isDraft ? 'Publish it or delete it' : 'Preview it or stop taking applicants'}
+                </p>
+                <div className="jv-manage">
+                  {isDraft ? (
                     <button
                       type="button"
-                      className="btn jv-close"
-                      onClick={() => setConfirm('close')}
-                      disabled={isClosed}
+                      className="jv-btn jv-btn--danger"
+                      onClick={() => setConfirm('delete')}
+                      disabled={saving}
                     >
-                      {isClosed ? 'Job closed' : 'Close this job'}
+                      Delete draft
                     </button>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <Link to={`/jobseeker/jobs/${job.id}`} className="jv-btn jv-btn--outline">
+                        {EyeIcon}
+                        Preview as job seeker
+                      </Link>
+                      <button
+                        type="button"
+                        className="jv-btn jv-btn--danger"
+                        onClick={() => setConfirm('close')}
+                        disabled={isClosed}
+                      >
+                        <LockIcon />
+                        {isClosed ? 'Job closed' : 'Close this job'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </section>
+
+              <section className="jv-card">
+                <h2>Job details</h2>
+                <div className="jv-rows">
+                  <Row label="Job type">{job.job_type ? formatJobType(job.job_type) : '—'}</Row>
+                  <Row label="Work mode">{job.work_mode ? formatWorkMode(job.work_mode) : '—'}</Row>
+                  <Row label="Location">{job.location || '—'}</Row>
+                  <Row label="Deadline">{job.deadline ? formatDeadline(job.deadline) : '—'}</Row>
+                  <Row label="Salary">{job.salary ? `BHD ${job.salary} / month` : 'Hidden'}</Row>
+                </div>
               </section>
             </aside>
           </div>
+
           {/* Hiring summary: not for drafts (no applicants yet) */}
           {!isDraft && <HiringSummary jobId={job.id} />}
         </>
       )}
+
       <ConfirmDialog
         open={confirm === 'delete'}
         title="Delete this draft?"
@@ -476,3 +460,4 @@ export default function JobView({ startEditing = false }) {
     </main>
   )
 }
+
