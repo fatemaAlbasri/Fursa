@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- for crypt() password hashing (bcry
 INSERT INTO plans (id, name, price_bhd_month, max_active_jobs, has_ai_ranking, has_match_reasons, has_bulk_actions, has_hiring_summary) VALUES
  (1, 'Free',    0.000,  1,    false, false, false, false),
  (2, 'Starter', 15.000, 2,    true,  true,  true,  false),
- (3, 'Growth',  35.000, NULL, true,  true,  true,  true);
+ (3, 'Growth',  25.000, NULL, true,  true,  true,  true);
 
 -- ---------- Skills (a starter list, users can add more) ----------
 INSERT INTO skills (id, name) VALUES
@@ -182,7 +182,7 @@ INSERT INTO notifications (user_id, application_id, job_id, type, title, message
 -- ---------- Payments (simulated) ----------
 INSERT INTO payments (user_id, subscription_id, cv_review_id, item, method, subtotal_bhd, vat_bhd, total_bhd, status, is_simulated, paid_at) VALUES
  (2, 1,    NULL, 'plan',               'card',       15.000, 1.500, 16.500, 'paid', true, '2026-10-12'),
- (3, 2,    NULL, 'plan',               'benefitpay', 35.000, 3.500, 38.500, 'paid', true, '2026-10-01'),
+ (3, 2,    NULL, 'plan',               'benefitpay', 25.000, 2.500, 27.500, 'paid', true, '2026-10-01'),
  (6, NULL, 1,    'advanced_cv_report', 'card',        2.000, 0.200,  2.200, 'paid', true, '2026-10-12');
 
 -- ---------- Reset ID counters (because we inserted IDs by hand) ----------
