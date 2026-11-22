@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
+import BackToTop from '../components/BackToTop.jsx';
 
 const NAV_LINKS = [
   { href: '#how-it-works', label: 'How it works' },
@@ -69,9 +70,13 @@ function useReveal() {
     }
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
+        const el = e.target;
         if (e.isIntersecting) {
-          e.target.classList.add('is-visible');
-          observer.unobserve(e.target);
+          el.classList.add('is-visible');
+        } else {
+          el.classList.remove('is-visible');
+          // left through the top of the screen → it comes back down from above
+          el.classList.toggle('reveal--above', e.boundingClientRect.top < 0);
         }
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
@@ -175,6 +180,7 @@ export default function Landing() {
         </div>
       </section>
 
+      <BackToTop />
       <footer className="footer">© 2026 Fursa</footer>
     </div>
   );
