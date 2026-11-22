@@ -2540,3 +2540,102 @@ html:has(.landing) {
     order: -1;
   }
 }
+
+/* ===== Navbar: one height, logo always in the same spot on every page ===== */
+:root {
+  --nav-h: 72px;                       /* navbar height */
+  --nav-x: clamp(28px, 5vw, 80px);     /* logo distance from the left edge (vw = same on every page) */
+}
+@media (min-width: 1101px) {
+  .topbar {
+    min-height: var(--nav-h);
+    padding: 0 var(--nav-x);
+  }
+}
+/* sign in / sign up side panel: the logo sits exactly where the navbar logo is */
+@media (min-width: 901px) {
+  .split__brand,
+  .split--signup .split__brand {
+    padding-top: 0;
+  }
+  .split__brand > .logo {
+    min-height: var(--nav-h);
+    margin-left: calc(var(--nav-x) - 44px); /* the panel has 44px side padding */
+  }
+}
+
+/* ===== Landing hero + navbar, as in the wireframe ===== */
+.landing .topbar__nav {
+  gap: 26px;
+}
+.landing .topbar__link {
+  padding: 8px 0;
+  border-radius: 0;
+  color: #c5d3de;
+  font-weight: 500;
+}
+.landing .topbar__link:hover {
+  background: none;
+  color: #fff;
+}
+@media (min-width: 1101px) {
+  /* navbar sits inside the hero, no bar of its own */
+  .landing {
+    position: relative;
+  }
+  .landing .topbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: transparent;
+  }
+  /* photo covers the whole hero; navy fades from solid (left) to see-through (right) */
+  .landing .hero {
+    background: var(--brand-navy);
+  }
+  .landing .hero__bg {
+    width: 100%;
+    background-position: center right;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .landing .hero__bg::after {
+    background:
+      linear-gradient(90deg, rgba(24, 59, 86, 0.97) 0%, rgba(24, 59, 86, 0.9) 38%, rgba(24, 59, 86, 0.55) 68%, rgba(24, 59, 86, 0.3) 100%),
+      linear-gradient(180deg, rgba(24, 59, 86, 0.85) 0%, rgba(24, 59, 86, 0) 22%);
+  }
+  .landing .hero__inner {
+    min-height: 0;
+    padding: calc(var(--nav-h) + 56px) var(--nav-x) 110px;
+  }
+  .landing .hero__copy {
+    max-width: 600px;
+    padding: 0;
+  }
+  .landing .hero__pill {
+    background: #24506f;
+    color: #b9e4e4;
+    font-size: 14px;
+  }
+  .landing .hero__title {
+    margin-top: 24px;
+    font-size: 56px;
+    line-height: 1.08;
+    font-weight: 700;
+  }
+  .landing .hero__text {
+    margin-top: 24px;
+    max-width: 520px;
+    font-size: 19px;
+    color: #c5d3de;
+    opacity: 1;
+  }
+  .landing .hero__actions {
+    margin-top: 24px;
+  }
+  .landing .hero__actions .btn {
+    min-height: 54px;
+    padding: 0 26px;
+    font-size: 17px;
+  }
+}
