@@ -3042,3 +3042,75 @@ html:has(.landing) {
     transition: none;
   }
 }
+
+/* ===== Navbar links: pills, the teal one slides to the open page ===== */
+.topbar__nav {
+  position: relative;
+}
+.topbar__link {
+  position: relative;
+  z-index: 1;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: #c5d3de;
+  font-weight: 700;
+  transition: color 0.25s ease, background-color 0.25s ease, transform 0.15s ease;
+}
+.topbar__link svg {
+  width: 18px;
+  height: 18px;
+}
+.topbar__link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.topbar__link:active {
+  transform: scale(0.97);
+}
+.topbar__link--active,
+.topbar__link--active:hover {
+  color: #fff;
+  background: var(--teal);
+}
+/* with the sliding pill the open link itself stays clear (the pill is behind it) */
+.topbar__nav--pill .topbar__link--active,
+.topbar__nav--pill .topbar__link--active:hover {
+  background: transparent;
+}
+.topbar__pill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 44px;
+  margin-top: -22px;
+  border-radius: 999px;
+  background: var(--teal);
+  box-shadow: 0 6px 16px rgba(21, 154, 156, 0.35);
+  pointer-events: none;
+  transition:
+    transform 0.4s cubic-bezier(0.3, 0.7, 0.2, 1),
+    width 0.4s cubic-bezier(0.3, 0.7, 0.2, 1);
+  animation: fade-in 0.3s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar__pill,
+  .topbar__link {
+    transition: none;
+  }
+}
+
+/* navbar fades up out of view when scrolling down, comes back when scrolling up */
+.topbar {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.topbar--hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar {
+    transition: none;
+  }
+}
