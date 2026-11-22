@@ -6,7 +6,7 @@ import ChoiceChips from '../components/ChoiceChips.jsx'
 import PhoneInput from '../components/PhoneInput.jsx'
 import { api } from '../api.js'
 import { XIcon } from '../components/icons.jsx'
-import Loading from '../components/Loading.jsx'
+import Loading, { ButtonSpinner } from '../components/Loading.jsx'
 import Notice from '../components/Notice.jsx'
 import PaymentForm, { PaymentDone } from '../../company/components/PaymentForm.jsx'
 import {
@@ -247,6 +247,7 @@ function JobSeekerSignup() {
   const [dragging, setDragging] = useState(false)
   const [errors, setErrors] = useState({})
   const [notice, setNotice] = useState(null) // errors that aren't about one field
+  const [busy, setBusy] = useState(false)
   const fileInput = useRef(null)
   const navigate = useNavigate()
 
@@ -289,6 +290,7 @@ function JobSeekerSignup() {
     data.append('workModes', JSON.stringify(workModes))
     if (cv) data.append('cv', cv)
 
+    setBusy(true)
     try {
       const { token } = await api('/auth/signup', {
         method: 'POST',
@@ -297,6 +299,7 @@ function JobSeekerSignup() {
       localStorage.setItem('token', token)
       navigate('/jobseeker')
     } catch (err) {
+      setBusy(false)
       if (err.fields) {
         setErrors(err.fields)
         scrollToFirstError()
@@ -469,8 +472,15 @@ function JobSeekerSignup() {
           </Field>
 
           <Notice notice={notice} onClose={() => setNotice(null)} />
-          <button className="btn btn--primary btn--block" type="submit">
-            Create account & see my jobs
+          <button className="btn btn--primary btn--block" type="submit" disabled={busy} aria-busy={busy}>
+            {busy ? (
+              <>
+                <ButtonSpinner />
+                Creating your account…
+              </>
+            ) : (
+              'Create account & see my jobs'
+            )}
           </button>
         </form>
         <SignInLink role="jobseeker" />
@@ -740,8 +750,15 @@ function CompanyDetails({ form, setForm, logo, setLogo, paid, serverErrors, onNe
           />
         </Field>
 
-        <button className="btn btn--primary btn--block" type="submit" disabled={checking}>
-          Continue: choose a plan
+        <button className="btn btn--primary btn--block" type="submit" disabled={checking} aria-busy={checking}>
+          {checking ? (
+            <>
+              <ButtonSpinner />
+              Checking…
+            </>
+          ) : (
+            'Continue: choose a plan'
+          )}
         </button>
       </form>
       <SignInLink role="company" />
@@ -749,7 +766,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, paid, serverErrors, onNe
   )
 }
 
-function ChoosePlan({ plan, setPlan, onFinish, notice, onCloseNotice }) {
+function ChoosePlan({ plan, setPlan, onFinish, busy, notice, onCloseNotice }) {
   const selected = PLANS.find((p) => p.id === plan)
   return (
     <main className="container container--wide">
@@ -806,10 +823,17 @@ function ChoosePlan({ plan, setPlan, onFinish, notice, onCloseNotice }) {
             Selected: {selected.name} · {selected.price} / month
           </b>
         </p>
-        <button type="button" className="btn btn--primary" onClick={onFinish}>
-          <span key={plan} className="swap">
-            {plan === 'free' ? 'Start free' : 'Continue to payment'}
-          </span>
+        <button type="button" className="btn btn--primary" onClick={onFinish} disabled={busy} aria-busy={busy}>
+          {busy ? (
+            <>
+              <ButtonSpinner />
+              Creating your account…
+            </>
+          ) : (
+            <span key={plan} className="swap">
+              {plan === 'free' ? 'Start free' : 'Continue to payment'}
+            </span>
+          )}
         </button>
       </div>
     </main>
@@ -948,6 +972,7 @@ function CompanySignup() {
         plan={plan}
         setPlan={setPlan}
         onFinish={() => (paid ? goToStep(3) : finish())}
+        busy={busy}
         notice={notice}
         onCloseNotice={() => setNotice(null)}
       />

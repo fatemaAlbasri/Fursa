@@ -2982,3 +2982,10 @@ html:has(.landing) {
     display: none;
   }
 }
+
+/* button while loading: keeps its colour (not faded like disabled), spinner + "…ing" text */
+.btn[aria-busy='true']:disabled {
+  opacity: 0.85;
+  cursor: progress;
+  gap: 10px;
+}
