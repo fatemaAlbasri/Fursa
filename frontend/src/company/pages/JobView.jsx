@@ -19,52 +19,16 @@ import {
 } from '../../shared/utils/jobFormat.js'
 import { toJobBody, jobToForm } from '../data/jobs.js'
 import Notice from '../../shared/components/Notice.jsx'
+import Loading from '../../shared/components/Loading.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
-import { BriefcaseIcon, LockIcon } from '../../shared/components/icons.jsx'
+import {
+  BriefcaseIcon,
+  LockIcon,
+  PencilIcon,
+  InfoIcon,
+  EyeIcon
+} from '../../shared/components/icons.jsx'
 import '../styles/JobView.css'
-
-// icons
-const PencilIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M4 20h4L19 9l-4-4L4 16z" />
-    <path d="M13 7l4 4" />
-  </svg>
-)
-const InfoIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 8v5M12 16v.5" />
-  </svg>
-)
-
-const EyeIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-)
 
 // A small grey box: label on top, value under it
 function Info({ label, children }) {
@@ -86,13 +50,13 @@ function Row({ label, children }) {
   )
 }
 
-export default function JobView({ startEditing = false }) {
+export default function JobView({ editing = false }) {
   const { id } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
 
   const [job, setJob] = useState(null)
-  // coming from post a job, show the success message
+  // just posted from Post a job
   const [notice, setNotice] = useState(
     location.state?.justPosted
       ? {
@@ -101,31 +65,17 @@ export default function JobView({ startEditing = false }) {
         }
       : null
   )
-  const [confirm, setConfirm] = useState(null)
+  const [confirmClose, setConfirmClose] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const editing = startEditing
-
-  // Load the job (backend)
   useEffect(() => {
     api('/jobs/mine/' + id)
       .then((data) => setJob(data.job))
       .catch(() => setJob(false))
   }, [id])
 
-  // Loading
-  if (job === null) {
-    return (
-      <main className="container">
-        <div className="jv-loading" role="status">
-          <span className="jv-spinner" aria-hidden="true" />
-          Loading job…
-        </div>
-      </main>
-    )
-  }
+  if (job === null) return <Loading text="Loading job…" />
 
-  // Not found ( pop-up )
   if (job === false) {
     return (
       <div className="jv-overlay">
@@ -135,7 +85,9 @@ export default function JobView({ startEditing = false }) {
           aria-modal="true"
           aria-labelledby="jv-popup-title"
         >
-          <span className="jv-popup__icon">{InfoIcon}</span>
+          <span className="jv-popup__icon">
+            <InfoIcon />
+          </span>
           <h2 id="jv-popup-title">Job not found</h2>
           <p>This job doesn't exist, or it isn't one of your jobs.</p>
           <Link to="/company/jobs" className="btn btn--primary">
@@ -146,18 +98,16 @@ export default function JobView({ startEditing = false }) {
     )
   }
   // drafts open in edit mode
-  if (job.status === 'draft' && !startEditing) {
+  if (job.status === 'draft' && !editing) {
     return <Navigate to={`/company/jobs/${id}/edit`} replace />
   }
 
-  // Values worked out from the job
   const roles = splitLines(job.responsibilities)
   const isClosed = job.status === 'closed'
   const isDraft = job.status === 'draft'
   const left = Math.max(0, daysLeft(job.deadline))
 
-  // Buttons
-  // status is 'draft' or 'open'
+  // 'draft' = save draft, 'open' = publish or save
   const saveChanges = (form, status) => {
     if (saving) return
     setSaving(true)
@@ -199,7 +149,6 @@ export default function JobView({ startEditing = false }) {
       .finally(() => setSaving(false))
   }
 
-  // Close job
   const closeJob = () => {
     if (saving) return
     setSaving(true)
@@ -244,7 +193,7 @@ export default function JobView({ startEditing = false }) {
       {/* ---------- Edit note ---------- */}
       {editing && (
         <p className="jv-warn" role="note">
-          {InfoIcon}
+          <InfoIcon />
           {isDraft
             ? "You are editing a draft. Job seekers can't see it until you publish it."
             : 'You are editing a live job. If you change the requirements, Fursa will re-rank all applicants.'}
@@ -285,7 +234,7 @@ export default function JobView({ startEditing = false }) {
                 onClick={() => navigate(`/company/jobs/${id}/edit`)}
                 disabled={isClosed}
               >
-                {PencilIcon}
+                <PencilIcon />
                 Edit job
               </button>
               {!isDraft && (
@@ -325,7 +274,6 @@ export default function JobView({ startEditing = false }) {
       </section>
 
       {editing ? (
-        /* =================== EDIT MODE =================== */
         <JobForm
           initial={jobToForm(job)}
           stacked
@@ -347,10 +295,8 @@ export default function JobView({ startEditing = false }) {
           }
         />
       ) : (
-        /* =================== VIEW MODE =================== */
         <>
           <div className="jv-cols">
-            {/* left side */}
             <section className="jv-card jv-main">
               <div className="jv-section">
                 <h2>Job description</h2>
@@ -404,7 +350,6 @@ export default function JobView({ startEditing = false }) {
               </div>
             </section>
 
-            {/* right side */}
             <aside className="jv-side">
               <section className="jv-card">
                 <h2>Manage this job</h2>
@@ -414,13 +359,13 @@ export default function JobView({ startEditing = false }) {
                     to={`/company/jobs/${job.id}/preview`}
                     className="jv-btn jv-btn--outline"
                   >
-                    {EyeIcon}
+                    <EyeIcon />
                     Preview as job seeker
                   </Link>
                   <button
                     type="button"
                     className="jv-btn jv-btn--danger"
-                    onClick={() => setConfirm('close')}
+                    onClick={() => setConfirmClose(true)}
                     disabled={isClosed}
                   >
                     <LockIcon />
@@ -450,22 +395,21 @@ export default function JobView({ startEditing = false }) {
             </aside>
           </div>
 
-          {/* hiring summary */}
           {!isDraft && <HiringSummary jobId={job.id} />}
         </>
       )}
 
       <ConfirmDialog
-        open={confirm === 'close'}
+        open={confirmClose}
         title="Close this job?"
         message="Job seekers will no longer see it or be able to apply."
         confirmLabel="Close job"
         danger
         onConfirm={() => {
-          setConfirm(null)
+          setConfirmClose(false)
           closeJob()
         }}
-        onCancel={() => setConfirm(null)}
+        onCancel={() => setConfirmClose(false)}
       />
     </main>
   )

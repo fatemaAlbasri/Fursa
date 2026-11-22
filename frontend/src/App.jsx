@@ -142,7 +142,7 @@ export default function App() {
         <Route path="jobs" element={<CompanyJobs />} />
         <Route path="post-job" element={<PostJob />} />
         <Route path="jobs/:id" element={<JobView />} />
-        <Route path="jobs/:id/edit" element={<JobView startEditing />} />
+        <Route path="jobs/:id/edit" element={<JobView editing />} />
         <Route path="jobs/:id/preview" element={<JobDetails preview />} />
         <Route path="jobs/:id/reject" element={<RejectApplicants />} />
         {/* one applicant: :id = job id, :appId = application id */}
