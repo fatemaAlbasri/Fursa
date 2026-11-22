@@ -11,89 +11,16 @@ import {
   splitLines
 } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
+import {
+  FileIcon,
+  GlobeIcon,
+  EyeIcon,
+  PinIcon,
+  BriefcaseIcon,
+  LockIcon
+} from '../../shared/components/icons.jsx'
 import '../styles/JobDetails.css'
 
-// ---------- Small icons used on this page ----------
-const FileIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-    <path d="M14 3v5h5" />
-  </svg>
-)
-const GlobeIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <circle cx="12" cy="12" r="9" />
-    <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
-  </svg>
-)
-
-const EyeIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-)
-const PinIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
-    <circle cx="12" cy="10" r="2.5" />
-  </svg>
-)
-const BagIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <rect x="3" y="7" width="18" height="13" rx="2" />
-    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-  </svg>
-)
-const LockIcon = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    aria-hidden="true"
-  >
-    <rect x="5" y="11" width="14" height="10" rx="2" />
-    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-  </svg>
-)
 
 // Same check the backend does: the id must be a whole number above 0
 const isValidId = (id) => Number.isInteger(Number(id)) && Number(id) > 0
@@ -157,7 +84,7 @@ export default function JobDetails({ preview = false }) {
       } catch (err) {
         if (ignore) return
         // The server answered with an error (expired / invalid token) → sign in again
-        if (err.error) navigate('/signin?role=jobseeker', { replace: true })
+        if (err.error) navigate(preview ? '/signin?role=company' : '/signin?role=jobseeker', { replace: true })
         else {
           setError('Could not reach the server')
           setStatus('error')
@@ -316,7 +243,7 @@ export default function JobDetails({ preview = false }) {
 
       {preview && (
         <div className="jd-preview" role="note">
-          <span className="jd-preview__icon">{EyeIcon}</span>
+          <span className="jd-preview__icon"><EyeIcon /></span>
           <div className="jd-preview__text">
             <b>Preview mode</b>
             <span>
@@ -357,11 +284,11 @@ export default function JobDetails({ preview = false }) {
                   : 'jd-tag'
               }
             >
-              {BagIcon}
+              <BriefcaseIcon />
               {formatJobType(job.job_type)}
             </span>
             <span className="jd-tag">
-              {PinIcon}
+              <PinIcon />
               {formatWorkMode(job.work_mode)}
             </span>
             <span className="jd-tag jd-tag--plain">
@@ -373,9 +300,8 @@ export default function JobDetails({ preview = false }) {
             </span>
           </div>
         </div>
-
-        {/* Match ring: only when the backend has a score for this seeker and job */}
-        {/* Seeker: their real score. Preview: an example, so the company sees where it shows */}
+        
+        {/* seeker: their real score (if any) · preview: an example */}
         {preview ? (
           <div
             className="jd-ring jd-ring--example"
@@ -499,7 +425,7 @@ export default function JobDetails({ preview = false }) {
               // preview: show what a seeker sees, but the button does nothing
               <>
                 <div className="jd-cv">
-                  {FileIcon}
+                  <FileIcon />
                   <div>
                     <p className="jd-cv__name">their_cv.pdf</p>
                     <p className="jd-cv__sub">
@@ -511,7 +437,7 @@ export default function JobDetails({ preview = false }) {
                   Apply with my CV
                 </button>
                 <p className="jd-apply__off">
-                  {LockIcon} Turned off in preview
+                  <LockIcon /> Turned off in preview
                 </p>
               </>
             ) : me?.application_status ? (
@@ -522,7 +448,7 @@ export default function JobDetails({ preview = false }) {
             ) : (
               <>
                 <div className="jd-cv">
-                  {FileIcon}
+                  <FileIcon />
                   {me?.cv_file_name ? (
                     <div>
                       <p className="jd-cv__name">{me.cv_file_name}</p>
@@ -567,7 +493,7 @@ export default function JobDetails({ preview = false }) {
                 rel="noopener noreferrer"
                 className="jd-company__link"
               >
-                {GlobeIcon}
+                <GlobeIcon />
                 {job.company_website}
               </a>
             )}
@@ -579,7 +505,7 @@ export default function JobDetails({ preview = false }) {
                 disabled
                 title="Not available in preview"
               >
-                {LockIcon}
+                <LockIcon />
                 View company page
               </button>
             ) : (
