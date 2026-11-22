@@ -5,7 +5,6 @@ import Loading from '../../shared/components/Loading.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
 import {
   formatJobType,
-  formatWorkMode,
   formatDeadline,
   daysLeft
 } from '../../shared/utils/jobFormat.js'
@@ -23,9 +22,6 @@ const TABS = [
   { id: 'draft', label: 'Drafts' },
   { id: 'closed', label: 'Closed' }
 ]
-
-const shortDate = (d) =>
-  new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 export default function CompanyJobs() {
   const [jobs, setJobs] = useState(null)
