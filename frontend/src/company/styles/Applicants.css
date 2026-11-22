@@ -169,7 +169,7 @@
 .ap-btn {
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 10px;
+  border-radius: 999px;
   font: inherit;
   font-weight: 700;
   cursor: pointer;

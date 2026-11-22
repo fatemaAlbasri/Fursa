@@ -887,7 +887,7 @@ button {
   font-size: var(--btn-size);
   line-height: 1.2;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   padding: var(--btn-pad);
   cursor: pointer;
 }
@@ -2355,7 +2355,7 @@ html:has(.landing) {
 .split--signup .card .btn--primary {
   font-size: 16px;
   padding: 15px 18px;
-  border-radius: 10px;
+  border-radius: 999px;
 }
 /* "or" with a thin line on each side */
 .split--signup .switch {

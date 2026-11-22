@@ -489,7 +489,7 @@ a.apd-nav__btn:hover {
   gap: 8px;
   min-height: 44px;
   padding: 0 16px;
-  border-radius: 12px;
+  border-radius: 999px;
   border: 0;
   font: inherit;
   font-weight: 700;
