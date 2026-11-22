@@ -15,31 +15,30 @@ const scoreOpenJob = (jobId) =>
 // GET /api/jobs → view all jobs (jobseeker)
 const getJobs = async (req, res, next) => {
   try {
-    // missing skills are worked out from the seeker's current skills
+    // missing skills come from the seeker's current skills
     const { rows } = await db.query(
       `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo,
               ms.score AS match_score,
               ms.is_qualified,
-              (SELECT COUNT(*)::int FROM job_skills js WHERE js.job_id = j.id) AS skills_total,
-              ARRAY(SELECT s.name
-                      FROM job_skills js
-                      JOIN skills s ON s.id = js.skill_id
-                     WHERE js.job_id = j.id
-                       AND NOT EXISTS (SELECT 1 FROM seeker_skills ss
-                                        WHERE ss.seeker_id = $1 AND ss.skill_id = js.skill_id)
-                     ORDER BY js.is_required DESC, s.name) AS missing_skills,
-              ARRAY(SELECT s.name
-                      FROM job_skills js
-                      JOIN skills s ON s.id = js.skill_id
-                     WHERE js.job_id = j.id AND js.is_required
-                       AND NOT EXISTS (SELECT 1 FROM seeker_skills ss
-                                        WHERE ss.seeker_id = $1 AND ss.skill_id = js.skill_id)
-                     ORDER BY s.name) AS missing_required,
+              sk.total AS skills_total,
+              sk.missing AS missing_skills,
+              sk.missing_required,
               EXISTS (SELECT 1 FROM applications a
                        WHERE a.job_id = j.id AND a.seeker_id = $1) AS applied
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
          LEFT JOIN match_scores ms ON ms.job_id = j.id AND ms.seeker_id = $1
+         LEFT JOIN LATERAL (
+           SELECT COUNT(*)::int AS total,
+                  COALESCE(array_agg(s.name ORDER BY js.is_required DESC, s.name)
+                           FILTER (WHERE ss.skill_id IS NULL), '{}') AS missing,
+                  COALESCE(array_agg(s.name ORDER BY s.name)
+                           FILTER (WHERE ss.skill_id IS NULL AND js.is_required), '{}') AS missing_required
+             FROM job_skills js
+             JOIN skills s ON s.id = js.skill_id
+             LEFT JOIN seeker_skills ss ON ss.skill_id = js.skill_id AND ss.seeker_id = $1
+            WHERE js.job_id = j.id
+         ) sk ON true
         WHERE j.status = 'open' AND j.deadline >= CURRENT_DATE
         ORDER BY ms.score DESC NULLS LAST, j.created_at DESC`,
       [req.user.id]
