@@ -51,7 +51,7 @@ const getJobs = async (req, res, next) => {
 }
 
 // GET /api/jobs/mine → view only their jobs (company)
-// applicants / qualified / newCount use the same rules as jobStats (the View job page)
+// same counts as jobStats
 const getCompanyJobs = async (req, res, next) => {
   try {
     const { rows } = await db.query(
