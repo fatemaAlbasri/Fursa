@@ -44,7 +44,7 @@
   --btn-pad: 11px 18px;
 
   --nav-h: 72px;                   /* navbar height */
-  --nav-x: clamp(28px, 5vw, 80px); /* logo distance from the left edge (vw = same on every page) */
+  --nav-x: clamp(28px, 5vw, 80px); 
 }
 @media (max-width: 640px) {
   :root {
@@ -1121,8 +1121,7 @@ button {
   background: #a3dada;
 }
 
-/* hero: photo covers the whole hero, navy fades from solid (left) to see-through (right).
-   The navbar sits on top of it (see .landing .topbar below). */
+/* hero */
 .hero {
   position: relative;
   overflow: hidden;
@@ -1959,7 +1958,7 @@ html:has(.landing) {
   opacity: 1;
   translate: 0 0;
 }
-/* scrolling up: hidden items wait above and slide down into place */
+/* when scrolling up, come in from the top */
 .reveal.reveal--above:not(.is-visible) {
   translate: 0 -28px;
 }
@@ -2423,8 +2422,8 @@ html:has(.landing) {
   }
 }
 
-/* ===== Navbar: logo always in the same spot on every page ===== */
-/* sign in / sign up side panel: the logo sits exactly where the navbar logo is */
+/* Logo position */
+/* sign in and sign up: keep logo in the same place as the navbar */
 @media (min-width: 901px) {
   .split__brand,
   .split--signup .split__brand {
@@ -2432,11 +2431,11 @@ html:has(.landing) {
   }
   .split__brand > .logo {
     min-height: var(--nav-h);
-    margin-left: calc(var(--nav-x) - 44px); /* the panel has 44px side padding */
+    margin-left: calc(var(--nav-x) - 44px); 
   }
 }
 
-/* ===== Landing hero + navbar, as in the wireframe ===== */
+/* Landing navbar */
 .landing .topbar__nav {
   gap: 26px;
 }
@@ -2450,7 +2449,7 @@ html:has(.landing) {
   background: none;
   color: #fff;
 }
-/* navbar sits inside the hero, no bar of its own */
+/* navbar on top of the hero */
 .landing {
   position: relative;
 }
@@ -2461,7 +2460,7 @@ html:has(.landing) {
   background: transparent;
 }
 
-/* ===== Back to top button ===== */
+/* Back to top button */
 .to-top {
   position: fixed;
   right: 24px;
@@ -2478,13 +2477,13 @@ html:has(.landing) {
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(21, 154, 156, 0.35);
   opacity: 0;
-  translate: 0 16px; /* hidden: slightly lower */
+  translate: 0 16px; 
   pointer-events: none;
   transition: opacity 0.3s ease, translate 0.3s ease, background-color 0.15s ease;
 }
 .to-top--show {
   opacity: 1;
-  translate: 0 0; /* slides up into place */
+  translate: 0 0; 
   pointer-events: auto;
 }
 .to-top:hover {
@@ -2496,7 +2495,7 @@ html:has(.landing) {
   transition: translate 0.2s ease;
 }
 .to-top:hover svg {
-  translate: 0 -3px; /* arrow nudges up on hover */
+  translate: 0 -3px; 
 }
 @media (prefers-reduced-motion: reduce) {
   .to-top,
@@ -2505,7 +2504,7 @@ html:has(.landing) {
   }
 }
 
-/* ===== Tablet + phone, as in the wireframe (1b tablet, 1c mobile) ===== */
+/* Tablet and phone */
 @media (max-width: 1100px) {
   :root { --nav-x: 28px; }
 }
@@ -2513,13 +2512,13 @@ html:has(.landing) {
   :root { --nav-x: 20px; }
 }
 
-/* ☰ menu button + the extra items inside the menu (hidden on desktop) */
+/* menu button, hidden on desktop */
 .topbar__toggle,
 .topbar__menu-extra {
   display: none;
 }
 @media (max-width: 1100px) {
-  /* one row: logo | right side | ☰ — the links open in a panel under the bar */
+  /* links open under the navbar */
   .topbar--nav {
     grid-template-columns: auto 1fr auto;
     column-gap: 10px;
@@ -2548,7 +2547,7 @@ html:has(.landing) {
     background: #fff;
     transition: transform 0.25s ease, opacity 0.2s ease;
   }
-  /* ☰ turns into ✕ while open */
+  /* turn into X when open */
   .topbar--open .topbar__toggle span:nth-child(1) {
     transform: translateY(7px) rotate(45deg);
   }
@@ -2563,7 +2562,7 @@ html:has(.landing) {
     top: 100%;
     left: 0;
     right: 0;
-    grid-column: auto; /* span the whole bar, not just the middle grid column */
+    grid-column: auto; 
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
@@ -2590,7 +2589,7 @@ html:has(.landing) {
   }
 }
 @media (max-width: 640px) {
-  /* phone: Sign in / Create account move from the bar into the menu */
+  /* phone: sign in buttons go inside the menu */
   .landing .topbar__right {
     display: none;
   }
@@ -2617,7 +2616,7 @@ html:has(.landing) {
   }
 }
 
-/* landing hero: photo fills the hero on every size */
+/* landing hero */
 @media (max-width: 1100px) {
   .landing .hero__bg {
     background-position: 70% center;
@@ -2661,7 +2660,7 @@ html:has(.landing) {
   }
 }
 
-/* landing sections on tablet: stacked "how" cards, Starter plan on top across both columns */
+/* tablet: Starter plan on top */
 @media (min-width: 641px) and (max-width: 1100px) {
   .landing .section {
     padding: 72px var(--nav-x) 0;

@@ -1,7 +1,7 @@
 /* Company navbar (top menu) — used on every /company page */
 .cnav {
   background: var(--navy);
-  padding: 0 var(--nav-x); /* same as .topbar, so the logo does not move between pages */
+  padding: 0 var(--nav-x); 
   flex-shrink: 0;
 }
 .cnav__inner {

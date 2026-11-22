@@ -6,12 +6,12 @@ import { BellIcon } from './icons.jsx';
 // `right` = anything shown on the right side (sign-in link, back button, profile...).
 // A link can also have `icon` (an icon from icons.jsx) and `soon: true` = page not built yet:
 // it is shown in the menu but can't be clicked.
-// On tablets and phones the links fold into a ☰ menu. `menuExtra` = shown at the bottom of
-// that menu on phones (e.g. the landing page's Sign in / Create account, hidden from the bar there).
+// On small screens the links go inside a menu button.
+// menuExtra = extra stuff to show at the bottom of that menu (used for the sign in buttons on phones)
 export default function Navbar({ tag, links = [], right, menuExtra }) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  useEffect(() => setOpen(false), [pathname]); // close the menu after moving to another page
+  useEffect(() => setOpen(false), [pathname]); // close menu when page changes
 
   let headerClass = links.length > 0 ? 'topbar topbar--nav' : 'topbar';
   if (open) headerClass += ' topbar--open';

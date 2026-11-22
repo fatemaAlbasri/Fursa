@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-// Round arrow button: shows after scrolling down, smooth-scrolls back to the top.
+// Back to top button, shows when you scroll down
 export default function BackToTop() {
   const [show, setShow] = useState(false);
 

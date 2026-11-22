@@ -75,7 +75,7 @@ function useReveal() {
           el.classList.add('is-visible');
         } else {
           el.classList.remove('is-visible');
-          // left through the top of the screen → it comes back down from above
+          // if it went out from the top, bring it back from the top
           el.classList.toggle('reveal--above', e.boundingClientRect.top < 0);
         }
       });
@@ -114,7 +114,7 @@ export default function Landing() {
   useReveal();
   return (
     <div className="landing">
-      {/* phones: the buttons move from the bar into the ☰ menu */}
+      {/* on phones the buttons show inside the menu */}
       <Navbar links={NAV_LINKS} right={authButtons} menuExtra={authButtons} />
 
       <section className="hero">
