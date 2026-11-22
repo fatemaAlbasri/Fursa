@@ -52,7 +52,7 @@ export default function SignIn() {
   }
 
   return (
-    <div className="split">
+    <div className="split split--signin">
       <aside className="split__brand">
         <Link to="/" className="logo">
           <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
@@ -61,9 +61,11 @@ export default function SignIn() {
           <h1>
             Unlock Your <span className="accent">Chance.</span>
           </h1>
-          <p>
-            See the jobs and internships that match your skills, and improve
-            your CV with AI.
+          {/* key={role} fades the text in again when the role changes */}
+          <p key={role} className="swap">
+            {isCompany
+              ? 'Post a job and get your applicants ranked, with a clear reason for every score.'
+              : 'See the jobs and internships that match your skills, and improve your CV with AI.'}
           </p>
         </div>
         <div className="dots">
