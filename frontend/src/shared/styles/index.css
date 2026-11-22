@@ -2972,3 +2972,13 @@ html:has(.landing) {
     font-size: 11px;
   }
 }
+
+/* sign up steps: lines after the current step stay empty */
+.steps__line--todo::after {
+  display: none;
+}
+@media (max-width: 480px) {
+  .step:not(.step--active) .step__name {
+    display: none;
+  }
+}

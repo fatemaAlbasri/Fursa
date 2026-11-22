@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import MultiSelect from '../components/MultiSelect.jsx'
 import PasswordInput from '../components/PasswordInput.jsx'
@@ -6,6 +6,9 @@ import ChoiceChips from '../components/ChoiceChips.jsx'
 import PhoneInput from '../components/PhoneInput.jsx'
 import { api } from '../api.js'
 import { XIcon } from '../components/icons.jsx'
+import Loading from '../components/Loading.jsx'
+import Notice from '../components/Notice.jsx'
+import PaymentForm, { PaymentDone } from '../../company/components/PaymentForm.jsx'
 import {
   MAJORS,
   STATUSES,
@@ -76,6 +79,18 @@ const PLANS = [
 
 const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v)
 const hasErrors = (errs) => Object.keys(errs).length > 0
+
+// After a failed submit: scroll to the first field with an error and put the cursor in it.
+// Waits a moment so the error messages are on the page first.
+function scrollToFirstError() {
+  setTimeout(() => {
+    const error = document.querySelector('.field__error')
+    const box = error?.closest('.field, .choice-box') || error
+    if (!box) return
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    box.querySelector('input:not([type=file]), select, textarea')?.focus({ preventScroll: true })
+  }, 50)
+}
 
 function Field({ label, error, hint, children }) {
   return (
@@ -231,6 +246,7 @@ function JobSeekerSignup() {
   const [cv, setCv] = useState(null)
   const [dragging, setDragging] = useState(false)
   const [errors, setErrors] = useState({})
+  const [notice, setNotice] = useState(null) // errors that aren't about one field
   const fileInput = useRef(null)
   const navigate = useNavigate()
 
@@ -261,15 +277,16 @@ function JobSeekerSignup() {
     if (workModes.length === 0) errs.workModes = 'Pick at least one work mode'
 
     setErrors(errs)
-    if (hasErrors(errs)) return
+    setNotice(null)
+    if (hasErrors(errs)) return scrollToFirstError()
 
     const data = new FormData()
     data.append('role', 'jobseeker')
     Object.entries(form).forEach(([key, value]) => data.append(key, value))
     data.append('skills', JSON.stringify(skills))
-    // the backend reads these as lists, so send the one choice as a list (empty = no preference)
-    data.append('jobTypes', JSON.stringify(jobTypes ? [jobTypes] : []))
-    data.append('workModes', JSON.stringify(workModes ? [workModes] : []))
+    // already lists, e.g. ["full_time", "internship"]
+    data.append('jobTypes', JSON.stringify(jobTypes))
+    data.append('workModes', JSON.stringify(workModes))
     if (cv) data.append('cv', cv)
 
     try {
@@ -280,9 +297,12 @@ function JobSeekerSignup() {
       localStorage.setItem('token', token)
       navigate('/jobseeker')
     } catch (err) {
-      setErrors(
-        err.fields || { email: err.error || 'Could not reach the server' }
-      )
+      if (err.fields) {
+        setErrors(err.fields)
+        scrollToFirstError()
+      } else {
+        setNotice({ type: 'error', text: err.error || 'Could not reach the server' })
+      }
     }
   }
 
@@ -448,6 +468,7 @@ function JobSeekerSignup() {
             </div>
           </Field>
 
+          <Notice notice={notice} onClose={() => setNotice(null)} />
           <button className="btn btn--primary btn--block" type="submit">
             Create account & see my jobs
           </button>
@@ -460,16 +481,30 @@ function JobSeekerSignup() {
 
 /* ================= COMPANY (2 steps) ================= */
 
-function Steps({ step }) {
+// paid = a paid plan is picked, so there is a 3rd step (Payment)
+function Steps({ step, paid }) {
+  const names = ['Company details', 'Choose a plan']
+  if (paid) names.push('Payment')
   return (
-    <div className={`steps ${step === 2 ? 'steps--center' : ''}`}>
-      <span className={step === 1 ? 'step step--active' : 'step step--done'}>
-        1 · Company details{step === 2 && ' ✓'}
-      </span>
-      <span className="steps__line" />
-      <span className={step === 2 ? 'step step--active' : 'step'}>
-        2 · Choose a plan
-      </span>
+    <div className={`steps ${step > 1 ? 'steps--center' : ''}`}>
+      {names.map((name, i) => {
+        const n = i + 1
+        let cls = 'step'
+        if (n === step) cls += ' step--active'
+        else if (n < step) cls += ' step--done'
+        return (
+          <Fragment key={name}>
+            {/* line fills only up to the current step */}
+            {i > 0 && <span className={n <= step ? 'steps__line' : 'steps__line steps__line--todo'} />}
+            <span className={cls}>
+              {n}
+              {/* on small phones only the current step shows its name */}
+              <span className="step__name"> · {name}</span>
+              {n < step && ' ✓'}
+            </span>
+          </Fragment>
+        )
+      })}
     </div>
   )
 }
@@ -478,8 +513,14 @@ function Steps({ step }) {
 const fileSize = (bytes) =>
   bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 
-function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
-  const [errors, setErrors] = useState({})
+// serverErrors = what the backend said when the account was created (e.g. email already used)
+function CompanyDetails({ form, setForm, logo, setLogo, paid, serverErrors, onNext }) {
+  const [errors, setErrors] = useState(serverErrors || {})
+  const [checking, setChecking] = useState(false)
+
+  useEffect(() => {
+    if (serverErrors) scrollToFirstError()
+  }, [serverErrors])
   const logoInput = useRef(null)
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -495,7 +536,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
     setLogo(null)
   }
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     const errs = {}
     if (!form.companyName.trim()) errs.companyName = 'Required'
@@ -510,13 +551,31 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
     if (!form.industry.trim()) errs.industry = 'Required'
     if (!form.location.trim()) errs.location = 'Required'
     setErrors(errs)
-    if (!hasErrors(errs)) onNext()
+    if (hasErrors(errs)) return scrollToFirstError()
+
+    // email / company name already used? tell them now, not after choosing a plan and paying
+    setChecking(true)
+    try {
+      const { fields } = await api('/auth/signup/check', {
+        method: 'POST',
+        body: { email: form.email, companyName: form.companyName }
+      })
+      if (hasErrors(fields)) {
+        setErrors(fields)
+        return scrollToFirstError()
+      }
+    } catch {
+      // check failed (server busy): carry on, sign up checks again at the end
+    } finally {
+      setChecking(false)
+    }
+    onNext()
   }
 
   return (
     <main className="container">
       <div className="page-head">
-        <Steps step={1} />
+        <Steps step={1} paid={paid} />
         <h1 className="title">Create your company account</h1>
         <p className="muted">
           Post jobs and internships, and get your applicants ranked by AI.
@@ -681,7 +740,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
           />
         </Field>
 
-        <button className="btn btn--primary btn--block" type="submit">
+        <button className="btn btn--primary btn--block" type="submit" disabled={checking}>
           Continue: choose a plan
         </button>
       </form>
@@ -690,18 +749,20 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
   )
 }
 
-function ChoosePlan({ plan, setPlan, onFinish }) {
+function ChoosePlan({ plan, setPlan, onFinish, notice, onCloseNotice }) {
   const selected = PLANS.find((p) => p.id === plan)
   return (
     <main className="container container--wide">
       <div className="page-head center">
-        <Steps step={2} />
+        <Steps step={2} paid={plan !== 'free'} />
         <h1 className="title">Choose your plan</h1>
         <p className="muted">
           Start free. Upgrade when you want AI ranking. Change or cancel any
           time.
         </p>
       </div>
+
+      <Notice notice={notice} onClose={onCloseNotice} />
 
       <div className="plans">
         {PLANS.map((p) => {
@@ -747,7 +808,7 @@ function ChoosePlan({ plan, setPlan, onFinish }) {
         </p>
         <button type="button" className="btn btn--primary" onClick={onFinish}>
           <span key={plan} className="swap">
-            {plan === 'free' ? 'Start free' : 'Pay & Start'}
+            {plan === 'free' ? 'Start free' : 'Continue to payment'}
           </span>
         </button>
       </div>
@@ -771,45 +832,69 @@ function CompanySignup() {
   })
   const [logo, setLogo] = useState(null)
   const [plan, setPlan] = useState('starter')
+  const [plans, setPlans] = useState([]) // prices from the backend, for the payment step
+  const [busy, setBusy] = useState(false)
+  const [payment, setPayment] = useState(null)
+  const [serverErrors, setServerErrors] = useState(null) // field errors from the backend → shown on step 1
+  const [notice, setNotice] = useState(null) // other errors, shown on the plan / payment step
 
   const navigate = useNavigate()
+  const paid = plan !== 'free'
+  const planInfo = plans.find((p) => p.name.toLowerCase() === plan)
+
+  useEffect(() => {
+    api('/plans')
+      .then((data) => setPlans(data.plans))
+      .catch(() => {})
+  }, [])
 
   const goToStep = (n) => {
     setStep(n)
     window.scrollTo(0, 0)
   }
 
-  const finish = async () => {
+  // the account is only created here: Free right away, a paid plan together with its payment
+  const finish = async ({ emailReceipt } = {}) => {
     const data = new FormData()
     data.append('role', 'company')
     Object.entries(form).forEach(([key, value]) => data.append(key, value))
     data.append('plan', plan)
+    if (paid) {
+      data.append('method', 'card')
+      data.append('emailReceipt', String(emailReceipt))
+    }
     if (logo?.file) data.append('logo', logo.file)
 
+    setBusy(true)
+    setNotice(null)
     try {
-      const { token } = await api('/auth/signup', {
+      const res = await api('/auth/signup', {
         method: 'POST',
         body: data
       })
-      localStorage.setItem('token', token)
-      navigate('/company')
+      localStorage.setItem('token', res.token)
+      if (res.payment) setPayment(res.payment)
+      else navigate('/company')
     } catch (err) {
-      const details = err.fields
-        ? Object.entries(err.fields)
-            .map(([field, msg]) => `${field}: ${msg}`)
-            .join('\n')
-        : ''
-      alert(details || err.error || 'Could not reach the server')
-      goToStep(1)
+      const fields = { ...err.fields }
+      delete fields.method
+      if (hasErrors(fields)) {
+        // e.g. email or company name already used → back to step 1, under that field
+        setServerErrors(fields)
+        goToStep(1)
+      } else {
+        setNotice({ type: 'error', text: err.error || 'Could not reach the server' })
+      }
+    } finally {
+      setBusy(false)
     }
   }
 
-  const right =
-    step === 2 ? (
-      <button type="button" className="back-link" onClick={() => goToStep(1)}>
-        ← Back
-      </button>
-    ) : null
+  const backTo = (n) => (
+    <button type="button" className="back-link" onClick={() => goToStep(n)}>
+      ← Back
+    </button>
+  )
 
   if (step === 1) {
     return (
@@ -819,17 +904,53 @@ function CompanySignup() {
           setForm={setForm}
           logo={logo}
           setLogo={setLogo}
-          onNext={() => goToStep(2)}
+          paid={paid}
+          serverErrors={serverErrors}
+          onNext={() => {
+            setServerErrors(null)
+            goToStep(2)
+          }}
         />
       </SignupSplit>
+    )
+  }
+
+  if (step === 3) {
+    return (
+      <div className="page">
+        <Header employer right={payment ? null : backTo(2)} />
+        <main className="container pay">
+          {payment ? (
+            <PaymentDone plan={planInfo} payment={payment} />
+          ) : (
+            <>
+              <div className="page-head center">
+                <Steps step={3} paid />
+              </div>
+              <Notice notice={notice} onClose={() => setNotice(null)} />
+              {planInfo ? (
+                <PaymentForm plan={planInfo} company={form.companyName} busy={busy} onPay={finish} />
+              ) : (
+                <Loading text="Loading your order…" />
+              )}
+            </>
+          )}
+        </main>
+      </div>
     )
   }
 
   // Step 2 keeps the full width so the three plan cards fit side by side.
   return (
     <div className="page">
-      <Header employer right={right} />
-      <ChoosePlan plan={plan} setPlan={setPlan} onFinish={finish} />
+      <Header employer right={backTo(1)} />
+      <ChoosePlan
+        plan={plan}
+        setPlan={setPlan}
+        onFinish={() => (paid ? goToStep(3) : finish())}
+        notice={notice}
+        onCloseNotice={() => setNotice(null)}
+      />
     </div>
   )
 }
