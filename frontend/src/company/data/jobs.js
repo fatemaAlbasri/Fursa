@@ -79,7 +79,7 @@ export function experienceFromYears(min, max) {
   return found ? found[0] : EXPERIENCE[0]
 }
 
-// A draft can have empty (null) fields, so every text field falls back to ''
+// drafts can have null fields, so use '' instead
 export const jobToForm = (job) => ({
   ...job,
   title: job.title || '',
