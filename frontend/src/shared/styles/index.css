@@ -2989,3 +2989,56 @@ html:has(.landing) {
   cursor: progress;
   gap: 10px;
 }
+
+/* forgot / reset password: 3-step bar above the card (wireframe 2b) */
+.pw-steps {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.pw-steps__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a9bab;
+  transition: color 0.3s ease;
+}
+.pw-steps__bar {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gray);
+  overflow: hidden;
+}
+/* teal fill slides in from the left when a step is reached */
+.pw-steps__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--teal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.pw-steps__item--on {
+  color: var(--teal);
+}
+.pw-steps__item--on .pw-steps__bar::after {
+  transform: scaleX(1);
+}
+@media (max-width: 420px) {
+  .pw-steps__item {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-steps__bar::after {
+    transition: none;
+  }
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
+import PasswordSteps from '../components/PasswordSteps.jsx'
 
 // One page for both roles. ?role= is only kept so "Back to sign in" opens the same tab.
 export default function ForgotPassword() {
@@ -45,6 +46,7 @@ export default function ForgotPassword() {
 
   return (
     <main className="pw">
+      <PasswordSteps step={sent ? 2 : 1} />
       <form className="card" onSubmit={submit} noValidate>
         <div className="pw-head">
           <span className="pw-head__icon">
