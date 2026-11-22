@@ -15,9 +15,10 @@ import {
   formatDeadline,
   daysLeft,
   splitLines,
-  formatExperience
+  formatExperience,
+  formatSalary
 } from '../../shared/utils/jobFormat.js'
-import { toJobBody, jobToForm } from '../data/jobs.js'
+import { toJobBody, jobToForm, tabOf } from '../data/jobs.js'
 import Notice from '../../shared/components/Notice.jsx'
 import Loading from '../../shared/components/Loading.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
@@ -29,6 +30,8 @@ import {
   EyeIcon
 } from '../../shared/components/icons.jsx'
 import '../styles/JobView.css'
+
+const LIVE_TEXT = 'Your job is live. Job seekers who match can now see and apply.'
 
 // A small grey box: label on top, value under it
 function Info({ label, children }) {
@@ -58,12 +61,7 @@ export default function JobView({ editing = false }) {
   const [job, setJob] = useState(null)
   // just posted from Post a job
   const [notice, setNotice] = useState(
-    location.state?.justPosted
-      ? {
-          type: 'success',
-          text: 'Your job is live. Job seekers who match can now see and apply.'
-        }
-      : null
+    location.state?.justPosted ? { type: 'success', text: LIVE_TEXT } : null
   )
   const [confirmClose, setConfirmClose] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -97,6 +95,7 @@ export default function JobView({ editing = false }) {
       </div>
     )
   }
+
   // drafts open in edit mode
   if (job.status === 'draft' && !editing) {
     return <Navigate to={`/company/jobs/${id}/edit`} replace />
@@ -107,46 +106,29 @@ export default function JobView({ editing = false }) {
   const isDraft = job.status === 'draft'
   const left = Math.max(0, daysLeft(job.deadline))
 
+  const showError = (err) =>
+    setNotice({ type: 'error', text: err.error || 'Something went wrong. Please try again.' })
+
   // 'draft' = save draft, 'open' = publish or save
   const saveChanges = (form, status) => {
     if (saving) return
     setSaving(true)
-    api('/jobs/mine/' + id, {
-      method: 'PUT',
-      body: toJobBody(form, status)
-    })
+    api('/jobs/mine/' + id, { method: 'PUT', body: toJobBody(form, status) })
       .then((data) => {
         setJob(data.job)
-        if (status === 'draft') {
-          // draft saved, stay in the form
-          setNotice({
-            type: 'success',
-            text: 'Draft saved. Publish it when you are ready.'
-          })
-        } else if (isDraft) {
-          // draft published
-          setNotice({
-            type: 'success',
-            text: 'Your job is live. Job seekers who match can now see and apply.'
-          })
-          navigate(`/company/jobs/${id}`, { replace: true })
-        } else {
-          // live job saved
-          setNotice({
-            type: 'success',
-            text: 'Changes saved. Applicants have been re-ranked.'
-          })
-          navigate(`/company/jobs/${id}`, { replace: true })
-        }
+        const text =
+          status === 'draft' ? 'Draft saved. Publish it when you are ready.'
+          : isDraft ? LIVE_TEXT
+          : 'Changes saved. Applicants have been re-ranked.'
+        setNotice({ type: 'success', text })
+        // a saved draft stays in the form, everything else goes back to the job
+        if (status !== 'draft') navigate(`/company/jobs/${id}`, { replace: true })
+      })
+      .catch(showError)
+      .finally(() => {
+        setSaving(false)
         window.scrollTo({ top: 0, behavior: 'smooth' })
       })
-      .catch((err) =>
-        setNotice({
-          type: 'error',
-          text: err.error || 'Something went wrong. Please try again.'
-        })
-      )
-      .finally(() => setSaving(false))
   }
 
   const closeJob = () => {
@@ -155,32 +137,18 @@ export default function JobView({ editing = false }) {
     api('/jobs/mine/' + id + '/close', { method: 'PATCH' })
       .then((data) => {
         setJob(data.job)
-        setNotice({
-          type: 'success',
-          text: 'Job closed. Job seekers can no longer apply.'
-        })
+        setNotice({ type: 'success', text: 'Job closed. Job seekers can no longer apply.' })
       })
-      .catch((err) =>
-        setNotice({
-          type: 'error',
-          text: err.error || 'Something went wrong. Please try again.'
-        })
-      )
+      .catch(showError)
       .finally(() => {
         setSaving(false)
-        // scroll up to show the message
         window.scrollTo({ top: 0, behavior: 'smooth' })
       })
   }
 
   // back link opens the same tab this job is in
-  const backTab = isDraft
-    ? 'draft'
-    : isClosed || daysLeft(job.deadline) < 0
-      ? 'closed'
-      : 'active'
-  const backTo =
-    backTab === 'active' ? '/company/jobs' : `/company/jobs?tab=${backTab}`
+  const tab = tabOf(job)
+  const backTo = tab === 'active' ? '/company/jobs' : `/company/jobs?tab=${tab}`
 
   return (
     <main className="jv">
@@ -388,7 +356,7 @@ export default function JobView({ editing = false }) {
                     {job.deadline ? formatDeadline(job.deadline) : '—'}
                   </Row>
                   <Row label="Salary">
-                    {job.salary ? `BHD ${job.salary} / month` : 'Hidden'}
+                    {job.salary ? `${formatSalary(job.salary)} / month` : 'Hidden'}
                   </Row>
                 </div>
               </section>

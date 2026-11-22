@@ -3,19 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import Loading from '../../shared/components/Loading.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
+import { tabOf } from '../data/jobs.js'
 import {
   formatJobType,
   formatDeadline,
   daysLeft
 } from '../../shared/utils/jobFormat.js'
 import '../styles/CompanyJobs.css'
-
-// an open job past its deadline counts as closed
-const tabOf = (job) => {
-  if (job.status === 'draft') return 'draft'
-  if (job.status === 'closed' || daysLeft(job.deadline) < 0) return 'closed'
-  return 'active'
-}
 
 const TABS = [
   { id: 'active', label: 'Active' },

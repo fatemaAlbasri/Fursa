@@ -5,6 +5,7 @@ import { toApplicant, countStats } from '../data/applicants.js';
 import StatusPill from '../../shared/components/StatusPill';
 import { LockIcon } from '../../shared/components/icons.jsx';
 import ScoreRing from '../components/ScoreRing.jsx';
+import { tabOf } from '../data/jobs.js';
 import '../styles/Applicants.css';
 
 // =====================================================================
@@ -41,6 +42,11 @@ export default function Applicants() {
   const [features, setFeatures] = useState(null); // what the company's plan allows
 
   const stats = countStats(applicants);
+
+  // back link opens the tab the picked job is in
+  const job = jobs.find((j) => j.id === jobId);
+  const jobTab = job ? tabOf(job) : 'active';
+  const backTo = jobTab === 'active' ? '/company/jobs' : `/company/jobs?tab=${jobTab}`;
 
   // ---------- Load from the backend ----------
   // 1) the company's jobs → open the job we came back from, else the first one that has applicants
@@ -126,7 +132,7 @@ export default function Applicants() {
       {/* ---------- Title + job drop-down ---------- */}
       <div className="ap-head">
         <div>
-          <Link to="/company/jobs" className="ap-back">← All jobs</Link>
+          <Link to={backTo} className="ap-back">← All jobs</Link>
           <h1>Applicants</h1>
           <p className="ap-sub">
             {onFree ? 'Sorted by date applied' : 'Ranked by AI'} · you make every decision

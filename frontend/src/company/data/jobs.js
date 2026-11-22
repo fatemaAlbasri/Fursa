@@ -1,4 +1,4 @@
-import { toDateInput } from '../../shared/utils/jobFormat.js'
+import { toDateInput, daysLeft } from '../../shared/utils/jobFormat.js'
 
 // ---------- Lists shown in the job form ----------
 export const MAJORS = [
@@ -96,3 +96,10 @@ export const jobToForm = (job) => ({
   deadline: toDateInput(job.deadline),
   skills: (job.skills || []).map((s) => ({ name: s.name, must: s.is_required })),
 })
+
+// which tab a job is in on Your jobs (an open job past its deadline counts as closed)
+export const tabOf = (job) => {
+  if (job.status === 'draft') return 'draft'
+  if (job.status === 'closed' || daysLeft(job.deadline) < 0) return 'closed'
+  return 'active'
+}
