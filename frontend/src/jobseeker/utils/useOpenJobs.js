@@ -51,7 +51,14 @@ export default function useOpenJobs() {
       // 2. The open jobs
       try {
         const data = await api('/jobs')
-        if (!ignore) setJobs(data.jobs)
+        if (!ignore) {
+          // top 10 = best 10 scored jobs the seeker qualifies for (list is already sorted by score)
+          const topIds = data.jobs
+            .filter((j) => j.match_score != null && j.is_qualified)
+            .slice(0, 10)
+            .map((j) => j.id)
+          setJobs(data.jobs.map((j) => ({ ...j, top: topIds.includes(j.id) })))
+        }
       } catch (err) {
         if (!ignore) setError(err.error || 'Could not reach the server')
       }

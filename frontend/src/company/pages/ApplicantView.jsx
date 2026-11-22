@@ -6,6 +6,7 @@ import { userInitials } from '../../shared/utils/jobFormat.js'
 import { STATUS_LABELS, avatarColor } from '../data/applicants.js'
 import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx'
 import StatusPill from '../../shared/components/StatusPill'
+import { LockIcon } from '../../shared/components/icons.jsx'
 import ScoreRing from '../components/ScoreRing.jsx'
 import '../styles/ApplicantView.css'
 
@@ -271,7 +272,10 @@ function ApplicantPage() {
     )
   }
 
-  const { applicant: a, interview, history, nav } = data
+  const { applicant: a, interview, history, nav, features } = data
+  // free plan has no score and no skills match
+  const ranked = Boolean(features?.ai_ranking)
+  const reasons = Boolean(features?.match_reasons)
   const status = a.status
 
   // only show a match if it's an exact major match
@@ -479,13 +483,15 @@ function ApplicantPage() {
           </p>
         </div>
         <StatusPill status={STATUS_LABELS[status]} />
-        <ScoreRing
-          score={a.score}
-          size={76}
-          className="ap-score apd-score"
-          byScore
-          thickness={3.75}
-        />
+        {ranked && (
+          <ScoreRing
+            score={a.score}
+            size={76}
+            className="ap-score apd-score"
+            byScore
+            thickness={3.75}
+          />
+        )}
       </section>
 
       {error && (
@@ -498,11 +504,19 @@ function ApplicantPage() {
         {/* left side */}
         <div className="apd-main">
           <section className="apd-card">
-            <h2>Why this score (AI match)</h2>
-            <p className="apd-muted">
-              Skills in the job requirements compared with the skills found in
-              the CV.
-            </p>
+            <h2>{reasons ? 'Why this score (AI match)' : 'Requirements'}</h2>
+            {reasons ? (
+              <p className="apd-muted">
+                Skills in the job requirements compared with the skills found in
+                the CV.
+              </p>
+            ) : (
+              <p className="apd-locked">
+                <LockIcon />
+                AI match details are on the Starter plan.{' '}
+                <Link to="/company/plans">See plans →</Link>
+              </p>
+            )}
             {a.skills.length > 0 && (
               <div className="apd-skills">
                 {a.skills.map((s) => {
@@ -533,7 +547,7 @@ function ApplicantPage() {
                 })}
               </div>
             )}
-            <p className="apd-subhead">Other requirements</p>
+            {reasons && <p className="apd-subhead">Other requirements</p>}
             <div className="apd-reqs">
               {reqs.map((r) => (
                 <div key={r.label} className="apd-req">
@@ -569,7 +583,7 @@ function ApplicantPage() {
                       aria-pressed={cvView === 'text'}
                       onClick={() => setCvTab('text')}
                     >
-                      Highlighted text
+                      {reasons ? 'Highlighted text' : 'Text'}
                     </button>
                     <button
                       type="button"
@@ -594,14 +608,16 @@ function ApplicantPage() {
             {cvView === 'text' && (
               <>
                 <p className="apd-muted apd-cv__note">
-                  Text read from the uploaded file · skills the job asks for are
-                  highlighted
+                  Text read from the uploaded file
+                  {reasons && ' · skills the job asks for are highlighted'}
                 </p>
                 <div className="apd-cv__box">
                   <HighlightedCv text={a.cv_text} skills={a.skills} />
-                  <div className="apd-cv__legend">
-                    <span aria-hidden="true" /> Matches the job requirements
-                  </div>
+                  {reasons && (
+                    <div className="apd-cv__legend">
+                      <span aria-hidden="true" /> Matches the job requirements
+                    </div>
+                  )}
                 </div>
               </>
             )}

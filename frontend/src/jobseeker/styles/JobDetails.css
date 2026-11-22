@@ -149,7 +149,10 @@ img.jd-logo {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(var(--teal) calc(var(--score) * 1%), var(--light) 0);
+  background: conic-gradient(
+    var(--teal) calc(var(--score) * 1%),
+    var(--light) 0
+  );
 }
 .jd-ring__inner {
   width: 66px;
@@ -428,5 +431,157 @@ img.jd-logo {
   }
   .jd-spinner {
     animation-duration: 2s;
+  }
+}
+/* ---------- Company preview (/company/jobs/:id/preview) ---------- */
+.jd-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #eaf7f7;
+  border: 1px solid #bfe5e5;
+}
+.jd-preview__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: #117a7c;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jd-preview__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.jd-preview__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.jd-preview__text b {
+  font-size: 14px;
+  color: #183b56;
+}
+.jd-preview__text span {
+  font-size: 13px;
+  color: #3e5468;
+}
+.jd-preview__exit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #117a7c;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.jd-preview__exit:hover {
+  background: #0e6466;
+  color: #ffffff;
+}
+
+/* example ring: a bit faded so it doesn't look like a real score */
+.jd-ring--example {
+  opacity: 0.6;
+}
+
+/* "Each job seeker sees this…" */
+.jd-note--teal {
+  color: var(--teal);
+  margin-top: -4px;
+}
+
+/* "Turned off in preview" under the apply button */
+.jd-apply__off {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #c5d3de;
+}
+.jd-apply__off svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---------- Company name link + tag icons ---------- */
+.jd-hero__link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.jd-hero__link:hover {
+  color: var(--teal);
+}
+.jd-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.jd-tag svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+/* ---------- "View company page" ---------- */
+.jd-company__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 42px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1.5px solid #117a7c;
+  color: #117a7c;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.jd-company__btn:hover:not(:disabled) {
+  background: #117a7c;
+  color: #ffffff;
+}
+.jd-company__btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+/* turned off in preview */
+.jd-company__btn--off {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5df;
+  color: #8a9bab;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .jd-preview {
+    flex-wrap: wrap;
+  }
+  .jd-preview__exit {
+    width: 100%;
+    justify-content: center;
   }
 }

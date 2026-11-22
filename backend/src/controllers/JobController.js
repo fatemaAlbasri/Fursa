@@ -15,12 +15,30 @@ const scoreOpenJob = (jobId) =>
 // GET /api/jobs → view all jobs (jobseeker)
 const getJobs = async (req, res, next) => {
   try {
+    // missing skills come from the seeker's current skills
     const { rows } = await db.query(
       `SELECT j.*, c.name AS company_name, c.logo_url AS company_logo,
-              ms.score AS match_score
+              ms.score AS match_score,
+              ms.is_qualified,
+              sk.total AS skills_total,
+              sk.missing AS missing_skills,
+              sk.missing_required,
+              EXISTS (SELECT 1 FROM applications a
+                       WHERE a.job_id = j.id AND a.seeker_id = $1) AS applied
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
          LEFT JOIN match_scores ms ON ms.job_id = j.id AND ms.seeker_id = $1
+         LEFT JOIN LATERAL (
+           SELECT COUNT(*)::int AS total,
+                  COALESCE(array_agg(s.name ORDER BY js.is_required DESC, s.name)
+                           FILTER (WHERE ss.skill_id IS NULL), '{}') AS missing,
+                  COALESCE(array_agg(s.name ORDER BY s.name)
+                           FILTER (WHERE ss.skill_id IS NULL AND js.is_required), '{}') AS missing_required
+             FROM job_skills js
+             JOIN skills s ON s.id = js.skill_id
+             LEFT JOIN seeker_skills ss ON ss.skill_id = js.skill_id AND ss.seeker_id = $1
+            WHERE js.job_id = j.id
+         ) sk ON true
         WHERE j.status = 'open' AND j.deadline >= CURRENT_DATE
         ORDER BY ms.score DESC NULLS LAST, j.created_at DESC`,
       [req.user.id]
@@ -33,13 +51,21 @@ const getJobs = async (req, res, next) => {
 }
 
 // GET /api/jobs/mine → view only their jobs (company)
+// same counts as jobStats
 const getCompanyJobs = async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      `SELECT j.*, (SELECT COUNT(*)::int FROM applications a WHERE a.job_id = j.id) AS applicants
+      `SELECT j.*, c.name AS company_name,
+              COUNT(a.id)::int AS applicants,
+              COUNT(a.id) FILTER (WHERE ms.is_qualified)::int AS qualified,
+              COUNT(a.id) FILTER (WHERE a.status = 'applied')::int AS "newCount",
+              COUNT(a.id) FILTER (WHERE a.applied_at >= now() - interval '7 days')::int AS "newThisWeek"
          FROM jobs j
          JOIN companies c ON c.id = j.company_id
+         LEFT JOIN applications a ON a.job_id = j.id
+         LEFT JOIN match_scores ms ON ms.job_id = a.job_id AND ms.seeker_id = a.seeker_id
         WHERE c.user_id = $1
+        GROUP BY j.id, c.name
         ORDER BY j.created_at DESC`,
       [req.user.id]
     )

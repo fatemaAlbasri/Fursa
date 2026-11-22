@@ -1,4 +1,4 @@
-import { toDateInput } from '../../shared/utils/jobFormat.js'
+import { toDateInput, daysLeft } from '../../shared/utils/jobFormat.js'
 
 // ---------- Lists shown in the job form ----------
 export const MAJORS = [
@@ -79,13 +79,27 @@ export function experienceFromYears(min, max) {
   return found ? found[0] : EXPERIENCE[0]
 }
 
+// drafts can have null fields, so use '' instead
 export const jobToForm = (job) => ({
   ...job,
-  jobType: job.job_type,
-  workMode: job.work_mode,
+  title: job.title || '',
+  description: job.description || '',
+  responsibilities: job.responsibilities || '',
+  location: job.location || '',
+  language: job.language || '',
+  salary: job.salary ?? '',
+  jobType: job.job_type || '',
+  workMode: job.work_mode || '',
   major: job.field || '',
   majorMust: job.major_must_have,
   experience: experienceFromYears(job.min_years, job.max_years),
   deadline: toDateInput(job.deadline),
-  skills: job.skills.map((s) => ({ name: s.name, must: s.is_required })),
+  skills: (job.skills || []).map((s) => ({ name: s.name, must: s.is_required })),
 })
+
+// which tab a job is in on Your jobs (an open job past its deadline counts as closed)
+export const tabOf = (job) => {
+  if (job.status === 'draft') return 'draft'
+  if (job.status === 'closed' || daysLeft(job.deadline) < 0) return 'closed'
+  return 'active'
+}
