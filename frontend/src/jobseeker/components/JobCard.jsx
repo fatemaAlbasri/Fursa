@@ -39,11 +39,11 @@ function JobTags({ job, withWorkMode }) {
 
 // The signed-in seeker's match for this job (match_score from GET /api/jobs).
 // null = not scored yet → no ring; 0 is a real score and is shown.
-function MatchRing({ score, qualified }) {
+function MatchRing({ score }) {
   if (score == null) return null
   return (
     <div
-      className={qualified === false ? 'jfy-ring jfy-ring--low' : 'jfy-ring'}
+      className="jfy-ring"
       style={{ '--score': score }}
       aria-label={`${score}% match`}
       title={`${score}% match`}

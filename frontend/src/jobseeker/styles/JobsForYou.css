@@ -399,6 +399,3 @@ img.jfy-logo {
 .jfy-badge--top { background: #E3F8EF; color: #067647; }
 .jfy-badge--applied { background: #EEF2F5; color: #3E5468; }
 .jfy-row__title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-
-/* not qualified: faded ring */
-.jfy-ring--low { opacity: .55; }
