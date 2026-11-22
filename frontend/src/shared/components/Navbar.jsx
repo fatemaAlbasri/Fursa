@@ -1,20 +1,30 @@
-import { Link, NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { BellIcon } from './icons.jsx';
 
 // Shared top menu. `links` = [{ to, label }] or [{ href: "#section", label }], `tag` = small label after the logo (e.g. "Employer"),
 // `right` = anything shown on the right side (sign-in link, back button, profile...).
 // A link can also have `icon` (an icon from icons.jsx) and `soon: true` = page not built yet:
 // it is shown in the menu but can't be clicked.
-export default function Navbar({ tag, links = [], right }) {
+// On tablets and phones the links fold into a ☰ menu. `menuExtra` = shown at the bottom of
+// that menu on phones (e.g. the landing page's Sign in / Create account, hidden from the bar there).
+export default function Navbar({ tag, links = [], right, menuExtra }) {
+  const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => setOpen(false), [pathname]); // close the menu after moving to another page
+
+  let headerClass = links.length > 0 ? 'topbar topbar--nav' : 'topbar';
+  if (open) headerClass += ' topbar--open';
+
   return (
-    <header className={links.length > 0 ? 'topbar topbar--nav' : 'topbar'}>
+    <header className={headerClass}>
       <Link to="/" className="logo logo--light">
         <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
         {tag && <span className="logo__tag">{tag}</span>}
       </Link>
 
       {links.length > 0 && (
-        <nav className="topbar__nav">
+        <nav id="topbar-menu" className="topbar__nav" onClick={() => setOpen(false)}>
           {links.map((l) => l.soon ? (
             <span key={l.label} className="topbar__link topbar__link--soon" aria-disabled="true" title="Coming soon">
               {l.icon}{l.label}
@@ -29,10 +39,19 @@ export default function Navbar({ tag, links = [], right }) {
               {l.icon}{l.label}
             </NavLink>
           ))}
+          {menuExtra && <div className="topbar__menu-extra">{menuExtra}</div>}
         </nav>
       )}
 
       {right && <span className="topbar__right">{right}</span>}
+
+      {links.length > 0 && (
+        <button type="button" className="topbar__toggle"
+          aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} aria-controls="topbar-menu"
+          onClick={() => setOpen((o) => !o)}>
+          <span /><span /><span />
+        </button>
+      )}
     </header>
   );
 }

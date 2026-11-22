@@ -103,19 +103,19 @@ function StepsCard({ id, title, icon, steps, dark, index }) {
   );
 }
 
+const authButtons = (
+  <span className="topbar__actions">
+    <Link to="/signin" className="btn btn--ghost">Sign in</Link>
+    <Link to="/signup" className="btn btn--teal">Create account</Link>
+  </span>
+);
+
 export default function Landing() {
   useReveal();
   return (
     <div className="landing">
-      <Navbar
-        links={NAV_LINKS}
-        right={
-          <span className="topbar__actions">
-            <Link to="/signin" className="btn btn--ghost">Sign in</Link>
-            <Link to="/signup" className="btn btn--teal">Create account</Link>
-          </span>
-        }
-      />
+      {/* phones: the buttons move from the bar into the ☰ menu */}
+      <Navbar links={NAV_LINKS} right={authButtons} menuExtra={authButtons} />
 
       <section className="hero">
         <div className="hero__bg" role="img" aria-label="Two graduates reviewing a job match on the Fursa platform in an office" />
