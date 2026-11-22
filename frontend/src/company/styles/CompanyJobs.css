@@ -309,7 +309,7 @@
   animation: cj-in 0.35s ease both;
   animation-delay: calc(
     var(--i, 0) * 70ms
-  ); /
+  ); 
 }
 
 /* no animation if the user turned off motion in their settings */

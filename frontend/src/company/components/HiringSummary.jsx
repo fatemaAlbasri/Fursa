@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../shared/api.js'
+import { LockIcon } from '../../shared/components/icons.jsx'
+import { formatDeadline } from '../../shared/utils/jobFormat.js'
 import '../styles/HiringSummary.css'
 
 // verdict.status → the pill at the top
@@ -12,8 +14,6 @@ const VERDICTS = {
 
 // days since posting → "Day 3", null → "–" (not reached yet)
 const dayText = (days) => (days == null ? '–' : `Day ${days}`)
-
-const shortDate = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 // Hiring summary for one job (Growth plan). Other plans see a locked card.
 export default function HiringSummary({ jobId }) {
@@ -30,27 +30,36 @@ export default function HiringSummary({ jobId }) {
       })
   }, [jobId])
 
-  // ---------- Not on the Growth plan ----------
+  // Not on the Growth plan
   if (locked) {
     return (
       <section className="hs-locked" aria-labelledby="hs-locked-title">
         <span className="hs-locked__icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4" />
-          </svg>
+          <LockIcon />
         </span>
         <div className="hs-locked__text">
           <h2 id="hs-locked-title">
             Hiring summary <span className="hs-badge">Growth</span>
           </h2>
-          <p>See conversion rates, how fast you're hiring and what's holding applicants back.</p>
+          <p>
+            See conversion rates, how fast you're hiring and what's holding
+            applicants back.
+          </p>
         </div>
-        <Link to="/company/plans" className="hs-locked__link">See plans →</Link>
+        <Link to="/company/plans" className="hs-locked__link">
+          See plans →
+        </Link>
       </section>
     )
   }
 
-  if (error) return <p className="field__error" role="alert">{error}</p>
+  if (error)
+    return (
+      <p className="field__error" role="alert">
+        {error}
+      </p>
+    )
+
   if (!data) return null // loading: show nothing so the page doesn't jump
 
   const { verdict, funnel, speed, quality, tip, job } = data
@@ -65,13 +74,23 @@ export default function HiringSummary({ jobId }) {
   ].map(([label, count]) => ({
     label,
     count,
-    width: funnel.applied ? Math.max(2, Math.round((count / funnel.applied) * 100)) : 0
+    width: funnel.applied
+      ? Math.max(2, Math.round((count / funnel.applied) * 100))
+      : 0
   }))
 
   const timeline = [
-    ['Posted', shortDate(job.created_at), true],
-    ['First shortlist', dayText(speed.first_shortlist_days), speed.first_shortlist_days != null],
-    ['First interview', dayText(speed.first_interview_days), speed.first_interview_days != null],
+    ['Posted', formatDeadline(job.created_at), true],
+    [
+      'First shortlist',
+      dayText(speed.first_shortlist_days),
+      speed.first_shortlist_days != null
+    ],
+    [
+      'First interview',
+      dayText(speed.first_interview_days),
+      speed.first_interview_days != null
+    ],
     ['Hired', dayText(speed.time_to_hire_days), speed.time_to_hire_days != null]
   ]
 
@@ -89,14 +108,16 @@ export default function HiringSummary({ jobId }) {
       </div>
 
       <div className="hs-grid">
-        {/* ----- Funnel ----- */}
         <div className="hs-box">
           <h3>Where applicants drop off</h3>
           {steps.map((s) => (
             <div key={s.label} className="hs-bar">
               <span className="hs-bar__label">{s.label}</span>
               <span className="hs-bar__track">
-                <span className="hs-bar__fill" style={{ width: `${s.width}%` }} />
+                <span
+                  className="hs-bar__fill"
+                  style={{ width: `${s.width}%` }}
+                />
               </span>
               <b className="hs-bar__count">{s.count}</b>
             </div>
@@ -109,13 +130,20 @@ export default function HiringSummary({ jobId }) {
           )}
         </div>
 
-        {/* ----- Timeline ----- */}
         <div className="hs-box">
           <h3>How fast you're hiring</h3>
           <ol className="hs-timeline">
             {timeline.map(([label, when, reached], i) => (
-              <li key={label} className={i < timeline.length - 1 ? 'hs-step hs-step--line' : 'hs-step'}>
-                <span className={reached ? 'hs-dot hs-dot--on' : 'hs-dot'} aria-hidden="true" />
+              <li
+                key={label}
+                className={
+                  i < timeline.length - 1 ? 'hs-step hs-step--line' : 'hs-step'
+                }
+              >
+                <span
+                  className={reached ? 'hs-dot hs-dot--on' : 'hs-dot'}
+                  aria-hidden="true"
+                />
                 <span className="hs-step__row">
                   <span>{label}</span>
                   <b>{when}</b>
@@ -126,11 +154,11 @@ export default function HiringSummary({ jobId }) {
         </div>
       </div>
 
-      {/* ----- Tip ----- */}
       {tip && (
         <p className="hs-tip">
-          <b>What's holding applicants back:</b> {tip.name} is missing for {tip.count} of {tip.of}{' '}
-          applicants, more than any other must-have. Making it optional would widen your pool.
+          <b>What's holding applicants back:</b> {tip.name} is missing for{' '}
+          {tip.count} of {tip.of} applicants, more than any other must-have.
+          Making it optional would widen your pool.
         </p>
       )}
     </section>
