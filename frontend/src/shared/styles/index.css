@@ -2954,15 +2954,21 @@ html:has(.landing) {
   flex-wrap: wrap;
   gap: 10px;
 }
-.btn--danger-outline {
-  background: var(--white);
-  color: var(--error);
-  border-color: #f5c2bd;
+
+.step {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.btn--danger-outline:hover {
-  background: #fef3f2;
+.steps__line {
+  flex-shrink: 1;
+  min-width: 12px;
 }
-.btn--danger-outline svg {
-  width: 16px;
-  height: 16px;
+@media (max-width: 640px) {
+  .steps {
+    gap: 6px;
+  }
+  .step {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
 }

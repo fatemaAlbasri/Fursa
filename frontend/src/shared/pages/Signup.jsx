@@ -5,7 +5,7 @@ import PasswordInput from '../components/PasswordInput.jsx'
 import ChoiceChips from '../components/ChoiceChips.jsx'
 import PhoneInput from '../components/PhoneInput.jsx'
 import { api } from '../api.js'
-import { TrashIcon, XIcon } from '../components/icons.jsx'
+import { XIcon } from '../components/icons.jsx'
 import {
   MAJORS,
   STATUSES,
@@ -563,12 +563,6 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
               >
                 {logo ? 'Change' : 'Upload logo'}
               </button>
-              {logo && (
-                <button type="button" className="btn btn--danger-outline" onClick={removeLogo}>
-                  <TrashIcon />
-                  Remove
-                </button>
-              )}
             </div>
             <input
               ref={logoInput}
