@@ -2768,7 +2768,7 @@ html:has(.landing) {
 .split--signin .auth {
   max-width: 440px;
   gap: 22px;
-  animation: none; 
+  animation: none;
 }
 .split--signin .auth > * {
   animation: fade-up 0.5s ease backwards;
@@ -2816,5 +2816,77 @@ html:has(.landing) {
   .split--signin .dots span,
   .split--signin .auth > * {
     animation: none;
+  }
+}
+
+/* sign in on tablet */
+@media (max-width: 1024px) {
+  .split--signin {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .split--signin .split__brand {
+    padding: 28px 40px 40px;
+    gap: 32px;
+    justify-content: flex-start;
+  }
+  .split--signin .split__brand > .logo {
+    min-height: 0;
+    margin-left: 0;
+  }
+  .split--signin .logo__full {
+    height: 46px;
+  }
+  .split--signin .split__copy h1 {
+    font-size: 36px;
+  }
+  .split--signin .split__copy p {
+    max-width: 520px;
+    margin-top: 12px;
+    font-size: 16px;
+  }
+  .split--signin .split__form {
+    place-items: start center;
+    padding: 48px 40px;
+  }
+  .split--signin .auth {
+    max-width: 480px;
+    padding: 32px;
+    background: var(--white);
+    border: 1px solid var(--gray);
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(24, 59, 86, 0.06);
+  }
+}
+/* sign in on phone */
+@media (max-width: 640px) {
+  .split--signin .split__brand {
+    padding: 20px 20px 28px;
+    gap: 22px;
+  }
+  .split--signin .logo__full {
+    height: 34px;
+  }
+  .split--signin .split__copy h1 {
+    font-size: 28px;
+  }
+  .split--signin .split__copy p {
+    margin-top: 8px;
+    font-size: 15px;
+  }
+  .split--signin .split__form {
+    padding: 28px 20px 32px;
+  }
+  .split--signin .auth {
+    max-width: none;
+    padding: 0;
+    gap: 18px;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .split--signin .auth h2 {
+    font-size: 24px;
   }
 }
