@@ -5,6 +5,7 @@ import PasswordInput from '../components/PasswordInput.jsx'
 import ChoiceChips from '../components/ChoiceChips.jsx'
 import PhoneInput from '../components/PhoneInput.jsx'
 import { api } from '../api.js'
+import { TrashIcon, XIcon } from '../components/icons.jsx'
 import {
   MAJORS,
   STATUSES,
@@ -473,14 +474,25 @@ function Steps({ step }) {
   )
 }
 
+// 48 KB, 1.2 MB
+const fileSize = (bytes) =>
+  bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
+
 function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
   const [errors, setErrors] = useState({})
   const logoInput = useRef(null)
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const pickLogo = (file) => {
-    if (file && file.type.startsWith('image/'))
+    if (file && file.type.startsWith('image/')) {
+      if (logo) URL.revokeObjectURL(logo.url)
       setLogo({ file, url: URL.createObjectURL(file) })
+    }
+    logoInput.current.value = '' // so picking the same file again still works
+  }
+  const removeLogo = () => {
+    URL.revokeObjectURL(logo.url)
+    setLogo(null)
   }
 
   const submit = (e) => {
@@ -515,9 +527,14 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
         <h3 className="section-title">Company</h3>
 
         <div className="logo-upload">
-          <div className="logo-upload__box">
+          <div className={logo ? 'logo-upload__box logo-upload__box--filled' : 'logo-upload__box'}>
             {logo ? (
-              <img src={logo.url} alt="Company logo" />
+              <>
+                <img src={logo.url} alt="Company logo" />
+                <button type="button" className="logo-upload__x" onClick={removeLogo} aria-label="Remove logo">
+                  <XIcon />
+                </button>
+              </>
             ) : (
               <svg
                 viewBox="0 0 24 24"
@@ -533,15 +550,26 @@ function CompanyDetails({ form, setForm, logo, setLogo, onNext }) {
               </svg>
             )}
           </div>
-          <div>
-            <p className="logo-upload__label">Company logo (optional)</p>
-            <button
-              type="button"
-              className="btn btn--outline"
-              onClick={() => logoInput.current.click()}
-            >
-              {logo ? 'Change logo' : 'Upload logo'}
-            </button>
+          <div className="logo-upload__info">
+            <p className="logo-upload__name">{logo ? logo.file.name : 'Company logo (optional)'}</p>
+            <p className="logo-upload__meta">
+              {logo ? `Uploaded · ${fileSize(logo.file.size)}` : 'PNG, JPG or SVG, up to 5 MB'}
+            </p>
+            <div className="logo-upload__actions">
+              <button
+                type="button"
+                className="btn btn--outline"
+                onClick={() => logoInput.current.click()}
+              >
+                {logo ? 'Change' : 'Upload logo'}
+              </button>
+              {logo && (
+                <button type="button" className="btn btn--danger-outline" onClick={removeLogo}>
+                  <TrashIcon />
+                  Remove
+                </button>
+              )}
+            </div>
             <input
               ref={logoInput}
               type="file"

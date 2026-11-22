@@ -2890,3 +2890,79 @@ html:has(.landing) {
     font-size: 24px;
   }
 }
+
+/* Company logo upload */
+.logo-upload__box {
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+}
+.logo-upload__box--filled {
+  position: relative;
+  overflow: visible;
+  border-style: solid;
+  border-color: transparent;
+  background: none;
+}
+.logo-upload__box--filled img {
+  border-radius: 14px;
+}
+.logo-upload__x {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  background: var(--error);
+  color: var(--white);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.logo-upload__x:hover {
+  transform: scale(1.1);
+}
+.logo-upload__x svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3;
+}
+.logo-upload__info {
+  min-width: 0;
+}
+.logo-upload__name {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.logo-upload__meta {
+  margin: 2px 0 10px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--slate);
+}
+.logo-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.btn--danger-outline {
+  background: var(--white);
+  color: var(--error);
+  border-color: #f5c2bd;
+}
+.btn--danger-outline:hover {
+  background: #fef3f2;
+}
+.btn--danger-outline svg {
+  width: 16px;
+  height: 16px;
+}
