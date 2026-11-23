@@ -1,4 +1,5 @@
 import { formatJobType, formatWorkMode } from '../../shared/utils/jobFormat.js'
+import { MAJORS, LOCATIONS } from '../../company/data/jobs.js'
 
 // Search + filters box shared by Jobs for you and All jobs.
 // The backend returns all open jobs, so filtering happens here in the browser (filterJobs).
@@ -9,9 +10,20 @@ const WORK_MODES = ['onsite', 'hybrid', 'remote']
 
 export const EMPTY_FILTERS = { search: '', type: '', mode: '', field: '', location: '' }
 
-// Unique, sorted, non-empty values of one job column (for the Field / Location menus)
-const optionsFrom = (jobs, key) =>
-  [...new Set(jobs.map((job) => job[key]).filter(Boolean))].sort()
+// Field / Location menus: the usual list (same as the Post a job form) + anything else
+// a company typed in, so every choice is there even when only a few jobs are loaded
+const optionsFrom = (jobs, key, usual) => {
+  const known = new Set(usual.map((v) => v.toLowerCase()))
+  const extra = jobs
+    .map((job) => job[key]?.trim())
+    .filter((v) => v && !known.has(v.toLowerCase()))
+  return [...usual, ...new Set(extra)].sort()
+}
+
+// "manama " and "Manama" are the same place
+const same = (a, b) => (a || '').trim().toLowerCase() === b.trim().toLowerCase()
+
+const isFiltering = (filters) => JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS)
 
 // The jobs that pass the search + every chosen filter
 export function filterJobs(jobs, filters) {
@@ -23,14 +35,13 @@ export function filterJobs(jobs, filters) {
         job.company_name.toLowerCase().includes(search)) &&
       (!filters.type || job.job_type === filters.type) &&
       (!filters.mode || job.work_mode === filters.mode) &&
-      (!filters.field || job.field === filters.field) &&
-      (!filters.location || job.location === filters.location)
+      (!filters.field || same(job.field, filters.field)) &&
+      (!filters.location || same(job.location, filters.location))
   )
 }
 
 // jobs = all loaded jobs (fills the Field / Location menus), onChange(newFilters)
-// action = optional button at the end of the row (Jobs for you: "Search all jobs")
-export default function JobFilters({ jobs, filters, onChange, action }) {
+export default function JobFilters({ jobs, filters, onChange }) {
   const change = (e) => onChange({ ...filters, [e.target.name]: e.target.value })
 
   return (
@@ -72,7 +83,7 @@ export default function JobFilters({ jobs, filters, onChange, action }) {
         <label htmlFor="jfy-field">Field</label>
         <select id="jfy-field" name="field" value={filters.field} onChange={change}>
           <option value="">All fields</option>
-          {optionsFrom(jobs, 'field').map((field) => (
+          {optionsFrom(jobs, 'field', MAJORS).map((field) => (
             <option key={field}>{field}</option>
           ))}
         </select>
@@ -81,12 +92,18 @@ export default function JobFilters({ jobs, filters, onChange, action }) {
         <label htmlFor="jfy-location">Location</label>
         <select id="jfy-location" name="location" value={filters.location} onChange={change}>
           <option value="">All Bahrain</option>
-          {optionsFrom(jobs, 'location').map((location) => (
+          {optionsFrom(jobs, 'location', LOCATIONS).map((location) => (
             <option key={location}>{location}</option>
           ))}
         </select>
       </div>
-      {action && <div className="jfy-filters__action">{action}</div>}
+      {isFiltering(filters) && (
+        <div className="jfy-filters__action">
+          <button type="button" className="btn btn--outline jfy-clear" onClick={() => onChange(EMPTY_FILTERS)}>
+            Clear filters
+          </button>
+        </div>
+      )}
     </section>
   )
 }

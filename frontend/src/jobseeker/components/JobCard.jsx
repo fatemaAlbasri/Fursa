@@ -108,15 +108,14 @@ function Badges({ job }) {
 
 const fadeIn = (index) => ({ animationDelay: `${Math.min(index, 8) * 40}ms` })
 
-// hideTop = don't show the "Top 10" badge (the Top 10 list itself)
-export default function JobCard({ job, index, hideTop }) {
+export default function JobCard({ job, index }) {
   return (
     <article className="jfy-card" style={fadeIn(index)}>
       <div className="jfy-card__top">
         <CompanyLogo job={job} className="jfy-logo" />
         <div className="jfy-card__heading">
           <h3 className="jfy-card__title">{job.title}</h3>
-          <Badges job={hideTop ? { ...job, top: false } : job} />
+          <Badges job={job} />
           <p className="jfy-card__company">
             {job.company_name} · {job.location}
           </p>
@@ -174,5 +173,65 @@ export function JobRow({ job, index }) {
         View job
       </Link>
     </article>
+  )
+}
+
+// Jobs for you (Top 10): one wide row — logo, job, tags + why it matches, then ring + button
+export function JobMatchRow({ job, index }) {
+  return (
+    <article className="jfy-match" style={fadeIn(index)}>
+      <CompanyLogo job={job} className="jfy-logo jfy-match__logo" />
+      <div className="jfy-match__info">
+        <div>
+          <h3 className="jfy-card__title">{job.title}</h3>
+          <p className="jfy-card__company">
+            <Link to={`/jobseeker/companies/${job.company_id}`} className="jfy-match__company">
+              {job.company_name}
+            </Link>
+            {' · '}
+            {job.location} · Deadline {formatDeadline(job.deadline)}
+          </p>
+        </div>
+        <div className="jfy-tags">
+          <span className={job.job_type === 'internship' ? 'jfy-tag jfy-tag--internship' : 'jfy-tag'}>
+            {formatJobType(job.job_type)}
+          </span>
+          <span className="jfy-tag jfy-tag--mode">{formatWorkMode(job.work_mode)}</span>
+          <MatchWhy job={job} />
+        </div>
+      </div>
+      <div className="jfy-match__end">
+        <MatchRing score={job.match_score} />
+        <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--primary jfy-match__btn">
+          View &amp; apply
+        </Link>
+      </div>
+    </article>
+  )
+}
+
+// Grey placeholder rows in the same shape, while the jobs load (wireframe 23 · Loading a list)
+export function JobMatchRowsLoading({ count = 4 }) {
+  return (
+    <div className="jfy-match-list" role="status" aria-label="Loading jobs">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="jfy-match jfy-match--loading" aria-hidden="true">
+          <span className="sk jfy-match__logo" />
+          <div className="jfy-match__info">
+            <span className="sk sk--line" style={{ width: '55%' }} />
+            <span className="sk sk--line sk--thin" style={{ width: '40%' }} />
+            <div className="jfy-tags">
+              <span className="sk sk--pill" />
+              <span className="sk sk--pill" />
+              <span className="sk sk--line sk--thin" style={{ width: '30%' }} />
+            </div>
+          </div>
+          <div className="jfy-match__end">
+            <span className="sk sk--ring" />
+            <span className="sk sk--btn" />
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }

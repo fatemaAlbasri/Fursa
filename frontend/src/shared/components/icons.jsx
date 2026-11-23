@@ -252,3 +252,11 @@ export const PlusIcon = () => (
     <path d="M12 5v14M5 12h14" />
   </Icon>
 )
+
+// Magnifier = Browse / search jobs
+export const SearchIcon = () => (
+  <Icon>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </Icon>
+)
