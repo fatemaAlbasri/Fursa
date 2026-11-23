@@ -313,6 +313,49 @@
 }
 
 /* no animation if the user turned off motion in their settings */
+/* loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) */
+.cj-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.cj-loading .cj-card {
+  animation: none;
+}
+.cj-loading .cj-stat {
+  gap: 10px;
+}
+.cj-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sk.cj-sk-tab {
+  display: block;
+  width: 130px;
+  height: 42px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px #e3e9ee;
+}
+.sk.cj-sk-num {
+  display: block;
+  height: 62px;
+  border-radius: 12px;
+}
+.sk.cj-sk-btn {
+  display: block;
+  height: 44px;
+  border-radius: 999px;
+}
+.sk.cj-sk-btn--small {
+  flex: 1;
+  height: 40px;
+}
+/* load error */
+.cj-error {
+  align-items: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cj-card,
   .cj-empty {
@@ -329,7 +372,8 @@
   .cj-actions {
     flex: 1 1 100%;
   }
-  .cj-tab {
+  .cj-tab,
+  .cj-sk-tab {
     flex: 1 1 0;
     width: auto;
   }

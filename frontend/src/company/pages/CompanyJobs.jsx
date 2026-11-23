@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
-import Loading from '../../shared/components/Loading.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
 import { tabOf } from '../data/jobs.js'
 import {
@@ -16,6 +15,48 @@ const TABS = [
   { id: 'draft', label: 'Drafts' },
   { id: 'closed', label: 'Closed' }
 ]
+function JobsLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  return (
+    <div className="cj-loading" role="status" aria-label="Loading your jobs">
+      <div className="cj-stats" aria-hidden="true">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="cj-stat">
+            {line(36)}
+            {line('60%', true)}
+          </div>
+        ))}
+      </div>
+      <div className="cj-tabs" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="sk cj-sk-tab" />
+        ))}
+      </div>
+      <div className="cj-list" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="cj-card">
+            <div className="cj-card__main cj-loading__text">
+              {line('60%')}
+              {line('45%', true)}
+            </div>
+            <div className="cj-nums">
+              {[0, 1, 2].map((n) => (
+                <span key={n} className="sk cj-sk-num" />
+              ))}
+            </div>
+            <div className="cj-actions">
+              <span className="sk cj-sk-btn" />
+              <div className="cj-actions__row">
+                <span className="sk cj-sk-btn cj-sk-btn--small" />
+                <span className="sk cj-sk-btn cj-sk-btn--small" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function CompanyJobs() {
   const [jobs, setJobs] = useState(null)
@@ -61,13 +102,34 @@ export default function CompanyJobs() {
 
   if (error && !jobs)
     return (
-      <main className="container">
-        <p className="field__error" role="alert">
-          {error}
-        </p>
+      <main className="cj">
+        <div className="cj-empty cj-error" role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="cj-btn cj-btn--ghost"
+            onClick={() => {
+              setError('')
+              load()
+            }}
+          >
+            Try again
+          </button>
+        </div>
       </main>
     )
-  if (!jobs) return <Loading text="Loading your jobs…" />
+  if (!jobs)
+    return (
+      <main className="cj">
+        <header className="cj-head">
+          <div>
+            <h1 className="cj-title">Your jobs</h1>
+            <p className="cj-sub">Manage all of your company's jobs and internships.</p>
+          </div>
+        </header>
+        <JobsLoading />
+      </main>
+    )
 
   const active = jobs.filter((j) => tabOf(j) === 'active')
   const stats = {
@@ -175,6 +237,7 @@ export default function CompanyJobs() {
                 <p className="cj-card__meta">
                   {tab === 'draft' ? 'Created' : 'Posted'}{' '}
                   {formatDeadline(job.created_at)}
+                  {tab !== 'draft' && job.deadline && ` · Deadline ${formatDeadline(job.deadline)}`}
                 </p>
               </div>
 
