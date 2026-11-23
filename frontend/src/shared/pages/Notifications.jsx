@@ -229,10 +229,20 @@ export default function Notifications({ role }) {
   let results
   if (loading) {
     results = (
-      <div className="nt-state" role="status">
-        <span className="nt-spinner" aria-hidden="true" />
-        Loading your notifications…
-      </div>
+      <ul className="nt-list nt-loading" role="status" aria-label="Loading your notifications">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <li key={i} aria-hidden="true">
+            <div className="nt-item">
+              <span className="sk nt-item__icon" />
+              <span className="nt-item__body nt-loading__text">
+                <span className="sk sk--line" style={{ width: '45%' }} />
+                <span className="sk sk--line sk--thin" style={{ width: '85%' }} />
+                <span className="sk sk--line sk--thin" style={{ width: 70 }} />
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
     )
   } else if (error) {
     results = (
