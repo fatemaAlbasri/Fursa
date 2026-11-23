@@ -38,8 +38,9 @@ function MarkTag({ list, onJump }) {
   return null
 }
 
-// "Your CV": the CV text with the lines that have a suggestion marked, and the layout suggestion on top
-export default function CvPreview({ review, onJump }) {
+// "Your CV": the CV text with the lines that have a suggestion marked, and the layout suggestion on top.
+// action = optional button in the header (the optimizer page puts "Download PDF" there)
+export default function CvPreview({ review, onJump, action }) {
   const view = useMemo(() => buildCvView(review.cvText, review.suggestions), [review.cvText, review.suggestions])
   const byId = useMemo(() => new Map(review.suggestions.map((s) => [s.id, s])), [review.suggestions])
   const layout = review.suggestions.find((s) => s.section === 'layout' && s.beforeText)
@@ -47,10 +48,13 @@ export default function CvPreview({ review, onJump }) {
   return (
     <section className="cvo-card cvo-cv">
       <header className="cvo-cv__head">
-        <h2 className="cvo-card__title">Your CV</h2>
-        <span className="cvo-cv__file">
-          {review.resume.fileName} · reviewed {formatDay(review.createdAt)}
-        </span>
+        <div className="cvo-cv__titles">
+          <h2 className="cvo-card__title">Your CV</h2>
+          <span className="cvo-cv__file">
+            {review.resume.fileName} · reviewed {formatDay(review.createdAt)}
+          </span>
+        </div>
+        {action}
       </header>
 
       {view.name ? (

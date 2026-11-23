@@ -1,102 +1,232 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Notice from '../../shared/components/Notice.jsx'
-import { CheckIcon, FileIcon, LockIcon, SparkleIcon, UploadIcon } from '../../shared/components/icons.jsx'
+import { CheckIcon, LockIcon, SparkleIcon, UploadIcon } from '../../shared/components/icons.jsx'
 import useCvReview from '../utils/useCvReview.js'
-import { formatBhd, scoreTone, REPORT_PATH } from '../utils/cvFormat.js'
-import { PageHead, LoadingState, ErrorState } from '../components/cvOptimizer/PageParts.jsx'
-import ScoreRing from '../components/cvOptimizer/ScoreRing.jsx'
+import { formatBhd, formatDay, scoreTone, REPORT_PATH } from '../utils/cvFormat.js'
+import { PageHead, ErrorState } from '../components/cvOptimizer/PageParts.jsx'
 import CvPreview from '../components/cvOptimizer/CvPreview.jsx'
 import SuggestionCard from '../components/cvOptimizer/SuggestionCard.jsx'
-import LockedList from '../components/cvOptimizer/LockedList.jsx'
 import MissingList from '../components/cvOptimizer/MissingList.jsx'
 import DownloadButton from '../components/cvOptimizer/DownloadButton.jsx'
 import UploadButton from '../components/cvOptimizer/UploadButton.jsx'
 import UnlockDialog from '../components/cvOptimizer/UnlockDialog.jsx'
 import '../styles/CvOptimizer.css'
 
-// "44 now" → "65 with our rewrites" → "up to 98 if you add what's missing"
-function Step({ score, label, prefix }) {
+// AI CV Optimizer (wireframe 8): CV strength, the free suggestion, the locked Advanced report,
+// what only the seeker can add, and the CV itself on the right.
+
+const MISSING_SHOWN = 4 // "Show all N tips" opens the rest
+
+// Score out of 100 in a ring: red under 50, amber under 75, green from 75 (scoreTone).
+// faded = a score you could reach, not the one you have now. Circle length 2πr = 301.6 for r = 48.
+function StrengthRing({ score, label, sub, faded }) {
   return (
-    <div className="cvo-step">
-      <span className={`cvo-step__score cvo-tone--${scoreTone(score)}`}>
-        {prefix && <span className="cvo-step__prefix">{prefix}</span>}
-        {score}
+    <div className="cvo-ring2">
+      <div className={`cvo-ring2__circle cvo-ring2--${scoreTone(score)}${faded ? ' cvo-ring2--faded' : ''}`}>
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle className="cvo-ring2__track" cx="60" cy="60" r="48" />
+          <circle
+            className="cvo-ring2__bar"
+            cx="60"
+            cy="60"
+            r="48"
+            style={{ strokeDasharray: `${((score / 100) * 301.6).toFixed(1)} 301.6` }}
+          />
+        </svg>
+        <span className="cvo-ring2__value">{score}</span>
+      </div>
+      <span className="cvo-ring2__label">
+        {label}
+        {sub && <span className="cvo-ring2__sub">{sub}</span>}
       </span>
-      <span className="cvo-step__label">{label}</span>
     </div>
   )
 }
 
-// ---------- Before there is a review: no CV, unreadable CV, ready to analyse, analysing ----------
+const Arrow = () => (
+  <svg className="cvo-ring2__arrow" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+)
+
+// Card with a title + a grey line under it, split from the content by a thin line
+function Panel({ title, sub, action, className = '', children, ...rest }) {
+  return (
+    <section className={`cvo-card cvo-panel ${className}`} {...rest}>
+      <div className="cvo-panel__head">
+        <div>
+          <h2 className="cvo-card__title">{title}</h2>
+          {sub && <p className="cvo-panel__sub">{sub}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+// While the review loads: grey shapes in the same layout (wireframe 23)
+function OptimizerLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  return (
+    <div className="cvo-loading" role="status" aria-label="Loading your CV review">
+      <section className="cvo-card cvo-panel" aria-hidden="true">
+        <div className="cvo-panel__head">
+          <div className="cvo-loading__lines">
+            {line(160)}
+            {line(220, true)}
+          </div>
+          <span className="sk sk--btn" />
+        </div>
+        <div className="cvo-rings">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="cvo-ring2">
+              <span className="sk cvo-sk-ring" />
+              {line(70, true)}
+            </div>
+          ))}
+        </div>
+      </section>
+      <div className="cvo-cols cvo-cols--opt" aria-hidden="true">
+        <div className="cvo-col">
+          {[0, 1].map((i) => (
+            <section key={i} className="cvo-card cvo-panel">
+              <div className="cvo-loading__lines">
+                {line('35%')}
+                {line('60%', true)}
+              </div>
+              <div className="cvo-loading__boxes">
+                <span className="sk cvo-sk-box" />
+                <span className="sk cvo-sk-box" />
+              </div>
+            </section>
+          ))}
+        </div>
+        <div className="cvo-col">
+          <section className="cvo-card cvo-panel">
+            <div className="cvo-loading__lines">
+              {line('30%')}
+              {line('50%', true)}
+              {line('45%')}
+              {[90, 80, 95, 70, 85, 60].map((w, i) => (
+                <span key={i} className="sk sk--line sk--thin" style={{ width: `${w}%` }} />
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// "AI is working" (wireframe 23): steps tick off while the review runs
+const AI_STEPS = ['Reading your CV', 'Checking your skills and wording', 'Writing suggestions']
+
+function Analysing({ fileName }) {
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    // the backend doesn't report progress, so the steps move on by time (the last one waits)
+    const timers = [setTimeout(() => setStep(1), 2500), setTimeout(() => setStep(2), 9000)]
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
+  return (
+    <section className="cvo-card cvo-ai" role="status" aria-live="polite">
+      <div className="cvo-ai__head">
+        <span className="cvo-ai__icon" aria-hidden="true">
+          <SparkleIcon />
+        </span>
+        <div>
+          <h2 className="cvo-card__title">Reviewing your CV…</h2>
+          <p className="cvo-panel__sub">
+            {fileName ? `${fileName} · ` : ''}This usually takes under a minute. Please keep this page open.
+          </p>
+        </div>
+      </div>
+      <div className="cvo-ai__bar">
+        <span />
+      </div>
+      <ol className="cvo-ai__steps">
+        {AI_STEPS.map((text, i) => (
+          <li key={text} className={i < step ? 'is-done' : i === step ? 'is-now' : ''}>
+            <span className="cvo-ai__dot" aria-hidden="true">
+              {i < step && <CheckIcon />}
+            </span>
+            {text}
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+// ---------- Before there is a review: no CV, unreadable CV, ready to review, reviewing ----------
 function PreReview({ cv, onNotice }) {
   const { phase, fileName, analyseError, analyse, upload } = cv
-  const uploadHint = <p className="cvo-hint">PDF or Word file · max 5 MB</p>
 
-  if (phase === 'no-cv' || phase === 'unreadable') {
-    const unreadable = phase === 'unreadable'
+  if (phase === 'analysing') return <Analysing fileName={fileName} />
+
+  if (phase === 'unreadable') {
     return (
-      <section className="cvo-card cvo-state">
-        <span className="cvo-state__icon" aria-hidden="true">
-          {unreadable ? <FileIcon /> : <UploadIcon />}
-        </span>
-        <h2 className="cvo-state__title">{unreadable ? "We couldn't read your CV" : 'Upload your CV to get started'}</h2>
-        <p className="cvo-muted">
-          {unreadable
-            ? "It may be a scanned image. Upload a PDF or Word file where the text can be selected."
-            : "We'll score it out of 100 and suggest rewrites that use only what you already wrote."}
-        </p>
+      <section className="cvo-alert" role="alert">
+        <span className="cvo-alert__icon" aria-hidden="true">!</span>
+        <div className="cvo-alert__text">
+          <h2>We couldn't read the text in your CV</h2>
+          <p>
+            This happens with scanned or image-only files. Please upload your CV again as a PDF or Word file with
+            selectable text.
+          </p>
+        </div>
         <UploadButton onUpload={upload} onNotice={onNotice} className="btn btn--primary">
           <UploadIcon />
-          {unreadable ? 'Upload a different CV' : 'Choose your CV'}
+          Upload CV again
         </UploadButton>
-        {uploadHint}
       </section>
     )
   }
 
-  const analysing = phase === 'analysing'
+  const noCv = phase === 'no-cv'
   return (
-    <section className="cvo-hero cvo-hero--start" aria-busy={analysing}>
-      <span className={analysing ? 'cvo-hero__badge cvo-hero__badge--busy' : 'cvo-hero__badge'} aria-hidden="true">
-        {analysing ? <span className="cvo-spinner cvo-spinner--light" /> : <SparkleIcon />}
+    <section className="cvo-card cvo-start">
+      <span className="cvo-start__icon" aria-hidden="true">
+        {noCv ? <UploadIcon /> : <SparkleIcon />}
       </span>
-      <div className="cvo-hero__start">
-        <h2 className="cvo-hero__title">{analysing ? 'Reviewing your CV…' : 'Your CV is ready to review'}</h2>
-        <p className="cvo-hero__text">
-          {analysing
-            ? 'This can take a few minutes. Please keep this page open.'
-            : 'Get a strength score and rewrites that use only what is already in your CV.'}
+      <h2 className="cvo-start__title">{noCv ? 'Upload your CV to get started' : "Your CV hasn't been reviewed yet"}</h2>
+      <p className="cvo-start__text">
+        {noCv ? (
+          "We'll score it out of 100 and suggest clearer wording, using only what you already wrote."
+        ) : (
+          <>
+            We'll score {fileName ? <strong>{fileName}</strong> : 'your CV'} and suggest clearer wording, using only
+            what you already wrote. A CV is reviewed once — upload a new CV to get a new review.
+          </>
+        )}
+      </p>
+      {analyseError && (
+        <p className="cvo-start__error" role="alert">
+          {analyseError}
         </p>
-        {fileName && (
-          <p className="cvo-hero__file">
-            <FileIcon /> {fileName}
-          </p>
-        )}
-        {!analysing && (
-          <ul className="cvo-hero__perks">
-            <li><CheckIcon /> A score out of 100</li>
-            <li><CheckIcon /> One free rewrite to try</li>
-            <li><CheckIcon /> What you can add yourself</li>
-          </ul>
-        )}
-        {analyseError && !analysing && (
-          <p className="cvo-hero__error" role="alert">
-            {analyseError}
-          </p>
-        )}
-        {!analysing && (
-          <div className="cvo-hero__actions">
-            <button type="button" className="btn cvo-btn-accent" onClick={analyse}>
-              <SparkleIcon />
-              {analyseError ? 'Try again' : 'Analyse my CV'}
-            </button>
-            <UploadButton onUpload={upload} onNotice={onNotice} className="cvo-link cvo-link--light">
-              Upload a different CV
-            </UploadButton>
-          </div>
-        )}
-      </div>
+      )}
+      {noCv ? (
+        <>
+          <UploadButton onUpload={upload} onNotice={onNotice} className="btn btn--primary">
+            <UploadIcon />
+            Choose your CV
+          </UploadButton>
+          <p className="cvo-hint">PDF or Word file · max 5 MB</p>
+        </>
+      ) : (
+        <>
+          <button type="button" className="btn btn--primary" onClick={analyse}>
+            <SparkleIcon />
+            {analyseError ? 'Try again' : 'Review my CV'}
+          </button>
+          <UploadButton onUpload={upload} onNotice={onNotice} className="cvo-link">
+            Upload a different CV
+          </UploadButton>
+        </>
+      )}
     </section>
   )
 }
@@ -109,12 +239,13 @@ export default function CvOptimizer() {
   // A message handed over by another page (e.g. "uploaded" after uploading from the Advanced report)
   const [notice, setNotice] = useState(() => location.state?.notice ?? null)
   const [unlockOpen, setUnlockOpen] = useState(false)
+  const [unlocking, setUnlocking] = useState(false)
+  const [allMissing, setAllMissing] = useState(false)
 
   // Shown once: clear it from the history entry so a reload or Back doesn't show it again
   useEffect(() => {
     if (location.state?.notice) navigate(location.pathname, { replace: true, state: null })
   }, [location.state, location.pathname, navigate])
-  const [unlocking, setUnlocking] = useState(false)
 
   const head = (
     <PageHead title="AI CV Optimizer" sub="Rewords what you already wrote. Never adds skills or experience you don't have." />
@@ -125,7 +256,7 @@ export default function CvOptimizer() {
     return (
       <main className="container cvo">
         {head}
-        <LoadingState text="Loading your CV review…" />
+        <OptimizerLoading />
       </main>
     )
   }
@@ -134,7 +265,7 @@ export default function CvOptimizer() {
       <main className="container cvo">
         {head}
         {noticeBar}
-        <ErrorState title="Could not load the AI CV Optimizer" error={cv.error} onRetry={cv.reload} />
+        <ErrorState title="The AI CV Optimizer is not available right now" error={cv.error} onRetry={cv.reload} />
       </main>
     )
   }
@@ -151,8 +282,9 @@ export default function CvOptimizer() {
   // ---------- The review ----------
   const free = review.suggestions.find((s) => !s.locked && s.isFreePreview)
   const locked = review.suggestions.filter((s) => s.locked)
-  const freeCount = review.suggestions.filter((s) => s.isFreePreview).length
   const count = review.improvementsFound
+  const reviewedOn = `${review.resume.fileName} · reviewed ${formatDay(review.createdAt)}`
+  const missing = allMissing ? review.missing : review.missing.slice(0, MISSING_SHOWN)
 
   // A line's "1 suggestion →": open its card here, or in the Advanced report
   function jumpTo(id) {
@@ -170,112 +302,136 @@ export default function CvOptimizer() {
     else navigate(REPORT_PATH)
   }
 
+  const unlockButton = review.isAdvanced ? (
+    <Link to={REPORT_PATH} className="btn btn--primary">
+      View Advanced report →
+    </Link>
+  ) : (
+    review.canUnlock && (
+      <button type="button" className="btn btn--primary" onClick={() => setUnlockOpen(true)}>
+        <LockIcon />
+        Unlock – BHD {formatBhd(review.reportPrice.totalBhd)}
+      </button>
+    )
+  )
+
   return (
     <main className="container cvo">
       {head}
       {noticeBar}
 
-      {/* ---------- Score ---------- */}
-      <section className="cvo-hero">
-        <ScoreRing score={review.currentScore} />
-        <div className="cvo-hero__body">
-          <div className="cvo-steps">
-            <Step score={review.currentScore} label="now" />
-            <span className="cvo-steps__arrow" aria-hidden="true">→</span>
-            <Step score={review.potentialScore} label="with our rewrites" />
-            <span className="cvo-steps__arrow" aria-hidden="true">→</span>
-            <Step score={review.reachableScore} prefix="up to " label="if you add what's missing" />
-          </div>
-          <div className="cvo-hero__foot">
-            <p className="cvo-hero__count">
-              <strong>
-                {count} {count === 1 ? 'improvement' : 'improvements'} found
-              </strong>
-              {review.isAdvanced ? ' · all unlocked' : freeCount > 0 && ` · ${freeCount} free`}
-            </p>
-            {review.isAdvanced ? (
-              <Link to={REPORT_PATH} className="btn cvo-btn-accent">
-                View Advanced report →
-              </Link>
-            ) : (
-              review.canUnlock && (
-                <button type="button" className="btn cvo-btn-accent" onClick={() => setUnlockOpen(true)}>
-                  <LockIcon />
-                  Unlock – BHD {formatBhd(review.reportPrice.totalBhd)}
-                </button>
-              )
-            )}
-          </div>
+      {/* ---------- CV strength: now → with our rewrites → if you add what's missing ---------- */}
+      <Panel title="Your CV strength" sub={`Based on ${reviewedOn}`} action={unlockButton} aria-label="CV score">
+        <div className="cvo-rings">
+          <StrengthRing score={review.currentScore} label="Now" />
+          <Arrow />
+          <StrengthRing score={review.potentialScore} label="With our rewrites" sub="possible" faded />
+          {review.reachableScore !== review.potentialScore && (
+            <>
+              <Arrow />
+              <StrengthRing score={review.reachableScore} label="If you add what's missing" sub="possible" faded />
+            </>
+          )}
         </div>
-      </section>
+      </Panel>
 
-      {/* ---------- CV + suggestions ---------- */}
-      <div className="cvo-cols">
-        <div className="cvo-col">
-          <CvPreview review={review} onJump={jumpTo} />
-          <DownloadButton
-            path="/cv/optimizer/improved-cv"
-            fileName="improved-cv.pdf"
-            className="btn btn--block cvo-btn-outline"
-          >
-            Download improved CV (PDF)
-          </DownloadButton>
-          <p className="cvo-caption">Free · includes only the suggestions you accepted</p>
-        </div>
-
+      <div className="cvo-cols cvo-cols--opt">
+        {/* ---------- Left: free suggestion, Advanced report, what only you can add ---------- */}
         <div className="cvo-col">
           {free && (
-            <SuggestionCard
-              suggestion={free}
-              variant="preview"
-              busy={cv.saving}
-              saving={cv.busyId === free.id}
-              onDecide={cv.decide}
-            />
-          )}
-          {!review.isAdvanced && locked.length > 0 && (
-            <LockedList suggestions={locked} canUnlock={review.canUnlock} onUnlock={() => setUnlockOpen(true)} />
-          )}
-          {review.isAdvanced && (
-            <section className="cvo-card cvo-unlocked">
-              <span className="cvo-badge">Advanced</span>
-              <h2 className="cvo-card__title">Your Advanced report is unlocked</h2>
-              <p className="cvo-muted">
-                See all {count} rewrites, accept or dismiss each one, and download the full report.
-              </p>
-              <Link to={REPORT_PATH} className="cvo-link">
-                Open the Advanced report →
-              </Link>
-            </section>
+            <Panel title="AI suggestion" sub="Your free preview · accept it to update your CV">
+              <SuggestionCard
+                suggestion={free}
+                variant="preview"
+                plain
+                busy={cv.saving}
+                saving={cv.busyId === free.id}
+                onDecide={cv.decide}
+              />
+            </Panel>
           )}
           {count === 0 && (
-            <section className="cvo-card cvo-unlocked">
-              <h2 className="cvo-card__title">No rewrites needed</h2>
-              <p className="cvo-muted">Your CV is already well worded. See below for what you could add.</p>
-            </section>
+            <Panel title="No rewrites needed" sub="Your CV is already well worded. See below for what you could add." />
+          )}
+
+          {/* only when there is something in it: unlocked, or suggestions still locked
+              (with just the free suggestion there is nothing to pay for, so no card) */}
+          {(review.isAdvanced || locked.length > 0) && (
+            <Panel title="Advanced report" sub="Every suggestion, a full rewrite and a comparison with strong CVs">
+              {review.isAdvanced ? (
+                <div className="cvo-lockrow cvo-lockrow--open">
+                  <CheckIcon />
+                  <span className="cvo-lockrow__text">
+                    <strong>Unlocked.</strong> See all {count} rewrites and download the full report.
+                  </span>
+                  <Link to={REPORT_PATH} className="cvo-link">
+                    Open →
+                  </Link>
+                </div>
+              ) : (
+                locked.length > 0 && (
+                  <div className="cvo-lockrow">
+                    <LockIcon />
+                    <span className="cvo-lockrow__text">
+                      <strong>
+                        {locked.length} more {locked.length === 1 ? 'suggestion' : 'suggestions'}
+                      </strong>{' '}
+                      {locked.length === 1 ? 'is' : 'are'} in the Advanced report
+                    </span>
+                    {review.canUnlock && (
+                      <button type="button" className="cvo-link" onClick={() => setUnlockOpen(true)}>
+                        Unlock →
+                      </button>
+                    )}
+                  </div>
+                )
+              )}
+            </Panel>
+          )}
+
+          {review.missing.length > 0 && (
+            <Panel
+              title="What only you can add"
+              sub={
+                <>
+                  We never invent facts. Add these to your CV if they are true, then{' '}
+                  <UploadButton onUpload={cv.upload} onNotice={setNotice} className="cvo-link cvo-link--inline">
+                    upload it again
+                  </UploadButton>{' '}
+                  to get a new score.
+                </>
+              }
+              action={<span className="cvo-add__goal">Up to {review.reachableScore} / 100</span>}
+              className="cvo-add"
+            >
+              <MissingList key={review.id} reviewId={review.id} items={missing} variant="list" />
+              {review.missing.length > MISSING_SHOWN && (
+                <button type="button" className="cvo-link cvo-more" onClick={() => setAllMissing(!allMissing)}>
+                  {allMissing ? 'Show less' : `Show all ${review.missing.length} tips`}
+                </button>
+              )}
+            </Panel>
           )}
         </div>
-      </div>
 
-      {/* ---------- What only you can add ---------- */}
-      {review.missing.length > 0 && (
-        <section className="cvo-card cvo-add">
-          <header className="cvo-add__head">
-            <div>
-              <h2 className="cvo-card__title">What only you can add</h2>
-              <p className="cvo-muted">
-                We never invent facts. Add these to your CV if they are true, then{' '}
-                <UploadButton onUpload={cv.upload} onNotice={setNotice} className="cvo-link cvo-link--inline">
-                  upload it again
-                </UploadButton>{' '}
-                to get a new score.
-              </p>
-            </div>
-            <span className="cvo-add__goal">Up to {review.reachableScore} / 100</span>
-          </header>
-          <MissingList key={review.id} reviewId={review.id} items={review.missing} variant="grid" />
-        </section>
-      )}
+        {/* ---------- Right: the CV ---------- */}
+        <div className="cvo-col">
+          <CvPreview
+            review={review}
+            onJump={jumpTo}
+            action={
+              <DownloadButton
+                path="/cv/optimizer/improved-cv"
+                fileName="improved-cv.pdf"
+                className="cvo-dl"
+                title="Free · includes only the suggestions you accepted"
+              >
+                Download PDF
+              </DownloadButton>
+            }
+          />
+        </div>
+      </div>
 
       <UnlockDialog
         open={unlockOpen}

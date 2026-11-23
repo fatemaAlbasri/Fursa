@@ -4,7 +4,8 @@ import { downloadPdf } from '../../utils/cvOptimizerApi.js'
 
 // Downloads one of the optimizer PDFs with the sign-in token, and shows the backend's message if it fails
 // (e.g. 422 for a CV that isn't in English)
-export default function DownloadButton({ path, fileName, className, children }) {
+// title = tooltip on the button
+export default function DownloadButton({ path, fileName, className, title, children }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -22,7 +23,7 @@ export default function DownloadButton({ path, fileName, className, children }) 
 
   return (
     <div className="cvo-download">
-      <button type="button" className={className} onClick={download} disabled={busy}>
+      <button type="button" className={className} onClick={download} disabled={busy} title={title}>
         <DownloadIcon />
         {busy ? 'Preparing PDF…' : children}
       </button>
