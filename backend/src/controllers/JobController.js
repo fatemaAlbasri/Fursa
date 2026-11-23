@@ -173,7 +173,9 @@ const seekerJobInfo = async (seekerId, jobId) => {
     `SELECT sp.major, sp.years_experience,
             COALESCE((SELECT array_agg(skill_id) FROM seeker_skills WHERE seeker_id = $1), '{}') AS skill_ids,
             (SELECT score FROM match_scores WHERE job_id = $2 AND seeker_id = $1) AS match_score,
+            (SELECT is_qualified FROM match_scores WHERE job_id = $2 AND seeker_id = $1) AS is_qualified,
             (SELECT file_name FROM resumes WHERE seeker_id = $1 AND is_current) AS cv_file_name,
+            (SELECT id FROM applications WHERE job_id = $2 AND seeker_id = $1) AS application_id,
             (SELECT status FROM applications WHERE job_id = $2 AND seeker_id = $1) AS application_status
        FROM seeker_profiles sp
       WHERE sp.user_id = $1`,

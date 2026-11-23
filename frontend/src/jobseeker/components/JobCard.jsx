@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { formatJobType, formatWorkMode, formatDeadline } from '../../shared/utils/jobFormat.js'
+import { formatJobType, formatWorkMode, formatDeadline, matchTier } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from './CompanyLogo.jsx'
 import { rememberScroll } from '../utils/listScroll.js'
 
@@ -22,13 +22,13 @@ function useBackState() {
 
 // The signed-in seeker's match for this job (match_score from GET /api/jobs).
 // null = not scored yet → no ring; 0 is a real score and is shown.
-// muted = pale red ring for jobs the seeker doesn't qualify for.
+// Colour: teal 80+, amber below 80; muted = pale red, the seeker doesn't qualify.
 // The coloured part fills up when the row appears (circle length 2πr = 157.08 for r = 25).
 function MatchRing({ score, muted }) {
   if (score == null) return null
   return (
     <div
-      className={muted ? 'jfy-ring jfy-ring--muted' : 'jfy-ring'}
+      className={`jfy-ring jfy-ring--${muted ? 'muted' : matchTier(score)}`}
       role="img"
       aria-label={`${score}% match`}
       title={`${score}% match`}

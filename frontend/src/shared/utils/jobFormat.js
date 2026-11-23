@@ -89,3 +89,8 @@ export function greeting(now = new Date()) {
   if (hour < 18) return 'Good afternoon'
   return 'Good evening'
 }
+
+// Ring colour for a match score: 80+ strong (teal), below 80 amber.
+// 80 is the backend's "strong" limit (services/scoring.js). Jobs the seeker doesn't
+// qualify for (missing a must-have) are pale red instead, whatever the score.
+export const matchTier = (score) => (score >= 80 ? 'strong' : 'good')

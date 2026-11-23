@@ -1385,3 +1385,20 @@ img.jfy-logo {
     grid-area: details;
   }
 }
+
+/* ring colour by match band (matchTier): teal 80+, amber below 80 */
+.jfy-ring.jfy-ring--good .jfy-ring__track {
+  stroke: #fef0c7;
+}
+.jfy-ring.jfy-ring--good .jfy-ring__bar {
+  stroke: #dc6803;
+}
+.jfy-ring.jfy-ring--good .jfy-ring__value {
+  color: #b54708;
+}
+.jfy-ring.jfy-ring--muted .jfy-ring__track {
+  stroke: #fdecea;
+}
+.jfy-ring.jfy-ring--muted .jfy-ring__value {
+  color: #b42318; /* same as the job page */
+}
