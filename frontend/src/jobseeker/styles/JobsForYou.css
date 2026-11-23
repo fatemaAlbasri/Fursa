@@ -908,3 +908,65 @@ img.jfy-logo {
   height: 42px;
   border-radius: 999px;
 }
+
+/* the Top 10 list is one card, jobs are rows split by lines */
+.jfy-panel {
+  gap: 0;
+  padding: 20px 24px 8px;
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(24, 59, 86, 0.06);
+  animation: fade-up 0.4s ease backwards;
+}
+.jfy-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.jfy-panel__head h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.jfy-panel__head p {
+  font-size: 13px;
+  color: var(--slate);
+}
+.jfy-panel .jfy-match-list {
+  gap: 0;
+}
+.jfy-panel .jfy-match {
+  padding: 18px 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid #eef2f5;
+  border-radius: 0;
+  box-shadow: none;
+}
+/* rows don't lift inside the card; the title turns teal instead */
+.jfy-panel .jfy-match:not(.jfy-match--loading):hover {
+  border-color: #eef2f5;
+  box-shadow: none;
+  transform: none;
+}
+.jfy-panel .jfy-match:hover .jfy-card__title {
+  color: var(--teal);
+}
+.jfy-panel .jfy-card__title {
+  transition: color 0.15s;
+}
+/* empty / error messages sit inside the card without a second box */
+.jfy-panel .jfy-state {
+  border: 0;
+  border-top: 1px solid #eef2f5;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 32px 0 24px;
+}
+@media (max-width: 640px) {
+  .jfy-panel {
+    padding: 16px 16px 4px;
+  }
+}

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { greeting } from '../../shared/utils/jobFormat.js'
-import { SearchIcon } from '../../shared/components/icons.jsx'
+import { SearchIcon, StarIcon } from '../../shared/components/icons.jsx'
 import useOpenJobs from '../utils/useOpenJobs.js'
 import { EMPTY_FILTERS } from '../components/JobFilters.jsx'
 import JobResults from '../components/JobResults.jsx'
@@ -37,10 +37,20 @@ export default function JobsForYou() {
       </header>
 
       <div className="jfy-home">
-        <section className="jfy-home__main" aria-label="Your matches">
-          <div className="jfy-section-head">
-            <h2>{showTop ? 'Top 10 matches' : 'Open jobs'}</h2>
-            <span className="pill">{showTop ? 'Sorted by match score' : 'Newest first'}</span>
+        {/* one white card: header, then the jobs as rows split by thin lines */}
+        <section className="jfy-home__main jfy-panel" aria-labelledby="jfy-top-title">
+          <div className="jfy-panel__head">
+            <span className="jfy-side__icon">
+              <StarIcon />
+            </span>
+            <div>
+              <h2 id="jfy-top-title">{showTop ? 'Top 10 matches' : 'Open jobs'}</h2>
+              <p>
+                {showTop
+                  ? 'Sorted by match score · based on your skills and preferences'
+                  : 'Newest first · add skills to your profile to see your matches'}
+              </p>
+            </div>
           </div>
 
           {loading ? (
