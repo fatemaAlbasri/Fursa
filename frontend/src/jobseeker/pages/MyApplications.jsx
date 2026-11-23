@@ -95,6 +95,53 @@ function ApplicationCard({ application }) {
   )
 }
 
+// Grey shapes in the same layout as the page while it loads 
+// the count boxes, the tabs and three application cards
+function ApplicationsLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  return (
+    <div className="ma-loading" role="status" aria-label="Loading your applications">
+      <div className="ma-summary" aria-hidden="true">
+        {Object.keys(STATUS_LABELS).map((status) => (
+          <div key={status} className="ma-stat">
+            {line(28)}
+            {line('70%', true)}
+          </div>
+        ))}
+      </div>
+      <div className="ma-tabs" aria-hidden="true">
+        {APPLICATION_TABS.map(({ id }) => (
+          <span key={id} className="sk ma-sk-tab" />
+        ))}
+      </div>
+      <ul className="ma-list" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <li key={i}>
+            <div className="ma-card ma-card--loading">
+              <span className="sk ma-logo" />
+              <div className="ma-card__info ma-loading__text">
+                {line('70%')}
+                {line('90%', true)}
+              </div>
+              <div className="ma-sk-steps">
+                {[0, 1, 2, 3].map((step) => (
+                  <span key={step} className="ma-sk-step">
+                    <span className="sk ma-sk-step__icon" />
+                    {line(48, true)}
+                  </span>
+                ))}
+              </div>
+              <span className="ma-card__status">
+                <span className="sk sk--pill" />
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export default function MyApplications() {
   const navigate = useNavigate()
 
@@ -164,12 +211,7 @@ export default function MyApplications() {
   // ---------- What goes under the tabs
   let results
   if (loading) {
-    results = (
-      <div className="ma-state" role="status">
-        <span className="ma-spinner" aria-hidden="true" />
-        Loading your applications…
-      </div>
-    )
+    results = <ApplicationsLoading />
   } else if (error) {
     results = (
       <div className="ma-state ma-state--error" role="alert">
