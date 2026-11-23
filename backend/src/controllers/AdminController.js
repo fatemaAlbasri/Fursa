@@ -247,5 +247,89 @@ const getSeekers = async (req, res, next) => {
     next(err)
   }
 }
+// Every company with its current plan, jobs and applicants, filtered by search ($1)
+const COMPANIES_CTE = `
+  WITH c AS (
+    SELECT co.id, co.name, co.logo_url, co.industry, co.location,
+           u.email, u.created_at,
+           COALESCE(p.name, 'Free') AS plan,
+           (SELECT COUNT(*) FROM jobs j
+             WHERE j.company_id = co.id AND j.status <> 'draft') AS jobs,
+           (SELECT COUNT(*) FROM applications a
+              JOIN jobs j ON j.id = a.job_id
+             WHERE j.company_id = co.id) AS applicants
+      FROM companies co
+      JOIN users u ON u.id = co.user_id
+      LEFT JOIN subscriptions s ON s.company_id = co.id AND s.status = 'active'
+      LEFT JOIN plans p ON p.id = s.plan_id
+     WHERE ($1::text IS NULL OR (co.name || ' ' || u.email) ILIKE $1)
+  )
+`
 
-module.exports = { getOverview, getSeekers }
+// How many companies are on each plan
+const PLAN_COUNTS = `${COMPANIES_CTE}
+  SELECT COUNT(*) AS all,
+         COUNT(*) FILTER (WHERE plan = 'Free')    AS "Free",
+         COUNT(*) FILTER (WHERE plan = 'Starter') AS "Starter",
+         COUNT(*) FILTER (WHERE plan = 'Growth')  AS "Growth"
+    FROM c
+`
+
+const COMPANY_TABS = ['all', 'Free', 'Starter', 'Growth']
+
+const planCountsOut = (r) => ({
+  all: num(r.all),
+  Free: num(r.Free),
+  Starter: num(r.Starter),
+  Growth: num(r.Growth)
+})
+
+// GET /api/admin/companies?plan=all|Free|Starter|Growth&q=&page=
+const getCompanies = async (req, res, next) => {
+  try {
+    const plan = COMPANY_TABS.includes(req.query.plan) ? req.query.plan : 'all'
+    const search = readSearch(req)
+    const page = readPage(req)
+
+    const [cards, tabs, list] = await Promise.all([
+      // 1) Top cards: whole platform (no search)
+      db.query(PLAN_COUNTS, [null]),
+      // 2) Count per tab: follows the search
+      db.query(PLAN_COUNTS, [search]),
+      // 3) One page of rows for the chosen plan
+      db.query(`${COMPANIES_CTE}
+        SELECT * FROM c
+         WHERE $2 = 'all' OR plan = $2
+         ORDER BY created_at DESC
+         LIMIT $3 OFFSET $4
+      `, [search, plan, PAGE_SIZE, (page - 1) * PAGE_SIZE])
+    ])
+
+    const t = planCountsOut(tabs.rows[0])
+    const total = t[plan]
+
+    res.json({
+      cards: planCountsOut(cards.rows[0]),
+      tabs: t,
+      companies: list.rows.map((c) => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        logo_url: c.logo_url,
+        industry: c.industry,
+        location: c.location,
+        plan: c.plan,
+        jobs: num(c.jobs),
+        applicants: num(c.applicants),
+        joined: c.created_at
+      })),
+      page,
+      page_size: PAGE_SIZE,
+      total,
+      total_pages: Math.max(1, Math.ceil(total / PAGE_SIZE))
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+module.exports = { getOverview, getSeekers, getCompanies }

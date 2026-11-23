@@ -9,7 +9,7 @@ const router = express.Router()
 router.get('/', requireAuth, requireRole('seeker'), CompanyController.getCompanies)
 
 // GET /api/companies/:id  (seeker)
-router.get('/:id', requireAuth, requireRole('seeker'), CompanyController.getOneCompany)
+router.get('/:id', requireAuth, requireRole('seeker', 'admin'), CompanyController.getOneCompany)
 
 
 module.exports = router

@@ -13,4 +13,7 @@ router.get('/overview', AdminController.getOverview)
 // GET /api/admin/seekers
 router.get('/seekers', AdminController.getSeekers)
 
+// GET /api/admin/companies
+router.get('/companies', AdminController.getCompanies)
+
 module.exports = router
