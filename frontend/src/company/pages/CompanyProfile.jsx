@@ -4,26 +4,109 @@ import { api } from '../../shared/api.js'
 import { formatSalary, formatDeadline } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../../jobseeker/components/CompanyLogo.jsx'
 import Notice from '../../shared/components/Notice.jsx'
+import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
 import PhoneInput from '../../shared/components/PhoneInput.jsx'
-import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx'
+import { ButtonSpinner } from '../../shared/components/Loading.jsx'
 import {
   LogOutIcon,
   TrashIcon,
   BriefcaseIcon,
+  BuildingIcon,
   CalendarIcon,
+  GlobeIcon,
+  InfoIcon,
+  LockIcon,
   PencilIcon,
-  TrendIcon
+  PinIcon,
+  TrendIcon,
+  XIcon
 } from '../../shared/components/icons.jsx'
+// same cards and tiles as the job seeker profile (wireframes 11 and 16 share them)
+import {
+  Section,
+  EditButton,
+  InfoTile,
+  UserIcon,
+  MailIcon,
+  PhoneIcon
+} from '../../jobseeker/components/profile/ProfileParts.jsx'
+import { formatPhone } from '../../jobseeker/utils/profile.js'
+import DeleteAccountDialog from '../../jobseeker/components/profile/DeleteAccountDialog.jsx'
+
+// What the delete pop-up lists for a company
+const COMPANY_LOST = [
+  'Your company profile, logo and website link',
+  'All your job posts, open and closed',
+  'All applicants and their ranked results',
+  'Your plan will stop renewing (no refund for the current month)'
+]
+const COMPANY_BYE =
+  'Your company, job posts and applicant data have been removed. We have sent a confirmation to your work email.'
+import '../../jobseeker/styles/Profile.css'
 import '../styles/CompanyProfile.css'
 
-// Company profile page
-
-// grey box with a label and a value
-function Info({ label, children, wide }) {
+function CompanyProfileLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  const tiles = (n) => (
+    <div className="pf-grid">
+      {Array.from({ length: n }, (_, i) => (
+        <div key={i} className="pf-tile">
+          <span className="sk pf-tile__icon" />
+          <div className="pf-tile__text cp-loading__text">
+            {line('40%', true)}
+            {line('70%')}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+  const head = (
+    <div className="pf-card__head">
+      <div className="pf-card__titles">
+        <span className="sk pf-card__icon" />
+        <div className="cp-loading__text">
+          {line(150)}
+          {line(210, true)}
+        </div>
+      </div>
+      <span className="sk sk--btn" />
+    </div>
+  )
   return (
-    <div className={`cp-info${wide ? ' cp-info--wide' : ''}`}>
-      <span className="cp-info__label">{label}</span>
-      <span className="cp-info__value">{children || '—'}</span>
+    <div className="cp-loading" role="status" aria-label="Loading your profile">
+      <section className="cp-hero" aria-hidden="true">
+        <div className="cp-hero__banner" />
+        <div className="cp-hero__body">
+          <div className="cp-logo-wrap">
+            <span className="sk cp-logo" />
+          </div>
+          <div className="cp-hero__text cp-loading__text">
+            {line(200)}
+            <div className="cp-meta">
+              <span className="sk sk--pill" />
+              <span className="sk sk--pill cp-loading__chip" />
+            </div>
+          </div>
+          <span className="sk sk--btn" />
+        </div>
+      </section>
+      <section className="cp-plan" aria-hidden="true">
+        <span className="sk cp-plan__icon" />
+        <div className="cp-plan__text cp-loading__text">
+          {line(90, true)}
+          {line(160)}
+          {line(220, true)}
+        </div>
+        <span className="sk sk--btn" />
+      </section>
+      <section className="card pf-card" aria-hidden="true">
+        {head}
+        {tiles(6)}
+      </section>
+      <section className="card pf-card" aria-hidden="true">
+        {head}
+        {tiles(2)}
+      </section>
     </div>
   )
 }
@@ -75,9 +158,23 @@ export default function CompanyProfile() {
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [logoBusy, setLogoBusy] = useState(false) // removing right now
   const location = useLocation()
   // A message handed over by another page (e.g. "Password updated" from Change password)
   const [notice, setNotice] = useState(() => location.state?.notice ?? null)
+  const [deleting, setDeleting] = useState(false) // "Delete your account?" pop-up is open
+  const [confirmLogout, setConfirmLogout] = useState(false) // "Are you sure?" dialog is open
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  // Escape closes the log out dialog (= Cancel), never logs out. Ignored while logging out.
+  useEffect(() => {
+    if (!confirmLogout || loggingOut) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setConfirmLogout(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [confirmLogout, loggingOut])
 
   // Shown once: clear it from the history entry so a reload or Back doesn't show it again
   useEffect(() => {
@@ -107,11 +204,7 @@ export default function CompanyProfile() {
   if (!profile) {
     return (
       <main className="container cp">
-        {notice?.type === 'error' ? (
-          <Notice notice={notice} />
-        ) : (
-          <Loading text="Loading your profile…" />
-        )}
+        {notice?.type === 'error' ? <Notice notice={notice} /> : <CompanyProfileLoading />}
       </main>
     )
   }
@@ -188,7 +281,22 @@ export default function CompanyProfile() {
     }
   }
 
+  const removeLogo = async () => {
+    setLogoBusy(true)
+    try {
+      await api('/profile/company/logo', { method: 'DELETE' })
+      setProfile({ ...profile, company: { ...company, logo_url: null } })
+      setNotice({ type: 'success', text: 'Logo removed.' })
+    } catch (err) {
+      setNotice({ type: 'error', text: err.error || 'Could not remove the logo.' })
+    } finally {
+      setLogoBusy(false)
+    }
+  }
+
+  // Tell the backend (it can't cancel the token, so a failure doesn't matter), then forget the token
   const logout = async () => {
+    setLoggingOut(true)
     await api('/auth/profile/logout', { method: 'POST' }).catch(() => {})
     localStorage.removeItem('token')
     navigate('/')
@@ -229,7 +337,12 @@ export default function CompanyProfile() {
 
       {/* company header */}
       <section className="cp-hero" aria-label="Company">
-        <div className="cp-hero__banner" />
+        <div className="cp-hero__banner" aria-hidden="true">
+          <span className="pf-header__dots" />
+          <span className="pf-header__shape pf-header__shape--1" />
+          <span className="pf-header__shape pf-header__shape--2" />
+          <span className="pf-header__shape pf-header__shape--3" />
+        </div>
         <div className="cp-hero__body">
           <div className="cp-logo-wrap">
             <CompanyLogo
@@ -250,6 +363,19 @@ export default function CompanyProfile() {
             >
               {uploading ? <ButtonSpinner /> : <PencilIcon />}
             </button>
+            {/* only when there is a logo to remove */}
+            {company.logo_url && (
+              <button
+                type="button"
+                className="cp-logo-remove"
+                aria-label="Remove logo"
+                title="Remove logo"
+                disabled={uploading || logoBusy}
+                onClick={removeLogo}
+              >
+                <XIcon />
+              </button>
+            )}
             <input
               ref={logoInput}
               type="file"
@@ -261,12 +387,12 @@ export default function CompanyProfile() {
           <div className="cp-hero__text">
             <h1>{company.name}</h1>
             <p className="cp-meta">
-              <span>
+              <span className="pf-chip pf-chip--teal">
                 <BriefcaseIcon />
                 Employer account
               </span>
               {profile.created_at && (
-                <span>
+                <span className="pf-chip">
                   <CalendarIcon />
                   Member since {monthYear(profile.created_at)}
                 </span>
@@ -275,14 +401,24 @@ export default function CompanyProfile() {
           </div>
           <button
             type="button"
-            className="btn btn--outline cp-logout"
-            onClick={logout}
+            className="pf-outline pf-logout"
+            onClick={() => setConfirmLogout(true)}
+            disabled={loggingOut}
           >
             <LogOutIcon />
-            Log out
+            {loggingOut ? 'Logging out…' : 'Log out'}
           </button>
         </div>
       </section>
+      <ConfirmDialog
+        open={confirmLogout}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Log out"
+        busy={loggingOut}
+        onConfirm={logout}
+        onCancel={() => setConfirmLogout(false)}
+      />
 
       {/* current plan */}
       {plan && (
@@ -320,19 +456,15 @@ export default function CompanyProfile() {
       )}
 
       {/* company details */}
-      <section className="cp-card">
-        <div className="cp-card__head">
-          <h2>Company details</h2>
-          {editing !== 'details' && (
-            <button
-              type="button"
-              className="cp-edit"
-              onClick={() => startEdit('details')}
-            >
-              Edit
-            </button>
-          )}
-        </div>
+      <Section
+        title="Company details"
+        sub="Shown on your public company page"
+        icon={<BuildingIcon />}
+        labelledBy="cp-details-title"
+        action={
+          editing !== 'details' && <EditButton onClick={() => startEdit('details')} label="Edit company details" />
+        }
+      >
 
         {editing === 'details' ? (
           <>
@@ -386,46 +518,47 @@ export default function CompanyProfile() {
             {formButtons}
           </>
         ) : (
-          <>
-            <div className="cp-grid">
-              <Info label="Company name">{company.name}</Info>
-              <Info label="Industry">{company.industry}</Info>
-              <Info label="Location">{company.location}</Info>
-              <Info label="Company phone">{company.phone}</Info>
-              <Info label="Website" wide>
-                {company.website && (
-                  <a
-                    href={websiteHref(company.website)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {company.website.replace(/^https?:\/\//, '')}
-                  </a>
-                )}
-              </Info>
-            </div>
-            <div className="cp-info">
-              <span className="cp-info__label">About the company</span>
-              <span className="cp-info__text">{company.about || '—'}</span>
-            </div>
-          </>
+          <div className="pf-grid">
+            <InfoTile label="Company name" icon={<BuildingIcon />}>
+              {company.name || '—'}
+            </InfoTile>
+            <InfoTile label="Industry" icon={<BriefcaseIcon />}>
+              {company.industry || '—'}
+            </InfoTile>
+            <InfoTile label="Location" icon={<PinIcon />}>
+              {company.location || '—'}
+            </InfoTile>
+            <InfoTile label="Company phone" icon={<PhoneIcon />}>
+              {company.phone ? formatPhone(company.phone) : <span className="pf-empty">Not added</span>}
+            </InfoTile>
+            <InfoTile label="Website" icon={<GlobeIcon />}>
+              {company.website ? (
+                <a href={websiteHref(company.website)} target="_blank" rel="noreferrer">
+                  {company.website.replace(/^https?:\/\//, '')}
+                </a>
+              ) : (
+                <span className="pf-empty">Not added</span>
+              )}
+            </InfoTile>
+            <InfoTile label="About the company" icon={<InfoIcon />} wide>
+              {company.about ? (
+                <span className="cp-about">{company.about}</span>
+              ) : (
+                <span className="pf-empty">Not added</span>
+              )}
+            </InfoTile>
+          </div>
         )}
-      </section>
+      </Section>
 
       {/* HR contact */}
-      <section className="cp-card">
-        <div className="cp-card__head">
-          <h2>HR contact</h2>
-          {editing !== 'contact' && (
-            <button
-              type="button"
-              className="cp-edit"
-              onClick={() => startEdit('contact')}
-            >
-              Edit
-            </button>
-          )}
-        </div>
+      <Section
+        title="HR contact"
+        sub="The account used to sign in"
+        icon={<UserIcon />}
+        labelledBy="cp-contact-title"
+        action={editing !== 'contact' && <EditButton onClick={() => startEdit('contact')} label="Edit HR contact" />}
+      >
 
         {editing === 'contact' ? (
           <>
@@ -456,24 +589,40 @@ export default function CompanyProfile() {
             {formButtons}
           </>
         ) : (
-          <div className="cp-grid">
-            <Info label="Name">
+          <div className="pf-grid">
+            <InfoTile label="Name" icon={<UserIcon />}>
               {profile.first_name} {profile.last_name}
-            </Info>
-            <Info label="Work email">{profile.email}</Info>
+            </InfoTile>
+            <InfoTile label="Work email" icon={<MailIcon />}>
+              {profile.email}
+            </InfoTile>
           </div>
         )}
 
-        <div className="cp-links">
-          <Link to="/company/change-password" className="cp-btn">
+        <div className="pf-account">
+          <Link to="/company/change-password" className="pf-outline">
+            <LockIcon />
             Change password
           </Link>
-          <Link to="/company/delete-account" className="cp-btn cp-btn--danger">
+          <button type="button" className="btn pf-danger" onClick={() => setDeleting(true)}>
             <TrashIcon />
             Delete my account
-          </Link>
+          </button>
         </div>
-      </section>
+
+        <DeleteAccountDialog
+          open={deleting}
+          who={[company.name, profile.email].filter(Boolean).join(' · ')}
+          lost={COMPANY_LOST}
+          bye={COMPANY_BYE}
+          alt={{
+            text: 'Only want to stop paying? You can',
+            label: 'change your plan instead.',
+            onClick: () => navigate('/company/plans')
+          }}
+          onClose={() => setDeleting(false)}
+        />
+      </Section>
     </main>
   )
 }

@@ -1,8 +1,8 @@
 import { PencilIcon } from '../../../shared/components/icons.jsx'
 
-// Small building blocks shared by the Profile page cards (styles: jobseeker/styles/Profile.css, "pf-").
+// Small building blocks shared by the Profile page cards 
 
-// Icons only this page uses (same shapes as the wireframe)
+// Icons only this page uses 
 const Svg = ({ children }) => (
   <svg
     viewBox="0 0 24 24"
@@ -87,10 +87,10 @@ export function EditButton({ onClick, children = 'Edit', label }) {
   )
 }
 
-// Read-only box: icon, small label above the saved value
-export function InfoTile({ label, icon, children }) {
+// Read-only box: icon, small label above the saved value. wide = across both columns
+export function InfoTile({ label, icon, wide = false, children }) {
   return (
-    <div className="pf-tile">
+    <div className={wide ? 'pf-tile pf-tile--wide' : 'pf-tile'}>
       {icon && (
         <span className="pf-tile__icon" aria-hidden="true">
           {icon}

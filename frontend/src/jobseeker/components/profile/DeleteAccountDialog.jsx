@@ -6,18 +6,30 @@ import { ButtonSpinner } from '../../../shared/components/Loading.jsx'
 import { CheckIcon, InfoIcon, TrashIcon, WarningIcon, XIcon } from '../../../shared/components/icons.jsx'
 import { errorText } from './ProfileParts.jsx'
 
-// "Delete your account?" pop-up (wireframe 21): what will be deleted, "log out instead",
-// the password, Keep my account / Delete my account. Then "Your account has been deleted".
+// "Delete your account?" pop-up (wireframes 21 and 22): what will be deleted, a softer way out
+// ("log out instead" / "change your plan instead"), the password, Keep my account / Delete my account.
+// Then "Your account has been deleted".
 // DELETE /api/auth/profile/account { password }; the backend also emails a confirmation.
+// The job seeker texts are the defaults; the company profile passes its own.
 
-const LOST = [
+const SEEKER_LOST = [
   'Your profile, phone number and job preferences',
   'Your CV and all AI CV reports',
   'Your skills and job matches',
   'All your applications (companies will no longer see them)'
 ]
+const SEEKER_BYE = 'Your profile, CV and applications have been removed. We have sent a confirmation to your email.'
 
-export default function DeleteAccountDialog({ open, email, onClose, onLogout }) {
+// who = line under the title (email, or company · email)
+// alt = { text, label, onClick } for the teal box
+export default function DeleteAccountDialog({
+  open,
+  who,
+  lost = SEEKER_LOST,
+  bye = SEEKER_BYE,
+  alt,
+  onClose
+}) {
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -86,9 +98,7 @@ export default function DeleteAccountDialog({ open, email, onClose, onLogout }) 
             <h2 id="pf-del-title" className="pf-del__title">
               Your account has been deleted
             </h2>
-            <p className="pf-del__bye">
-              Your profile, CV and applications have been removed. We have sent a confirmation to your email.
-            </p>
+            <p className="pf-del__bye">{bye}</p>
             <button type="button" className="btn btn--primary pf-del__home" onClick={goHome}>
               Go to the home page
             </button>
@@ -107,7 +117,7 @@ export default function DeleteAccountDialog({ open, email, onClose, onLogout }) 
                   Delete your account?
                 </h2>
                 <p className="pf-del__who">
-                  {email ? `${email} · ` : ''}This cannot be undone.
+                  {who ? `${who} · ` : ''}This cannot be undone.
                 </p>
               </div>
             </div>
@@ -115,7 +125,7 @@ export default function DeleteAccountDialog({ open, email, onClose, onLogout }) 
             <div className="pf-del__lost">
               <p className="pf-del__lost-title">What will be deleted</p>
               <ul>
-                {LOST.map((text) => (
+                {lost.map((text) => (
                   <li key={text}>
                     <XIcon />
                     {text}
@@ -124,15 +134,17 @@ export default function DeleteAccountDialog({ open, email, onClose, onLogout }) 
               </ul>
             </div>
 
-            <div className="pf-del__alt">
-              <InfoIcon />
-              <p>
-                Just need a break? You can{' '}
-                <button type="button" className="pf-del__link" onClick={onLogout} disabled={busy}>
-                  log out instead.
-                </button>
-              </p>
-            </div>
+            {alt && (
+              <div className="pf-del__alt">
+                <InfoIcon />
+                <p>
+                  {alt.text}{' '}
+                  <button type="button" className="pf-del__link" onClick={alt.onClick} disabled={busy}>
+                    {alt.label}
+                  </button>
+                </p>
+              </div>
+            )}
 
             <div className="field pf-del__field">
               <label htmlFor="pf-delete-password">Enter your password to confirm</label>

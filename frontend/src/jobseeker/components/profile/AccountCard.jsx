@@ -24,12 +24,16 @@ export default function AccountCard({ email, onLogout }) {
 
       <DeleteAccountDialog
         open={open}
-        email={email}
-        onClose={() => setOpen(false)}
-        onLogout={() => {
-          setOpen(false)
-          onLogout()
+        who={email}
+        alt={{
+          text: 'Just need a break? You can',
+          label: 'log out instead.',
+          onClick: () => {
+            setOpen(false)
+            onLogout()
+          }
         }}
+        onClose={() => setOpen(false)}
       />
     </Section>
   )

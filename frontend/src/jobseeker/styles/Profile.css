@@ -1,11 +1,5 @@
-/* ===== Profile (job seeker), as in the wireframe (11) =====
-   Banner header, then one white card per section: Personal details, My skills, Job preferences, My CV, Account.
-   Uses the shared .card, .btn, .field and .choice-box styles from index.css.
-   Every class here starts with "pf-". Rules that change a shared class (.container, .card, .btn)
-   use two classes, because index.css loads after this file and would win otherwise. */
-
-/* colours used only on this page */
-.container.pf {
+.container.pf,
+.container.cp {
   --pf-line: #e8eef2;
   --pf-soft: #eaf7f7;
   --pf-soft-line: #cde7e7;
@@ -15,7 +9,6 @@
   --pf-danger-hover: #b42318;
 }
 
-/* page body: narrower than the job lists, like the wireframe */
 .container.pf {
   max-width: 920px;
   gap: 22px;
@@ -23,7 +16,7 @@
   padding-bottom: 48px;
 }
 
-/* ---------- Cards ---------- */
+/* Cards */
 .card.pf-card {
   gap: 18px;
   padding: 24px 26px;
@@ -141,7 +134,7 @@
   height: 18px;
 }
 
-/* ---------- Header: banner, initials over it, name, chips, Log out ---------- */
+/*  Header: banner, initials over it, name, chips, Log out  */
 .card.pf-header {
   gap: 0;
   padding: 0;
@@ -266,7 +259,7 @@
   padding: 0 20px;
 }
 
-/* ---------- Tiles: two columns of read-only boxes (and of form fields while editing) ---------- */
+/*  Tiles: two columns of read-only boxes (and of form fields while editing)  */
 .pf-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -285,6 +278,9 @@
 }
 .pf-tile:hover {
   border-color: #b9e4e4;
+}
+.pf-tile--wide {
+  grid-column: 1 / -1;
 }
 .pf-tile__icon {
   width: 40px;
@@ -335,7 +331,7 @@
   gap: 10px;
 }
 
-/* ---------- My skills ---------- */
+/*  My skills  */
 .pf-skills {
   list-style: none;
   padding: 0;
@@ -355,7 +351,7 @@
   font-weight: 700;
 }
 
-/* ---------- Job preferences ---------- */
+/*  Job preferences  */
 .pf-prefs {
   display: flex;
   flex-wrap: wrap;
@@ -371,7 +367,7 @@
   font-weight: 700;
 }
 
-/* ---------- My CV: one tile with the file, Download and Replace ---------- */
+/*  My CV: one tile with the file, Download and Replace  */
 .pf-tile.pf-cv {
   flex-wrap: wrap;
   gap: 14px;
@@ -415,7 +411,7 @@
   white-space: nowrap;
 }
 
-/* ---------- Account: Change password on the left, Delete on the right ---------- */
+/*  Account: Change password on the left, Delete on the right  */
 .pf-account {
   display: flex;
   flex-wrap: wrap;
@@ -439,7 +435,7 @@
   height: 18px;
 }
 
-/* ---------- "Delete your account?" pop-up (wireframe 21) ---------- */
+/*  "Delete your account?" pop-up (wireframe 21)  */
 .pf-del-overlay {
   overflow-y: auto;
   animation: fade-in 0.2s ease both;
@@ -679,7 +675,7 @@
   padding: 0 24px;
 }
 
-/* ---------- Loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) ---------- */
+/*  Loading: grey shapes of the page (the .sk shapes are in JobsForYou.css)  */
 .pf-loading {
   display: flex;
   flex-direction: column;
@@ -716,7 +712,7 @@
   width: 170px;
 }
 
-/* ---------- Load error ---------- */
+/*  Load error  */
 .card.pf-state {
   align-items: center;
   text-align: center;
@@ -731,7 +727,7 @@
   font-size: var(--text-size);
 }
 
-/* ---------- Tablet / phone ---------- */
+/*  Tablet / phone  */
 @media (max-width: 640px) {
   .container.pf {
     gap: 16px;

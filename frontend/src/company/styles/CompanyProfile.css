@@ -6,7 +6,8 @@
   --cp-soft: #f4fafa;
 }
 .container.cp {
-  max-width: 900px;
+  max-width: 920px;
+  gap: 22px;
   padding: 32px 20px;
 }
 
@@ -117,20 +118,6 @@
   height: 15px;
 }
 
-/* logout button */
-.cp-logout {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  color: var(--cp-teal);
-  border-color: var(--cp-teal);
-}
-.cp-logout svg {
-  width: 18px;
-  height: 18px;
-}
-
 /* plan box */
 .cp-plan {
   background: var(--white);
@@ -210,86 +197,25 @@
 }
 
 /* cards */
-.cp-card {
-  background: var(--white);
-  border: 1px solid var(--gray);
-  border-radius: 18px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.cp-card__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.cp-card__head h2 {
-  font-size: 18px;
-  font-weight: 700;
-}
+
 .cp-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
-.cp-info {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--cp-soft);
-  border: 1px solid transparent;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
-}
-.cp-info:hover {
-  border-color: #d3ecec;
-  background: #eef8f8;
-}
-.cp-info--wide {
-  grid-column: 1 / -1;
-}
-.cp-info__label {
-  font-size: 12px;
-  color: var(--cp-muted);
-  font-weight: 600;
-}
-.cp-info__value {
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-.cp-info__text {
-  white-space: pre-line;
-}
-.cp-info a {
-  color: var(--cp-teal);
-  font-weight: 700;
-}
-.cp-info a:hover {
-  color: var(--cp-teal-hover);
-}
-
 /* buttons */
-.cp-links,
 .cp-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
-.cp-links {
-  justify-content: space-between;
-}
+
 .cp-actions {
   justify-content: flex-end;
 }
 
-.cp-btn,
-.cp-edit {
+.cp-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -330,52 +256,24 @@
 .cp-btn--teal:hover:not(:disabled) {
   background: var(--cp-teal-hover);
 }
-.cp-btn--danger {
-  border-color: var(--error);
-  background: var(--error);
-  color: var(--white);
-  font-weight: 700;
-}
-.cp-btn--danger:hover:not(:disabled) {
-  background: #b42318;
-  border-color: #b42318;
-}
-
-.cp-edit {
-  min-height: 40px;
-  border: 1px solid var(--cp-teal);
-  background: var(--white);
-  color: var(--cp-teal);
-  font-weight: 700;
-}
-.cp-edit:hover {
-  background: var(--light);
-}
 
 /* hover effect */
-.cp-btn:hover:not(:disabled),
-.cp-edit:hover,
-.cp-logout:hover {
+.cp-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(24, 59, 86, 0.1);
 }
 
 /* animations */
 .cp-hero,
-.cp-plan,
-.cp-card {
+.cp-plan {
   animation: fade-up 0.4s ease backwards;
 }
 .cp-plan {
   animation-delay: 0.08s;
 }
-.cp-card {
-  animation-delay: 0.16s;
-}
-.cp-card + .cp-card {
-  animation-delay: 0.24s;
-}
-.cp-card .field,
+
+/* edit form fields slide in */
+.cp .pf-card .field,
 .cp-actions {
   animation: fade-up 0.25s ease backwards;
 }
@@ -403,4 +301,109 @@
   .cp-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.cp-hero__banner {
+  position: relative;
+  overflow: hidden;
+  height: 150px;
+}
+.cp-logo-wrap {
+  z-index: 1; 
+}
+.cp-meta {
+  gap: 8px;
+  margin-top: 10px;
+}
+.cp-hero .pf-outline.pf-logout {
+  flex-shrink: 0;
+}
+.cp-about {
+  display: block;
+  font-weight: 500;
+  white-space: pre-line;
+}
+.pf-tile__value a {
+  color: var(--teal);
+}
+
+/* loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) */
+.cp-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.cp-loading .card,
+.cp-loading .cp-hero,
+.cp-loading .cp-plan {
+  animation: none;
+}
+.cp-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cp-loading .cp-hero__banner {
+  background: linear-gradient(90deg, #e3eaef 0%, #edf2f5 40%, #e3eaef 80%);
+  background-size: 800px 100%;
+  animation: sk-shine 1.4s linear infinite;
+}
+.cp-loading .sk.cp-logo,
+.cp-loading .sk.cp-plan__icon,
+.cp-loading .sk.pf-card__icon,
+.cp-loading .sk.pf-tile__icon {
+  display: block;
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.cp-loading__chip {
+  width: 160px;
+}
+
+@media (max-width: 640px) {
+  .cp-hero__banner {
+    height: 110px;
+  }
+  .cp-hero .pf-outline.pf-logout {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-loading .cp-hero__banner {
+    animation: none;
+  }
+}
+
+.cp-logo-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  background: #d92d20;
+  color: var(--white);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(16, 42, 61, 0.2);
+  animation: cp-pop 0.3s ease backwards;
+  transition:
+    transform 0.15s,
+    background 0.15s;
+}
+.cp-logo-remove svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 3;
+}
+.cp-logo-remove:hover:not(:disabled) {
+  background: #b42318;
+  transform: scale(1.12);
+}
+.cp-logo-remove:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
