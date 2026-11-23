@@ -638,6 +638,55 @@ a.apd-nav__btn:hover {
   animation-delay: 0s;
 }
 
+/* loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) */
+.apd-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.apd-loading .apd-head,
+.apd-loading .apd-card {
+  animation: none;
+}
+.apd-loading .apd-card {
+  gap: 12px;
+}
+.apd-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.apd-loading .sk.apd-avatar {
+  border-radius: 50%;
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.sk.apd-sk-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+.sk.apd-sk-box {
+  height: 46px;
+  border-radius: 12px;
+}
+.sk.apd-sk-btn {
+  height: 48px;
+  border-radius: 999px;
+}
+.apd-loading__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sk.apd-sk-dot {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  border-radius: 50%;
+}
+
 @media (max-width: 900px) {
   .apd-body {
     grid-template-columns: 1fr;
