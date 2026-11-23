@@ -152,10 +152,10 @@ export default function useCvReview() {
     [toSignIn]
   )
 
-  // Simulated payment. Returns an error message, or null
-  const unlock = useCallback(async () => {
+  // Simulated payment (the Payment page). Returns an error message, or null
+  const unlock = useCallback(async ({ emailReceipt = false } = {}) => {
     try {
-      const data = await unlockReport()
+      const data = await unlockReport(emailReceipt)
       if (alive.current) setReview(data.review)
       return null
     } catch (err) {

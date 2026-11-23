@@ -2,6 +2,7 @@ const db = require('../config/db')
 const { aiEnabled } = require('../services/cvAi')
 const { reviewCv, applySuggestions, missingContent, afterAllChanges, reachableScore, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions } = require('../services/cvOptimizer')
 const { renderCv, renderReport } = require('../services/cvPdf')
+const { receiptNo, emailReceipt } = require('../services/planPayment')
 
 // Advanced CV report (simulated payment). VAT is 10%, the same as plan payments
 const REPORT_PRICE = { subtotal: 2, vat: 0.2, total: 2.2 }
@@ -20,7 +21,7 @@ async function loadCurrentResume(seekerId) {
 
 async function loadReview(resumeId, queryable = db) {
   const { rows } = await queryable.query(
-    `SELECT rv.*, p.paid_at, p.subtotal_bhd, p.vat_bhd, p.total_bhd
+    `SELECT rv.*, p.id AS payment_id, p.paid_at, p.subtotal_bhd, p.vat_bhd, p.total_bhd
        FROM cv_reviews rv
        LEFT JOIN payments p
          ON p.cv_review_id = rv.id AND p.item = 'advanced_cv_report' AND p.status = 'paid'
@@ -82,6 +83,7 @@ function formatReview(review, suggestions, resume, missing, currentScore, reacha
             met: review.comparison?.[key] === true
           })),
           payment: review.paid_at && {
+            receiptNo: receiptNo(review.payment_id),
             paidAt: review.paid_at,
             subtotalBhd: Number(review.subtotal_bhd),
             vatBhd: Number(review.vat_bhd),
@@ -215,12 +217,13 @@ async function createReview(req, res, next) {
 }
 
 async function unlock(req, res, next) {
-  const { method } = req.body || {}
+  const { method, emailReceipt: wantsReceipt } = req.body || {}
   if (!PAYMENT_METHODS.includes(method)) {
     return res.status(400).json({ error: 'Please choose how to pay', fields: { method: 'Must be card' } })
   }
 
   let client
+  let payment = null // the new payment, for "Email me the receipt"
   try {
     const resume = await loadCurrentResume(req.user.id)
     const review = resume && (await loadReview(resume.id))
@@ -240,11 +243,13 @@ async function unlock(req, res, next) {
           await client.query('ROLLBACK')
           return res.status(409).json({ error: 'Your CV has nothing more to unlock' })
         }
-        await client.query(
+        const { rows: paid } = await client.query(
           `INSERT INTO payments (user_id, cv_review_id, item, method, subtotal_bhd, vat_bhd, total_bhd, status, is_simulated, paid_at)
-           VALUES ($1, $2, 'advanced_cv_report', $3, $4, $5, $6, 'paid', true, now())`,
+           VALUES ($1, $2, 'advanced_cv_report', $3, $4, $5, $6, 'paid', true, now())
+           RETURNING *`,
           [req.user.id, review.id, method, REPORT_PRICE.subtotal, REPORT_PRICE.vat, REPORT_PRICE.total]
         )
+        payment = paid[0]
         await client.query('UPDATE cv_reviews SET is_advanced = true WHERE id = $1', [review.id])
       }
       await client.query('COMMIT')
@@ -253,6 +258,7 @@ async function unlock(req, res, next) {
       throw err
     }
     res.json({ review: await reviewResponse(resume) })
+    if (payment && wantsReceipt === true) emailReceipt(req.user.id, payment)
   } catch (err) {
     next(err)
   } finally {

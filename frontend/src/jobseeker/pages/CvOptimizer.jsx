@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Notice from '../../shared/components/Notice.jsx'
 import { CheckIcon, LockIcon, SparkleIcon, UploadIcon } from '../../shared/components/icons.jsx'
 import useCvReview from '../utils/useCvReview.js'
-import { formatBhd, formatDay, REPORT_PATH } from '../utils/cvFormat.js'
+import { formatBhd, formatDay, REPORT_PATH, PAY_PATH } from '../utils/cvFormat.js'
 import { PageHead, ErrorState } from '../components/cvOptimizer/PageParts.jsx'
 import { Panel, StrengthRing, Arrow, ReviewLoading } from '../components/cvOptimizer/StrengthParts.jsx'
 import CvPreview from '../components/cvOptimizer/CvPreview.jsx'
@@ -11,7 +11,6 @@ import SuggestionCard from '../components/cvOptimizer/SuggestionCard.jsx'
 import MissingList from '../components/cvOptimizer/MissingList.jsx'
 import DownloadButton from '../components/cvOptimizer/DownloadButton.jsx'
 import UploadButton from '../components/cvOptimizer/UploadButton.jsx'
-import UnlockDialog from '../components/cvOptimizer/UnlockDialog.jsx'
 import '../styles/CvOptimizer.css'
 
 // AI CV Optimizer (wireframe 8): CV strength, the free suggestion, the locked Advanced report,
@@ -137,8 +136,6 @@ export default function CvOptimizer() {
   const location = useLocation()
   // A message handed over by another page (e.g. "uploaded" after uploading from the Advanced report)
   const [notice, setNotice] = useState(() => location.state?.notice ?? null)
-  const [unlockOpen, setUnlockOpen] = useState(false)
-  const [unlocking, setUnlocking] = useState(false)
   const [allMissing, setAllMissing] = useState(false)
 
   // Shown once: clear it from the history entry so a reload or Back doesn't show it again
@@ -192,25 +189,16 @@ export default function CvOptimizer() {
     else if (review.isAdvanced) navigate(`${REPORT_PATH}#cvo-s-${id}`)
   }
 
-  async function confirmUnlock() {
-    setUnlocking(true)
-    const error = await cv.unlock()
-    setUnlocking(false)
-    setUnlockOpen(false)
-    if (error) setNotice({ type: 'error', text: error })
-    else navigate(REPORT_PATH)
-  }
-
   const unlockButton = review.isAdvanced ? (
     <Link to={REPORT_PATH} className="btn btn--primary">
       View Advanced report →
     </Link>
   ) : (
     review.canUnlock && (
-      <button type="button" className="btn btn--primary" onClick={() => setUnlockOpen(true)}>
+      <Link to={PAY_PATH} className="btn btn--primary">
         <LockIcon />
         Unlock – BHD {formatBhd(review.reportPrice.totalBhd)}
-      </button>
+      </Link>
     )
   )
 
@@ -278,9 +266,9 @@ export default function CvOptimizer() {
                       {locked.length === 1 ? 'is' : 'are'} in the Advanced report
                     </span>
                     {review.canUnlock && (
-                      <button type="button" className="cvo-link" onClick={() => setUnlockOpen(true)}>
+                      <Link to={PAY_PATH} className="cvo-link">
                         Unlock →
-                      </button>
+                      </Link>
                     )}
                   </div>
                 )
@@ -332,13 +320,6 @@ export default function CvOptimizer() {
         </div>
       </div>
 
-      <UnlockDialog
-        open={unlockOpen}
-        price={review.reportPrice}
-        busy={unlocking}
-        onConfirm={confirmUnlock}
-        onCancel={() => setUnlockOpen(false)}
-      />
     </main>
   )
 }

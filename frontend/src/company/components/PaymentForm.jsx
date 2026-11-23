@@ -50,9 +50,26 @@ function checkCard(card) {
   return errs
 }
 
+// What the order summary shows for a company plan
+function planOrder(plan, company) {
+  return {
+    name: `${plan.name} plan · monthly`,
+    sub: company,
+    features: planFeatures(plan)
+      .filter(([, included]) => included)
+      .map(([text]) => text),
+    subtotal: plan.price_bhd,
+    vat: plan.vat_bhd,
+    total: plan.total_bhd,
+    note: 'Renews every month. Cancel any time from your profile.'
+  }
+}
+
 // `plan` = a plan from /api/plans, `company` = name for the summary,
+// or `order` = { name, sub, features, subtotal, vat, total, note } for anything else (the Advanced CV report).
 // `onPay({ emailReceipt })` runs once the card looks valid, `busy` = paying right now
-export default function PaymentForm({ plan, company, busy, onPay }) {
+export default function PaymentForm({ plan, company, order, busy, onPay }) {
+  const o = order || planOrder(plan, company)
   const [card, setCard] = useState(EMPTY)
   const [emailReceipt, setEmailReceipt] = useState(true)
   const [errors, setErrors] = useState({})
@@ -146,7 +163,7 @@ export default function PaymentForm({ plan, company, busy, onPay }) {
               Processing payment…
             </>
           ) : (
-            `Pay ${formatBHD(plan.total_bhd)}`
+            `Pay ${formatBHD(o.total)}`
           )}
         </button>
         <p className="pay-pilot">
@@ -157,52 +174,49 @@ export default function PaymentForm({ plan, company, busy, onPay }) {
       {/* order summary */}
       <aside className="pay-summary">
         <p className="pay-summary__kicker">ORDER SUMMARY</p>
-        <p className="pay-summary__name">{plan.name} plan · monthly</p>
-        {company && <p className="pay-summary__muted">{company}</p>}
+        <p className="pay-summary__name">{o.name}</p>
+        {o.sub && <p className="pay-summary__muted">{o.sub}</p>}
         <ul className="pay-summary__list">
-          {planFeatures(plan)
-            .filter(([, included]) => included)
-            .map(([text]) => (
-              <li key={text}>
-                <span>✓</span>
-                {text}
-              </li>
-            ))}
+          {o.features.map((text) => (
+            <li key={text}>
+              <span>✓</span>
+              {text}
+            </li>
+          ))}
         </ul>
         <hr />
         <p className="pay-summary__row">
           <span>Subtotal</span>
-          <span>{formatBHD(plan.price_bhd)}</span>
+          <span>{formatBHD(o.subtotal)}</span>
         </p>
         <p className="pay-summary__row">
           <span>VAT (10%)</span>
-          <span>{formatBHD(plan.vat_bhd)}</span>
+          <span>{formatBHD(o.vat)}</span>
         </p>
         <p className="pay-summary__row pay-summary__total">
           <span>Total</span>
-          <span>{formatBHD(plan.total_bhd)}</span>
+          <span>{formatBHD(o.total)}</span>
         </p>
-        <p className="pay-summary__note">
-          Renews every month. Cancel any time from your profile.
-        </p>
+        <p className="pay-summary__note">{o.note}</p>
       </aside>
     </div>
   )
 }
 
-// "Payment successful" with the receipt number
-export function PaymentDone({ plan, payment }) {
+// "Payment successful" with the receipt number.
+// For a plan: `plan` + `payment` (from the API). For anything else: `name`, `next` = { to, label } too.
+export function PaymentDone({ plan, payment, name, next = { to: '/company', label: 'Go to my jobs' } }) {
   return (
     <section className="pay-done">
       <span className="pay-done__icon">{CheckIcon}</span>
       <h1>Payment successful</h1>
       <p>
-        {plan.name} plan · monthly · {formatBHD(payment.total_bhd)}
+        {name || `${plan.name} plan · monthly`} · {formatBHD(payment.total_bhd)}
         <br />
         Receipt no. {payment.receipt_no} · {formatDeadline(payment.paid_at)}
       </p>
-      <Link to="/company" className="pay-done__next">
-        Go to my jobs
+      <Link to={next.to} className="pay-done__next">
+        {next.label}
       </Link>
     </section>
   )

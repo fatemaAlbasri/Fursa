@@ -36,6 +36,7 @@ import Companies from './jobseeker/pages/Companies.jsx'
 import CompanyDetails from './jobseeker/pages/CompanyDetails.jsx'
 import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx'
 import CvReport from './jobseeker/pages/CvReport.jsx'
+import CvPayment from './jobseeker/pages/CvPayment.jsx'
 import MyApplications from './jobseeker/pages/MyApplications.jsx'
 import ApplicationDetails from './jobseeker/pages/ApplicationDetails.jsx'
 import Profile from './jobseeker/pages/Profile.jsx'
@@ -127,6 +128,7 @@ export default function App() {
         <Route path="companies/:id" element={<CompanyDetails />} />
         <Route path="cv-optimizer" element={<CvOptimizer />} />
         <Route path="cv-optimizer/report" element={<CvReport />} />
+        <Route path="cv-optimizer/pay" element={<CvPayment />} />
         <Route path="applications" element={<MyApplications />} />
         <Route path="applications/:id" element={<ApplicationDetails />} />
         <Route

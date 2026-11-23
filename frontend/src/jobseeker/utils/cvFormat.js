@@ -2,6 +2,7 @@
 
 export const OPTIMIZER_PATH = '/jobseeker/cv-optimizer'
 export const REPORT_PATH = '/jobseeker/cv-optimizer/report'
+export const PAY_PATH = '/jobseeker/cv-optimizer/pay'
 
 // 2.2 → "2.200" (Bahraini dinar has 3 decimals)
 export const formatBhd = (value) => Number(value).toFixed(3)

@@ -783,39 +783,6 @@
   padding-top: 4px;
 }
 
-/* ---------- Unlock dialog (inside ConfirmDialog's <p>) ---------- */
-.cvo-price {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.cvo-price__intro {
-  display: block;
-  margin-bottom: 4px;
-}
-.cvo-price__row {
-  display: flex;
-  justify-content: space-between;
-  color: var(--navy);
-  font-weight: 600;
-}
-.cvo-price__row--total {
-  border-top: 1px solid var(--gray);
-  padding-top: 8px;
-  font-weight: 800;
-  font-size: 15px;
-}
-.cvo-price__note {
-  display: block;
-  margin-top: 4px;
-  background: var(--cvo-amber-bg, #fdf3df);
-  color: #8a4b0b;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
 /* ---------- Smaller screens ---------- */
 @media (max-width: 960px) {
   .cvo-cols {
@@ -1405,4 +1372,33 @@
 }
 .cvo-start .cvo-link {
   align-self: center; /* centred under the button, like everything else in this card */
+}
+
+/* ===== Payment: Advanced CV report (wireframe 18) — the form itself is in Payment.css ===== */
+.cvp-back {
+  align-self: flex-start;
+}
+.cvp-loading .pay-form,
+.cvp-loading .pay-summary {
+  gap: 14px;
+}
+.cvp-loading__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cvp-sk-input {
+  display: block;
+  height: 48px;
+  border-radius: 10px;
+}
+.cvp-sk-pay {
+  display: block;
+  height: 54px;
+  border-radius: 999px;
+}
+/* the navy summary keeps a soft light shine instead of the grey one */
+.cvp-loading__summary .sk {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.18) 40%, rgba(255, 255, 255, 0.08) 80%);
+  background-size: 800px 100%;
 }

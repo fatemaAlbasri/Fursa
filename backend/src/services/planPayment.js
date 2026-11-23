@@ -72,7 +72,7 @@ function emailReceipt(userId, payment) {
         to: rows[0].email,
         subject: `Fursa receipt ${p.receipt_no}`,
         text:
-          `Hi ${rows[0].first_name},\n\n${p.plan_name} plan · monthly\n` +
+          `Hi ${rows[0].first_name},\n\n${p.plan_name ? `${p.plan_name} plan · monthly` : 'Advanced CV report · one-time'}\n` +
           `Subtotal: BHD ${p.subtotal_bhd.toFixed(3)}\nVAT (10%): BHD ${p.vat_bhd.toFixed(3)}\n` +
           `Total: BHD ${p.total_bhd.toFixed(3)}\n\nPilot version: this payment is simulated. No card was charged.`
       })
