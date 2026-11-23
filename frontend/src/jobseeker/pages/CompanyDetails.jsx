@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
-import { formatJobType, formatWorkMode, formatDeadline } from '../../shared/utils/jobFormat.js'
+import { formatJobType, formatWorkMode, formatDeadline, matchTier } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
 import '../styles/Companies.css'
 
@@ -50,8 +50,13 @@ const logoInfo = (company) => ({
 function JobRow({ job }) {
   return (
     <article className="co-job">
+      {/* same colours as the job lists: teal 80+, amber below 80, pale red = doesn't qualify */}
       {job.match_score != null && (
-        <div className="co-ring" style={{ '--score': job.match_score }} aria-label={`${job.match_score}% match`}>
+        <div
+          className={`co-ring co-ring--${job.is_qualified === false ? 'muted' : matchTier(job.match_score)}`}
+          style={{ '--score': job.match_score }}
+          aria-label={`${job.match_score}% match`}
+        >
           <span className="co-ring__value">{job.match_score}%</span>
         </div>
       )}
@@ -98,6 +103,61 @@ function StandOut({ company, skills }) {
         Improve my CV with AI
       </Link>
     </section>
+  )
+}
+
+// Grey shapes in the same layout as the company page, while it loads (wireframe 23)
+function CompanyLoading() {
+  const line = (width, thin) => (
+    <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  )
+  return (
+    <div className="co-loading" role="status" aria-label="Loading company">
+      <section className="co-hero" aria-hidden="true">
+        <span className="sk co-hero__banner" />
+        <div className="co-hero__body">
+          <span className="sk co-logo" />
+          <div className="co-hero__text co-loading__text">
+            {line('40%')}
+            {line('55%', true)}
+          </div>
+          <span className="sk sk--btn" />
+        </div>
+      </section>
+      <div className="co-layout" aria-hidden="true">
+        <div className="co-main">
+          <section className="co-section">
+            {line('30%')}
+            {line('95%', true)}
+            {line('80%', true)}
+          </section>
+          <section className="co-section">
+            {line('25%')}
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="co-job co-job--loading">
+                <span className="sk sk--ring" />
+                <div className="co-job__info co-loading__text">
+                  {line('50%')}
+                  <span className="sk sk--pill" />
+                </div>
+                <span className="sk sk--btn" />
+              </div>
+            ))}
+          </section>
+        </div>
+        <div className="co-side">
+          <section className="co-section">
+            {line('45%')}
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="co-loading__text">
+                {line('35%', true)}
+                {line('60%')}
+              </div>
+            ))}
+          </section>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -190,10 +250,7 @@ export default function CompanyDetails() {
     return (
       <main className="container co">
         {backLink}
-        <div className="co-state" role="status">
-          <span className="co-spinner" aria-hidden="true" />
-          Loading company…
-        </div>
+        <CompanyLoading />
       </main>
     )
   }

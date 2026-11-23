@@ -662,3 +662,53 @@ a.co-info__value:hover {
 .co-sk-about {
   margin-top: 6px;
 }
+
+/* company page loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) */
+.co-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.co-loading .co-hero,
+.co-loading .co-section {
+  animation: none;
+}
+.co-loading .co-section {
+  gap: 12px;
+}
+.co-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.co-hero__banner.sk {
+  display: block;
+  border-radius: 0;
+}
+/* band + logo keep the grey shine, not their usual colours */
+.co-loading .sk.co-hero__banner,
+.co-loading .sk.co-logo {
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.co-job--loading {
+  pointer-events: none;
+}
+.co-job--loading .sk--ring {
+  width: 48px;
+  height: 48px;
+}
+
+/* job ring colours, same as the job lists: teal 80+, amber below 80, pale red = doesn't qualify */
+.co-ring--good {
+  background: conic-gradient(#dc6803 calc(var(--score) * 1%), #fef0c7 0);
+}
+.co-ring--good .co-ring__value {
+  color: #b54708;
+}
+.co-ring--muted {
+  background: conic-gradient(#e8a7a1 calc(var(--score) * 1%), #fdecea 0);
+}
+.co-ring--muted .co-ring__value {
+  color: #b42318;
+}
