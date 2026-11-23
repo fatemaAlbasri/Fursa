@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../../shared/api.js'
 import ConfirmDialog from '../../../shared/components/ConfirmDialog.jsx'
 import PasswordInput from '../../../shared/components/PasswordInput.jsx'
-import { TrashIcon } from '../../../shared/components/icons.jsx'
-import { errorText } from './ProfileParts.jsx'
+import { LockIcon, TrashIcon } from '../../../shared/components/icons.jsx'
+import { Section, ShieldIcon, errorText } from './ProfileParts.jsx'
 
 // "Account": Change password (the existing page) and Delete my account.
 // Deleting asks for confirmation + the current password: DELETE /api/auth/profile/account { password }.
@@ -36,10 +36,10 @@ export default function AccountCard() {
   }
 
   return (
-    <section className="card pf-card" aria-labelledby="pf-account-title">
-      <h2 id="pf-account-title" className="pf-card__title">Account</h2>
+    <Section title="Account" sub="Password and account settings" icon={<ShieldIcon />} labelledBy="pf-account-title">
       <div className="pf-account">
-        <Link to="/jobseeker/change-password" className="btn btn--cancel">
+        <Link to="/jobseeker/change-password" className="pf-outline">
+          <LockIcon />
           Change password
         </Link>
         <button type="button" className="btn pf-danger" onClick={() => setOpen(true)}>
@@ -72,6 +72,6 @@ export default function AccountCard() {
           {error && <p className="field__error" role="alert">{error}</p>}
         </div>
       </ConfirmDialog>
-    </section>
+    </Section>
   )
 }

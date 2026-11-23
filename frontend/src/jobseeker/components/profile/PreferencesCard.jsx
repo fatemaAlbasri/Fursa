@@ -4,6 +4,7 @@ import Notice from '../../../shared/components/Notice.jsx'
 import ChoiceChips from '../../../shared/components/ChoiceChips.jsx'
 import { JOB_TYPE_OPTIONS, WORK_MODE_OPTIONS } from '../../../shared/utils/seekerOptions.js'
 import { formatJobType, formatWorkMode } from '../../../shared/utils/jobFormat.js'
+import { BriefcaseIcon, PinIcon } from '../../../shared/components/icons.jsx'
 import { Section, EditButton, InfoTile, FormActions, errorText } from './ProfileParts.jsx'
 
 // Saved values as small pills, or "No preference" when the list is empty (= every option scores the same)
@@ -63,6 +64,8 @@ export default function PreferencesCard({ jobTypes, workModes, onSaved }) {
     <Section
       title="Job preferences"
       optional
+      sub="Helps us show you the right jobs"
+      icon={<BriefcaseIcon />}
       labelledBy="pf-prefs-title"
       action={!editing && <EditButton onClick={startEdit} label="Edit job preferences" />}
     >
@@ -77,10 +80,10 @@ export default function PreferencesCard({ jobTypes, workModes, onSaved }) {
         </form>
       ) : (
         <div className="pf-grid">
-          <InfoTile label="Job type">
+          <InfoTile label="Job type" icon={<BriefcaseIcon />}>
             <PrefPills values={jobTypes} format={formatJobType} />
           </InfoTile>
-          <InfoTile label="Work mode">
+          <InfoTile label="Work mode" icon={<PinIcon />}>
             <PrefPills values={workModes} format={formatWorkMode} />
           </InfoTile>
         </div>

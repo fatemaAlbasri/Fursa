@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { api } from '../../../shared/api.js'
 import Notice from '../../../shared/components/Notice.jsx'
 import MultiSelect from '../../../shared/components/MultiSelect.jsx'
+import { StarIcon } from '../../../shared/components/icons.jsx'
 import { Section, EditButton, FormActions, errorText } from './ProfileParts.jsx'
 
 // "My skills": the saved skills as chips; "Edit skills" adds / removes them.
@@ -48,6 +49,8 @@ export default function SkillsCard({ skills, onSaved }) {
   return (
     <Section
       title="My skills"
+      sub="Your job matches update when you change your skills"
+      icon={<StarIcon />}
       labelledBy="pf-skills-title"
       action={!editing && <EditButton onClick={startEdit}>Edit skills</EditButton>}
     >
@@ -73,7 +76,6 @@ export default function SkillsCard({ skills, onSaved }) {
         <p className="pf-empty">You haven't added any skills yet.</p>
       )}
 
-      <p className="pf-note">Your job matches update when you change your skills.</p>
     </Section>
   )
 }

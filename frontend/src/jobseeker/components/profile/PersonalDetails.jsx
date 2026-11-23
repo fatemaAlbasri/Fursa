@@ -4,7 +4,19 @@ import Notice from '../../../shared/components/Notice.jsx'
 import PhoneInput from '../../../shared/components/PhoneInput.jsx'
 import { MAJORS, STATUSES } from '../../../shared/utils/seekerOptions.js'
 import { formatPhone, phoneDigits, withCurrent, announceUser } from '../../utils/profile.js'
-import { Section, EditButton, InfoTile, Field, FormActions, errorText } from './ProfileParts.jsx'
+import {
+  Section,
+  EditButton,
+  InfoTile,
+  Field,
+  FormActions,
+  errorText,
+  UserIcon,
+  MailIcon,
+  PhoneIcon,
+  BookIcon,
+  CapIcon
+} from './ProfileParts.jsx'
 
 const isEmail = (v) => /^\S+@\S+\.\S+$/.test(v)
 
@@ -101,6 +113,8 @@ export default function PersonalDetails({ profile, onSaved }) {
   return (
     <Section
       title="Personal details"
+      sub="Used by companies to contact you"
+      icon={<UserIcon />}
       labelledBy="pf-details-title"
       action={!editing && <EditButton onClick={startEdit} label="Edit personal details" />}
     >
@@ -142,14 +156,24 @@ export default function PersonalDetails({ profile, onSaved }) {
         </form>
       ) : (
         <div className="pf-grid">
-          <InfoTile label="First name">{profile.first_name}</InfoTile>
-          <InfoTile label="Last name">{profile.last_name}</InfoTile>
-          <InfoTile label="Email">{profile.email}</InfoTile>
-          <InfoTile label="Phone number">
+          <InfoTile label="First name" icon={<UserIcon />}>
+            {profile.first_name}
+          </InfoTile>
+          <InfoTile label="Last name" icon={<UserIcon />}>
+            {profile.last_name}
+          </InfoTile>
+          <InfoTile label="Email" icon={<MailIcon />}>
+            {profile.email}
+          </InfoTile>
+          <InfoTile label="Phone number" icon={<PhoneIcon />}>
             {profile.phone ? formatPhone(profile.phone) : <span className="pf-empty">Not added</span>}
           </InfoTile>
-          <InfoTile label="Major">{profile.major}</InfoTile>
-          <InfoTile label="Graduation status">{profile.graduation_status}</InfoTile>
+          <InfoTile label="Major" icon={<BookIcon />}>
+            {profile.major}
+          </InfoTile>
+          <InfoTile label="Graduation status" icon={<CapIcon />}>
+            {profile.graduation_status}
+          </InfoTile>
         </div>
       )}
     </Section>
