@@ -21,18 +21,18 @@ INSERT INTO skills (id, name) VALUES
  (31,'Project Management'),(32,'Accounting');
 
 -- ---------- Users (1 admin, 4 employers, 6 seekers) ----------
-INSERT INTO users (id, first_name, last_name, email, password_hash, role) VALUES
- (1,  'Admin',  'Fursa',     'admin@fursa.bh',        crypt('Fursa@123', gen_salt('bf')), 'admin'),
- (2,  'Huda',   'Saleh',     'hr@nakhlatech.bh',      crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (3,  'Yousif', 'Kamal',     'hr@pearlsoft.bh',       crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (4,  'Mariam', 'Isa',       'hr@dilmunit.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (5,  'Khalid', 'Nasser',    'hr@seefdata.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (6,  'Fatima', 'Ali',       'fatima@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (7,  'Noor',   'Ahmed',     'noor@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (8,  'Zainab', 'Mohammed',  'zainab@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (9,  'Ali',    'Hasan',     'ali@example.com',       crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (10, 'Sara',   'Jaffar',    'sara@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (11, 'Hamad',  'Rashid',    'hamad@example.com',     crypt('Fursa@123', gen_salt('bf')), 'seeker');
+INSERT INTO users (id, first_name, last_name, email, password_hash, role, created_at) VALUES
+ (1,  'Admin',  'Fursa',     'admin@fursa.bh',        crypt('Fursa@123', gen_salt('bf')), 'admin',    '2026-06-01'),
+ (2,  'Huda',   'Saleh',     'hr@nakhlatech.bh',      crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-06-15'),
+ (3,  'Yousif', 'Kamal',     'hr@pearlsoft.bh',       crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-07-20'),
+ (4,  'Mariam', 'Isa',       'hr@dilmunit.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-09-10'),
+ (5,  'Khalid', 'Nasser',    'hr@seefdata.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-11-20'),
+ (6,  'Fatima', 'Ali',       'fatima@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-07-05'),
+ (7,  'Noor',   'Ahmed',     'noor@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-08-12'),
+ (8,  'Zainab', 'Mohammed',  'zainab@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-09-03'),
+ (9,  'Ali',    'Hasan',     'ali@example.com',       crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-10-18'),
+ (10, 'Sara',   'Jaffar',    'sara@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-11-02'),
+ (11, 'Hamad',  'Rashid',    'hamad@example.com',     crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-11-21');
 
 -- ---------- Seeker profiles ----------
 INSERT INTO seeker_profiles (user_id, phone, major, graduation_status, years_experience, job_types, work_modes) VALUES
@@ -76,9 +76,9 @@ INSERT INTO subscriptions (id, company_id, plan_id, status, started_at, renews_a
 
 -- ---------- Jobs ----------
 INSERT INTO jobs (id, company_id, job_type, work_mode, location, title, description, responsibilities, salary, deadline, field, major_must_have, min_years, max_years, language, status, created_at) VALUES
- (1, 1, 'full_time', 'onsite', 'Manama', 'Junior Frontend Developer', 'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 450.000, '2026-10-30', 'Computer Science', true, 0, 2, 'English', 'open', '2026-10-05'),
- (2, 2, 'internship', 'hybrid', 'Seef', 'Software Engineering Intern', 'Three-month internship in our product team.', 'Write and test code; join daily stand-ups.', NULL, '2026-10-25', 'Computer Science', false, 0, 1, 'English', 'open', '2026-10-08'),
- (3, 3, 'full_time', 'onsite', 'Muharraq', 'IT Support Officer', 'First-line IT support for clients.', 'Answer tickets; set up devices; basic networking.', 380.000, '2026-11-02', 'Information Technology', false, 0, 2, 'Arabic', 'open', '2026-10-01'),
+ (1, 1, 'full_time', 'onsite', 'Manama', 'Junior Frontend Developer', 'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 450.000, '2026-12-31', 'Computer Science', true, 0, 2, 'English', 'open', '2026-10-05'),
+ (2, 2, 'internship', 'hybrid', 'Seef', 'Software Engineering Intern', 'Three-month internship in our product team.', 'Write and test code; join daily stand-ups.', NULL, '2027-01-15', 'Computer Science', false, 0, 1, 'English', 'open', '2026-10-08'),
+ (3, 3, 'full_time', 'onsite', 'Muharraq', 'IT Support Officer', 'First-line IT support for clients.', 'Answer tickets; set up devices; basic networking.', 380.000, '2026-12-20', 'Information Technology', false, 0, 2, 'Arabic', 'open', '2026-10-01'),
  (4, 4, 'internship', 'remote',  'Manama', 'Data Analyst Trainee', 'Learn to build reports for clients.', 'Clean data; build dashboards.', NULL, '2026-11-05', 'Information Systems', false, 0, 1, 'English', 'open', '2026-09-20'),
  (5, 1, 'part_time', 'hybrid', 'Manama', 'Web Developer Trainee', 'Entry-level web role.', 'Build pages with HTML, CSS and JavaScript.', NULL, '2026-10-30', 'Computer Science', false, 0, 1, 'English', 'draft', '2026-10-10');
 
