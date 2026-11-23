@@ -20,7 +20,6 @@ import {
 } from '../../shared/utils/jobFormat.js'
 import { toJobBody, jobToForm, tabOf } from '../data/jobs.js'
 import Notice from '../../shared/components/Notice.jsx'
-import Loading from '../../shared/components/Loading.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
 import {
   BriefcaseIcon,
@@ -53,6 +52,68 @@ function Row({ label, children }) {
   )
 }
 
+function JobViewLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  return (
+    <main className="jv jv-loading" role="status" aria-label="Loading job">
+      {line(140, true)}
+      <section className="jv-card jv-hero" aria-hidden="true">
+        <div className="jv-hero__top">
+          <span className="sk jv-hero__logo" />
+          <div className="jv-hero__text jv-loading__text">
+            <div className="jv-tags">
+              <span className="sk sk--pill" />
+              <span className="sk sk--pill" />
+            </div>
+            {line('55%')}
+            {line('40%', true)}
+          </div>
+          <div className="jv-hero__actions">
+            <span className="sk sk--btn" />
+            <span className="sk sk--btn" />
+          </div>
+        </div>
+        <div className="jv-stats">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="jv-stat jv-loading__text">
+              {line(30)}
+              {line('50%', true)}
+            </div>
+          ))}
+        </div>
+      </section>
+      <div className="jv-cols" aria-hidden="true">
+        <section className="jv-card jv-main jv-loading__text">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="jv-loading__text jv-loading__block">
+              {line(160)}
+              {line('95%', true)}
+              {line('75%', true)}
+            </div>
+          ))}
+        </section>
+        <aside className="jv-side">
+          <section className="jv-card jv-loading__text">
+            {line(150)}
+            {line('70%', true)}
+            <span className="sk jv-sk-btn" />
+            <span className="sk jv-sk-btn" />
+          </section>
+          <section className="jv-card jv-loading__text">
+            {line(110)}
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="jv-loading__row">
+                {line(70, true)}
+                {line(80, true)}
+              </div>
+            ))}
+          </section>
+        </aside>
+      </div>
+    </main>
+  )
+}
+
 export default function JobView({ editing = false }) {
   const { id } = useParams()
   const location = useLocation()
@@ -72,7 +133,7 @@ export default function JobView({ editing = false }) {
       .catch(() => setJob(false))
   }, [id])
 
-  if (job === null) return <Loading text="Loading job…" />
+  if (job === null) return <JobViewLoading />
 
   if (job === false) {
     return (
@@ -158,7 +219,7 @@ export default function JobView({ editing = false }) {
 
       <Notice notice={notice} onClose={() => setNotice(null)} />
 
-      {/* ---------- Edit note ---------- */}
+      {/* Edit note */}
       {editing && (
         <p className="jv-warn" role="note">
           <InfoIcon />
@@ -168,7 +229,7 @@ export default function JobView({ editing = false }) {
         </p>
       )}
 
-      {/* ---------- Header ---------- */}
+      {/* Header */}
       <section className="jv-card jv-hero">
         <div className="jv-hero__top">
           <span className="jv-hero__logo" aria-hidden="true">
