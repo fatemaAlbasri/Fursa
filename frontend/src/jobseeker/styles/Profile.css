@@ -438,13 +438,245 @@
   width: 18px;
   height: 18px;
 }
-/* password box inside the delete dialog (.dialog p would make the error grey) */
-.dialog .pf-dialog-field {
-  margin-top: 4px;
+
+/* ---------- "Delete your account?" pop-up (wireframe 21) ---------- */
+.pf-del-overlay {
+  overflow-y: auto;
+  animation: fade-in 0.2s ease both;
 }
-.dialog .pf-dialog-field .field__error {
+.pf-del {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  margin: auto;
+  padding: 32px;
+  border: 1px solid #e5eaf0;
+  border-top: 6px solid var(--pf-danger);
+  border-radius: 20px;
+  background: var(--white);
+  box-shadow: 0 24px 60px rgba(16, 42, 61, 0.25);
+  animation: pf-del-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes pf-del-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+.pf-del__form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.pf-del__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #5b7186;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.pf-del__close:hover:not(:disabled) {
+  background: #f2f5f8;
+}
+.pf-del__close svg {
+  width: 18px;
+  height: 18px;
+}
+.pf-del__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 32px;
+}
+.pf-del__icon {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #fdecea;
+  color: var(--pf-danger);
+}
+.pf-del__icon svg {
+  width: 30px;
+  height: 30px;
+}
+.pf-del__title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--navy);
+}
+.pf-del__who {
+  margin-top: 2px;
+  font-size: 15px;
+  color: #5b7186;
+  overflow-wrap: anywhere;
+}
+/* "What will be deleted" */
+.pf-del__lost {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid #f7b4ae;
+  border-radius: 14px;
+  background: #fff4f2;
+}
+.pf-del__lost-title {
+  font-weight: 700;
+  color: #912018;
+}
+.pf-del__lost ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pf-del__lost li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  color: #3e5468;
+}
+.pf-del__lost li svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--pf-danger);
+  stroke-width: 2.5;
+}
+/* "Just need a break? You can log out instead." */
+.pf-del__alt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--pf-soft);
+  font-size: 14px;
+  color: #3e5468;
+}
+.pf-del__alt > svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--teal);
+}
+.pf-del__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--teal);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pf-del__link:hover {
+  text-decoration: underline;
+}
+.pf-del__field {
+  margin: 0;
+}
+.pf-del__field .field__error {
   color: var(--error);
-  font-size: var(--hint-size);
+}
+.pf-del__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.pf-del__keep,
+.pf-del__delete {
+  min-height: 50px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    background-color 0.15s,
+    filter 0.15s;
+}
+.pf-del__keep {
+  flex: 1 1 160px;
+  border: 1px solid #cbd5df;
+  background: var(--white);
+  color: var(--navy);
+}
+.pf-del__keep:hover:not(:disabled) {
+  background: #f2f5f8;
+}
+.pf-del__delete {
+  flex: 2 1 220px;
+  border: 0;
+  background: var(--pf-danger-hover);
+  color: var(--white);
+}
+.pf-del__delete:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.pf-del__delete:disabled {
+  cursor: progress;
+  opacity: 0.85;
+}
+.pf-del__delete svg {
+  width: 18px;
+  height: 18px;
+}
+/* after deleting: grey tick, message, Go to the home page */
+.pf-del--done {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 32px;
+  border-top-width: 1px;
+  border-top-color: #e5eaf0;
+  text-align: center;
+}
+.pf-del__done-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef2f5;
+  color: #5b7186;
+  animation: pop 0.35s ease both;
+}
+.pf-del__done-icon svg {
+  width: 30px;
+  height: 30px;
+  stroke-width: 2.5;
+}
+.pf-del--done .pf-del__title {
+  font-size: 26px;
+}
+.pf-del__bye {
+  max-width: 420px;
+  color: #5b7186;
+}
+.btn.pf-del__home {
+  min-height: 48px;
+  padding: 0 24px;
 }
 
 /* ---------- Loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) ---------- */
@@ -551,6 +783,28 @@
   .pf-actions .btn {
     flex: 1;
   }
+  .pf-del {
+    padding: 24px 20px;
+  }
+  .pf-del__head {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .pf-del__icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+  .pf-del__icon svg {
+    width: 24px;
+    height: 24px;
+  }
+  .pf-del__title {
+    font-size: 22px;
+  }
+  .pf-del__lost li {
+    font-size: 14px;
+  }
 }
 /* very narrow: the title icon gets out of the way of the Edit button */
 @media (max-width: 380px) {
@@ -561,7 +815,10 @@
 @media (prefers-reduced-motion: reduce) {
   .card.pf-card,
   .card.pf-header,
-  .pf-loading .pf-header__banner {
+  .pf-loading .pf-header__banner,
+  .pf-del-overlay,
+  .pf-del,
+  .pf-del__done-icon {
     animation: none;
   }
 }

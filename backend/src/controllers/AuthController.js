@@ -465,7 +465,7 @@ async function deleteAccount(req, res, next) {
   }
   try {
     const { rows } = await client.query(
-      'SELECT password_hash FROM users WHERE id = $1',
+      'SELECT password_hash, email, first_name FROM users WHERE id = $1',
       [req.user.id]
     )
     if (!rows[0]) return res.status(401).json({ error: 'Please sign in' })
@@ -486,6 +486,14 @@ async function deleteAccount(req, res, next) {
     await client.query('COMMIT')
 
     res.json({ message: 'Your account has been deleted' })
+    // Confirmation email, sent after answering: a failed email never undoes the delete
+    sendMail({
+      to: rows[0].email,
+      subject: 'Your Fursa account has been deleted',
+      text:
+        `Hi ${rows[0].first_name},\n\nYour Fursa account and everything in it have been deleted, as you asked.\n` +
+        'If this wasn\'t you, please contact us.\n\nThe Fursa team'
+    }).catch((err) => console.error('Delete confirmation email failed:', err.message))
   } catch (err) {
     await client.query('ROLLBACK')
     next(err)

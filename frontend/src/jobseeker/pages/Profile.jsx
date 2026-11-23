@@ -232,7 +232,7 @@ export default function Profile() {
         onSaved={update}
       />
       <CvCard cv={profile.cv} onSaved={(cv) => update({ cv })} />
-      <AccountCard />
+      <AccountCard email={profile.email} onLogout={() => setConfirmLogout(true)} />
     </main>
   )
 }
