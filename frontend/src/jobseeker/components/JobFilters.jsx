@@ -29,7 +29,8 @@ export function filterJobs(jobs, filters) {
 }
 
 // jobs = all loaded jobs (fills the Field / Location menus), onChange(newFilters)
-export default function JobFilters({ jobs, filters, onChange }) {
+// action = optional button at the end of the row (Jobs for you: "Search all jobs")
+export default function JobFilters({ jobs, filters, onChange, action }) {
   const change = (e) => onChange({ ...filters, [e.target.name]: e.target.value })
 
   return (
@@ -85,6 +86,7 @@ export default function JobFilters({ jobs, filters, onChange }) {
           ))}
         </select>
       </div>
+      {action && <div className="jfy-filters__action">{action}</div>}
     </section>
   )
 }

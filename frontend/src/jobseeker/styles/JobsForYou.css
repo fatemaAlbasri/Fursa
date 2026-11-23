@@ -399,3 +399,128 @@ img.jfy-logo {
 .jfy-badge--top { background: #E3F8EF; color: #067647; }
 .jfy-badge--applied { background: #EEF2F5; color: #3E5468; }
 .jfy-row__title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* ===== Jobs for you, as in the wireframe (6) ===== */
+.card.jfy-filters {
+  grid-template-columns: 2fr repeat(4, 1fr) auto;
+  align-items: end;
+  padding: 16px;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(24, 59, 86, 0.05);
+}
+.jfy-filters__action .btn {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.jfy-card {
+  gap: 14px;
+  padding: 20px;
+  border-radius: 22px;
+  box-shadow: 0 6px 20px rgba(16, 42, 61, 0.05);
+}
+.jfy-card__top {
+  align-items: flex-start;
+}
+.jfy-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+.jfy-tags {
+  align-items: center;
+  gap: 8px;
+}
+.jfy-tag {
+  padding: 4px 10px;
+}
+.jfy-tag--mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e0f2fe;
+  color: #075985;
+}
+.jfy-tag--mode svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.4;
+}
+.jfy-why {
+  font-size: 14px;
+  color: #3e5468;
+}
+.jfy-why--bad {
+  color: #b42318;
+  font-weight: 600;
+}
+
+/* match ring: teal part fills up when the card appears */
+.jfy-ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: block;
+  background: none;
+}
+.jfy-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* start at 12 o'clock */
+}
+.jfy-ring circle {
+  fill: none;
+  stroke-width: 6;
+}
+.jfy-ring__track {
+  stroke: #ddf1f1;
+}
+.jfy-ring__bar {
+  stroke: var(--teal);
+  stroke-linecap: round;
+  animation: ring-fill 1s 0.15s cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+}
+@keyframes ring-fill {
+  from {
+    stroke-dasharray: 0 157.08;
+  }
+}
+.jfy-ring__value {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  background: none;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #117a7c;
+}
+
+@media (max-width: 1100px) {
+  .card.jfy-filters {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .jfy-filters__action {
+    grid-column: 1 / -1;
+  }
+  .jfy-filters__action .btn {
+    width: 100%;
+  }
+}
+@media (max-width: 900px) {
+  .card.jfy-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .card.jfy-filters {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jfy-ring__bar {
+    animation: none;
+  }
+}

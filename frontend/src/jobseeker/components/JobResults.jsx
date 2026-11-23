@@ -2,7 +2,8 @@ import { EMPTY_FILTERS } from './JobFilters.jsx'
 
 // Loading / error / "no jobs" / "no match" messages shared by Jobs for you and All jobs.
 // When there are jobs to show, it shows `children` (the cards or rows) instead.
-export default function JobResults({ jobs, shown, loading, error, filters, onRetry, onClearFilters, children }) {
+// empty = { title, text } to say something else when `jobs` is empty
+export default function JobResults({ jobs, shown, loading, error, filters, onRetry, onClearFilters, empty, children }) {
   const filtering = JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS)
 
   if (loading) {
@@ -27,8 +28,8 @@ export default function JobResults({ jobs, shown, loading, error, filters, onRet
   if (jobs.length === 0) {
     return (
       <div className="jfy-state">
-        <h3>No open jobs right now</h3>
-        <p>New jobs are added by companies all the time. Check back soon.</p>
+        <h3>{empty?.title || 'No open jobs right now'}</h3>
+        <p>{empty?.text || 'New jobs are added by companies all the time. Check back soon.'}</p>
       </div>
     )
   }
