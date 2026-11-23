@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
+import { SearchBox, FilterChips } from '../components/FilterParts.jsx'
+import { INDUSTRIES, LOCATIONS } from '../../shared/utils/companyOptions.js'
 import '../styles/Companies.css'
 
 // The two tabs: "Hiring now" = companies with at least one open job, "All companies" = every company
@@ -12,9 +14,18 @@ const TABS = [
 
 const EMPTY_FILTERS = { search: '', industry: '', location: '' }
 
-// Unique, sorted, non-empty values of one company column (for the Industry / Location menus)
-const optionsFrom = (companies, key) =>
-  [...new Set(companies.map((company) => company[key]).filter(Boolean))].sort()
+// Industry / Location menus: the usual list (same as company Sign up) + anything else
+// a company typed, so every choice is there even when only a few companies are loaded
+const optionsFrom = (companies, key, usual) => {
+  const known = new Set(usual.map((v) => v.toLowerCase()))
+  const extra = companies
+    .map((company) => company[key]?.trim())
+    .filter((v) => v && !known.has(v.toLowerCase()))
+  return [...usual, ...new Set(extra)].sort()
+}
+
+// "manama " and "Manama" are the same place
+const same = (a, b) => (a || '').trim().toLowerCase() === b.trim().toLowerCase()
 
 // The backend returns all companies, so the search + filters happen here in the browser
 function filterCompanies(companies, filters) {
@@ -22,9 +33,18 @@ function filterCompanies(companies, filters) {
   return companies.filter(
     (company) =>
       (!search || company.name.toLowerCase().includes(search)) &&
-      (!filters.industry || company.industry === filters.industry) &&
-      (!filters.location || company.location === filters.location)
+      (!filters.industry || same(company.industry, filters.industry)) &&
+      (!filters.location || same(company.location, filters.location))
   )
+}
+
+// What is switched on, as removable chips: [{ key, label }]
+function activeChips(filters) {
+  const chips = []
+  if (filters.search.trim()) chips.push({ key: 'search', label: `"${filters.search.trim()}"` })
+  if (filters.industry) chips.push({ key: 'industry', label: filters.industry })
+  if (filters.location) chips.push({ key: 'location', label: filters.location })
+  return chips
 }
 
 // 1 → "1 open job", 3 → "3 open jobs", 0 → "No open jobs"
@@ -64,6 +84,30 @@ function CompanyCard({ company, index }) {
         </div>
       </div>
     </Link>
+  )
+}
+
+// Grey cards in the same shape as the company cards, while the list loads
+function CompaniesLoading() {
+  return (
+    <div className="co-grid" role="status" aria-label="Loading companies">
+      {Array.from({ length: 6 }, (_, i) => (
+        <div key={i} className="co-card co-card--loading" aria-hidden="true">
+          <span className="sk co-card__banner" />
+          <div className="co-card__body">
+            <span className="sk co-logo" />
+            <span className="sk sk--line" style={{ width: '60%' }} />
+            <span className="sk sk--line sk--thin" style={{ width: '45%' }} />
+            <span className="sk sk--line sk--thin co-sk-about" style={{ width: '95%' }} />
+            <span className="sk sk--line sk--thin" style={{ width: '70%' }} />
+            <div className="co-card__foot">
+              <span className="sk sk--pill" />
+              <span className="sk sk--line sk--thin" style={{ width: 50 }} />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -128,6 +172,7 @@ export default function Companies() {
   }, [navigate, reloadKey])
 
   const changeFilter = (e) => setFilters({ ...filters, [e.target.name]: e.target.value })
+  const removeFilter = (key) => setFilters({ ...filters, [key]: EMPTY_FILTERS[key] })
 
   const inTab = tab === 'hiring' ? companies.filter((company) => company.open_jobs > 0) : companies
   const shown = filterCompanies(inTab, filters)
@@ -136,12 +181,7 @@ export default function Companies() {
   // ---------- What goes under the tabs: loading / error / empty / the cards ----------
   let results
   if (loading) {
-    results = (
-      <div className="co-state" role="status">
-        <span className="co-spinner" aria-hidden="true" />
-        Loading companies…
-      </div>
-    )
+    results = <CompaniesLoading />
   } else if (error) {
     results = (
       <div className="co-state co-state--error" role="alert">
@@ -174,10 +214,10 @@ export default function Companies() {
     results = (
       <div className="co-state">
         <h3>No companies match your search</h3>
-        <p>Try a different name or fewer filters.</p>
+        <p>Try another name or remove a filter.</p>
         {filtering && (
           <button type="button" className="btn btn--outline" onClick={() => setFilters(EMPTY_FILTERS)}>
-            Clear filters
+            Clear all
           </button>
         )}
       </div>
@@ -201,22 +241,19 @@ export default function Companies() {
 
       {/* ---------- Search + filters ---------- */}
       <section className="card co-filters" aria-label="Search and filters">
-        <div className="field">
-          <label htmlFor="co-search">Search companies</label>
-          <input
-            id="co-search"
-            name="search"
-            type="search"
-            placeholder="Company name"
-            value={filters.search}
-            onChange={changeFilter}
-          />
-        </div>
+        <SearchBox
+          id="co-search"
+          label="Search companies"
+          placeholder="Company name"
+          value={filters.search}
+          onChange={changeFilter}
+          onClear={() => removeFilter('search')}
+        />
         <div className="field">
           <label htmlFor="co-industry">Industry</label>
           <select id="co-industry" name="industry" value={filters.industry} onChange={changeFilter}>
             <option value="">All industries</option>
-            {optionsFrom(companies, 'industry').map((industry) => (
+            {optionsFrom(companies, 'industry', INDUSTRIES).map((industry) => (
               <option key={industry}>{industry}</option>
             ))}
           </select>
@@ -225,11 +262,16 @@ export default function Companies() {
           <label htmlFor="co-location">Location</label>
           <select id="co-location" name="location" value={filters.location} onChange={changeFilter}>
             <option value="">All Bahrain</option>
-            {optionsFrom(companies, 'location').map((location) => (
+            {optionsFrom(companies, 'location', LOCATIONS).map((location) => (
               <option key={location}>{location}</option>
             ))}
           </select>
         </div>
+        <FilterChips
+          chips={activeChips(filters)}
+          onRemove={removeFilter}
+          onClearAll={() => setFilters(EMPTY_FILTERS)}
+        />
       </section>
 
       {/* ---------- Tabs + count ---------- */}

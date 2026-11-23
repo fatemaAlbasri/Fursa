@@ -5,6 +5,7 @@ import PasswordInput from '../components/PasswordInput.jsx'
 import ChoiceChips from '../components/ChoiceChips.jsx'
 import PhoneInput from '../components/PhoneInput.jsx'
 import { api } from '../api.js'
+import { INDUSTRIES, LOCATIONS } from '../utils/companyOptions.js'
 import { XIcon } from '../components/icons.jsx'
 import Loading, { ButtonSpinner } from '../components/Loading.jsx'
 import Notice from '../components/Notice.jsx'
@@ -15,24 +16,6 @@ import {
   JOB_TYPE_OPTIONS as JOB_TYPES,
   WORK_MODE_OPTIONS as WORK_MODES
 } from '../utils/seekerOptions.js'
-
-const INDUSTRIES = [
-  'Technology',
-  'Banking & Finance',
-  'Telecom',
-  'Consulting',
-  'Healthcare',
-  'Retail',
-  'Government'
-]
-const LOCATIONS = [
-  'Manama',
-  'Seef',
-  'Muharraq',
-  'Riffa',
-  'Isa Town',
-  'Hamad Town'
-]
 
 const PLANS = [
   {

@@ -984,113 +984,6 @@ img.jfy-logo {
   border-radius: 22px;
   box-shadow: 0 10px 30px rgba(24, 59, 86, 0.06);
 }
-.jfy-search {
-  position: relative;
-}
-.jfy-search > svg {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  width: 18px;
-  height: 18px;
-  transform: translateY(-50%);
-  color: #8a9bab;
-  pointer-events: none;
-}
-/* same weight as the base .field input rule, so the room for the icon and the × wins */
-.field .jfy-search input:not([type='checkbox']):not([type='radio']) {
-  padding-left: 38px;
-  padding-right: 42px;
-}
-.jfy-search__clear {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  transform: translateY(-50%);
-  display: grid;
-  place-items: center;
-  background: #eef2f5;
-  color: #3e5468;
-  cursor: pointer;
-  animation: fade-in 0.15s ease both;
-}
-.jfy-search__clear:hover {
-  background: #e1e8ee;
-}
-.jfy-search__clear svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 2.6;
-}
-
-.jfy-chips {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #eef2f5;
-  animation: fade-in 0.2s ease both;
-}
-.jfy-chips__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--slate);
-}
-.jfy-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 8px 0 12px;
-  border: 1px solid #b9e4e4;
-  border-radius: 999px;
-  background: var(--light);
-  color: #0e6466;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  animation: pop 0.25s ease both;
-  transition: background-color 0.15s, border-color 0.15s;
-}
-.jfy-chip:hover {
-  border-color: var(--teal);
-}
-.jfy-chip__x {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--white);
-}
-.jfy-chip__x svg {
-  width: 10px;
-  height: 10px;
-  stroke-width: 3;
-}
-.jfy-chips__clear {
-  margin-left: auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--teal);
-  cursor: pointer;
-}
-.jfy-chips__clear:hover {
-  text-decoration: underline;
-}
-
 /* results card */
 .jfy-panel {
   display: flex;
@@ -1240,9 +1133,6 @@ img.jfy-logo {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .jfy-chip,
-  .jfy-chips,
-  .jfy-search__clear,
   .jfy-switch__knob {
     animation: none;
     transition: none;

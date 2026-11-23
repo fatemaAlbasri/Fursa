@@ -1,6 +1,6 @@
 import { formatJobType, formatWorkMode } from '../../shared/utils/jobFormat.js'
 import { MAJORS, LOCATIONS } from '../../company/data/jobs.js'
-import { SearchIcon, XIcon } from '../../shared/components/icons.jsx'
+import { SearchBox, FilterChips } from './FilterParts.jsx'
 
 // Search + filters box on All jobs.
 // The backend returns all open jobs, so filtering happens here in the browser (filterJobs).
@@ -62,32 +62,14 @@ export default function JobFilters({ jobs, filters, onChange }) {
 
   return (
     <section className="card jfy-filters" aria-label="Search and filters">
-      <div className="field">
-        <label htmlFor="jfy-search">Search</label>
-        <div className="jfy-search">
-          <SearchIcon />
-          <input
-            id="jfy-search"
-            name="search"
-            type="text"
-            placeholder="Job title or company"
-            value={filters.search}
-            onChange={change}
-            autoComplete="off"
-          />
-          {filters.search && (
-            <button
-              type="button"
-              className="jfy-search__clear"
-              onClick={() => remove('search')}
-              aria-label="Clear search"
-              title="Clear search"
-            >
-              <XIcon />
-            </button>
-          )}
-        </div>
-      </div>
+      <SearchBox
+        id="jfy-search"
+        label="Search"
+        placeholder="Job title or company"
+        value={filters.search}
+        onChange={change}
+        onClear={() => remove('search')}
+      />
       <div className="field">
         <label htmlFor="jfy-type">Job type</label>
         <select id="jfy-type" name="type" value={filters.type} onChange={change}>
@@ -130,28 +112,7 @@ export default function JobFilters({ jobs, filters, onChange }) {
       </div>
 
       {/* what's switched on, each with its own ×, and Clear all */}
-      {chips.length > 0 && (
-        <div className="jfy-chips">
-          <span className="jfy-chips__label">Filters:</span>
-          {chips.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              className="jfy-chip"
-              onClick={() => remove(chip.key)}
-              aria-label={`Remove ${chip.label}`}
-            >
-              {chip.label}
-              <span className="jfy-chip__x" aria-hidden="true">
-                <XIcon />
-              </span>
-            </button>
-          ))}
-          <button type="button" className="jfy-chips__clear" onClick={() => onChange(EMPTY_FILTERS)}>
-            Clear all
-          </button>
-        </div>
-      )}
+      <FilterChips chips={chips} onRemove={remove} onClearAll={() => onChange(EMPTY_FILTERS)} />
     </section>
   )
 }

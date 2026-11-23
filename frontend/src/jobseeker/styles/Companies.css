@@ -620,3 +620,45 @@ a.co-info__value:hover {
     animation-duration: 2s;
   }
 }
+
+/* Search + filters */
+.card.co-filters {
+  align-items: end;
+  padding: 18px 20px;
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(24, 59, 86, 0.06);
+}
+@media (max-width: 760px) {
+  .card.co-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .card.co-filters > .field:first-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 520px) {
+  .card.co-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* loading: grey cards with the shine (the .sk shapes are in JobsForYou.css) */
+.co-card--loading {
+  pointer-events: none;
+}
+.co-card--loading .co-card__body {
+  gap: 8px;
+}
+.co-card__banner.sk {
+  display: block;
+  border-radius: 0;
+}
+/* the band and the logo box keep the grey shine, not their usual colours */
+.co-card--loading .sk.co-card__banner,
+.co-card--loading .sk.co-logo {
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.co-sk-about {
+  margin-top: 6px;
+}
