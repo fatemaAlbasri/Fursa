@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import {
   formatJobType,
@@ -52,6 +52,12 @@ function Requirement({ label, value, ok }) {
 export default function JobDetails({ preview = false }) {
   const { id } = useParams() // the job id from the URL
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // opening a job from a list scrolled down → start the job page at the top
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [id])
 
   // status: 'loading' | 'ready' | 'notfound' | 'error'
   const [status, setStatus] = useState('loading')
@@ -135,10 +141,17 @@ export default function JobDetails({ preview = false }) {
     }
   }, [id, navigate, reloadKey, preview])
 
+  // "Back" returns to the list the job was opened from (All jobs keeps its filters and page);
+  // opened some other way (a link, a refresh) → Jobs for you.
   // In preview the "Exit preview" button takes the company back, so no back link there
+  const from = location.state?.from
+  let backLabel = 'Back to jobs'
+  if (from?.startsWith('/jobseeker/jobs/all')) backLabel = 'Back to All jobs'
+  else if (from?.startsWith('/jobseeker/jobs')) backLabel = 'Back to Jobs for you'
+  else if (from?.startsWith('/jobseeker/companies')) backLabel = 'Back to the company'
   const backLink = preview ? null : (
-    <Link to="/jobseeker/jobs" className="jd-back">
-      ← Back to jobs
+    <Link to={from || '/jobseeker/jobs'} state={{ restoreScroll: true }} className="jd-back">
+      ← {backLabel}
     </Link>
   )
 

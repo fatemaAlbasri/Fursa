@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { greeting } from '../../shared/utils/jobFormat.js'
 import { SearchIcon, StarIcon } from '../../shared/components/icons.jsx'
 import useOpenJobs from '../utils/useOpenJobs.js'
+import { useRestoreScroll } from '../utils/listScroll.js'
 import { EMPTY_FILTERS } from '../components/JobFilters.jsx'
 import JobResults from '../components/JobResults.jsx'
 import { JobMatchRow, JobMatchRowsLoading } from '../components/JobCard.jsx'
@@ -13,6 +14,7 @@ import '../styles/JobsForYou.css'
 // Searching and filtering live on All jobs.
 export default function JobsForYou() {
   const { firstName, jobs, loading, error, reload } = useOpenJobs()
+  useRestoreScroll(!loading)
 
   // The backend sends best match first. Top 10 = best scored jobs the seeker qualifies for.
   // Before any job is scored (e.g. just signed up) there is no Top 10 yet → show the newest jobs instead.

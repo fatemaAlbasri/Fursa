@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import useOpenJobs from '../utils/useOpenJobs.js'
+import { useRestoreScroll } from '../utils/listScroll.js'
 import JobFilters, { EMPTY_FILTERS, filterJobs } from '../components/JobFilters.jsx'
 import JobResults from '../components/JobResults.jsx'
 import { JobRow, JobMatchRowsLoading } from '../components/JobCard.jsx'
@@ -8,18 +9,36 @@ import '../styles/JobsForYou.css'
 
 const PAGE_SIZE = 10
 
+// The search, filters and page live in the address (?q=web&location=Manama&page=2),
+// so "Back" from a job (or a refresh) shows the list exactly as it was.
+const URL_KEYS = { search: 'q', type: 'type', mode: 'mode', field: 'field', location: 'location' }
+
+function readFilters(params) {
+  const filters = { ...EMPTY_FILTERS, qualified: params.get('qualified') === '1' }
+  for (const [key, name] of Object.entries(URL_KEYS)) filters[key] = params.get(name) || ''
+  return filters
+}
+
+function toParams(filters, page) {
+  const params = {}
+  for (const [key, name] of Object.entries(URL_KEYS)) if (filters[key]) params[name] = filters[key]
+  if (filters.qualified) params.qualified = '1'
+  if (page > 1) params.page = String(page)
+  return params
+}
+
 // All jobs (wireframe 6b): search + filters, then every open job in one card, 10 per page
 export default function AllJobs() {
   const { jobs, loading, error, reload } = useOpenJobs()
-  const [filters, setFiltersState] = useState(EMPTY_FILTERS)
-  const [page, setPage] = useState(1)
+  useRestoreScroll(!loading)
+  const [params, setParams] = useSearchParams()
   const resultsRef = useRef(null)
 
-  // a new search / filter starts again from page 1
-  const setFilters = (next) => {
-    setFiltersState(next)
-    setPage(1)
-  }
+  const filters = readFilters(params)
+  const page = Number(params.get('page')) || 1
+
+  // a new search / filter starts again from page 1; replace = typing doesn't fill the browser history
+  const setFilters = (next) => setParams(toParams(next, 1), { replace: true })
 
   const shown = filterJobs(jobs, filters)
   const pages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE))
@@ -27,7 +46,7 @@ export default function AllJobs() {
   const pageJobs = shown.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
 
   const goTo = (n) => {
-    setPage(n)
+    setParams(toParams(filters, n), { replace: true })
     resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 

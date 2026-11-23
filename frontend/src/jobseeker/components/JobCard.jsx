@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { formatJobType, formatWorkMode, formatDeadline } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from './CompanyLogo.jsx'
+import { rememberScroll } from '../utils/listScroll.js'
 
 // One job as a wide row, two kinds:
 //   JobMatchRow = Jobs for you (Top 10): tags + why it matches, ring + "View & apply"
@@ -10,6 +11,14 @@ import CompanyLogo from './CompanyLogo.jsx'
 
 const fadeIn = (index) => ({ animationDelay: `${Math.min(index, 8) * 40}ms` })
 const jobPath = (job) => `/jobseeker/jobs/${job.id}`
+
+// sent with the link, so the job page's "Back" returns to this exact list (filters and page too);
+// onClick remembers how far down the list was, to scroll back there
+function useBackState() {
+  const { pathname, search } = useLocation()
+  const from = pathname + search
+  return { state: { from }, onClick: () => rememberScroll(from) }
+}
 
 // The signed-in seeker's match for this job (match_score from GET /api/jobs).
 // null = not scored yet → no ring; 0 is a real score and is shown.
@@ -46,13 +55,16 @@ const TypeTag = ({ job }) => (
 )
 
 // title = link to the job; its ::after stretches over the whole row (see .jfy-match__link)
-const Title = ({ job }) => (
-  <h3 className="jfy-card__title">
-    <Link to={jobPath(job)} className="jfy-match__link">
-      {job.title}
-    </Link>
-  </h3>
-)
+function Title({ job }) {
+  const back = useBackState()
+  return (
+    <h3 className="jfy-card__title">
+      <Link to={jobPath(job)} {...back} className="jfy-match__link">
+        {job.title}
+      </Link>
+    </h3>
+  )
+}
 
 // "Company · Manama · Hybrid · Deadline 1 Dec" — each part stays on one line when it wraps,
 // and the dot at the start of a wrapped line is hidden (see .jfy-meta in the CSS)
@@ -124,6 +136,7 @@ function Badges({ job }) {
 }
 
 export function JobRow({ job, index }) {
+  const back = useBackState()
   const notQualified = job.match_score != null && job.is_qualified === false
   return (
     <article className="jfy-match jfy-match--row" style={fadeIn(index)}>
@@ -143,7 +156,7 @@ export function JobRow({ job, index }) {
       </div>
       <div className="jfy-match__end">
         <MatchRing score={job.match_score} muted={notQualified} />
-        <Link to={jobPath(job)} className="btn btn--outline jfy-row__btn">
+        <Link to={jobPath(job)} {...back} className="btn btn--outline jfy-row__btn">
           View job
         </Link>
       </div>
@@ -152,6 +165,7 @@ export function JobRow({ job, index }) {
 }
 
 export function JobMatchRow({ job, index }) {
+  const back = useBackState()
   return (
     <article className="jfy-match" style={fadeIn(index)}>
       <CompanyLogo job={job} className="jfy-logo jfy-match__logo" />
@@ -170,7 +184,7 @@ export function JobMatchRow({ job, index }) {
       </div>
       <div className="jfy-match__end">
         <MatchRing score={job.match_score} />
-        <Link to={jobPath(job)} className="btn btn--primary jfy-match__btn">
+        <Link to={jobPath(job)} {...back} className="btn btn--primary jfy-match__btn">
           View &amp; apply
         </Link>
       </div>
