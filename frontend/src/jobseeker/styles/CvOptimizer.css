@@ -1,4 +1,4 @@
-/* ===== AI CV Optimizer (free page) + Advanced CV report =====
+/*  AI CV Optimizer (free page) + Advanced CV report 
    Both pages share this file. Every class starts with "cvo-". Uses the shared tokens and .btn styles
    from index.css. Rules that change a shared class (.container, .btn) use two classes, because
    index.css loads after this file and would win otherwise. */
@@ -21,7 +21,7 @@
   padding-bottom: 48px;
 }
 
-/* ---------- Text helpers ---------- */
+/*  Text helpers  */
 .cvo-muted {
   color: var(--slate);
   font-size: 13.5px;
@@ -76,7 +76,7 @@
   color: var(--white);
 }
 
-/* ---------- Buttons ---------- */
+/*  Buttons  */
 .btn.cvo-btn-accent {
   background: var(--accent);
   color: var(--navy);
@@ -104,7 +104,7 @@
   padding: 13px 18px;
 }
 
-/* ---------- Page head ---------- */
+/*  Page head  */
 .cvo-head {
   display: flex;
   align-items: center;
@@ -160,7 +160,7 @@
   flex-shrink: 0;
 }
 
-/* ---------- Cards ---------- */
+/*  Cards  */
 .cvo-card {
   background: var(--card-bg);
   border: var(--card-border);
@@ -251,7 +251,7 @@
   margin-top: 4px;
 }
 
-/* ---------- Loading / message cards ---------- */
+/*  Loading / message cards  */
 .cvo-state {
   align-items: center;
   text-align: center;
@@ -289,7 +289,7 @@
   }
 }
 
-/* ---------- Two columns ---------- */
+/*  Two columns  */
 .cvo-cols {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -304,7 +304,7 @@
   min-width: 0;
 }
 
-/* ---------- Your CV ---------- */
+/*  Your CV  */
 .cvo-cv__head {
   display: flex;
   align-items: baseline;
@@ -449,7 +449,7 @@
   background: var(--cvo-green-bg);
 }
 
-/* ---------- Suggestion card ---------- */
+/*  Suggestion card  */
 .cvo-sugg {
   gap: 12px;
   transition: border-color 0.15s, background 0.15s;
@@ -573,7 +573,7 @@
   color: var(--slate);
 }
 
-/* ---------- Locked list / unlocked card ---------- */
+/*  Locked list / unlocked card  */
 .cvo-locked {
   gap: 6px;
 }
@@ -625,7 +625,7 @@
   align-self: flex-start;
 }
 
-/* ---------- What only you can add ---------- */
+/*  What only you can add  */
 .cvo-add__head {
   display: flex;
   align-items: flex-end;
@@ -725,7 +725,7 @@
   text-decoration: line-through;
 }
 
-/* ---------- Comparison ---------- */
+/*  Comparison  */
 .cvo-compare {
   gap: 8px;
 }
@@ -783,7 +783,7 @@
   padding-top: 4px;
 }
 
-/* ---------- Smaller screens ---------- */
+/*  Smaller screens  */
 @media (max-width: 960px) {
   .cvo-cols {
     grid-template-columns: minmax(0, 1fr);
@@ -831,7 +831,7 @@
   }
 }
 
-/* ===== AI CV Optimizer, as in the wireframe (8) ===== */
+/*  AI CV Optimizer */
 .cvo {
   gap: 22px;
 }
@@ -975,7 +975,7 @@
   background: none;
 }
 
-/* Advanced report (wireframe 9): every rewrite in one card, split by a thin line */
+/* Advanced report */
 .cvo-rewrites {
   gap: 18px;
 }
@@ -1182,7 +1182,7 @@
   gap: 8px;
 }
 
-/* AI is working (wireframe 23) */
+/* AI is working */
 @keyframes cvo-pulse {
   0%,
   100% {
@@ -1374,31 +1374,7 @@
   align-self: center; /* centred under the button, like everything else in this card */
 }
 
-/* ===== Payment: Advanced CV report (wireframe 18) — the form itself is in Payment.css ===== */
+/*  Payment: Advanced CV report */
 .cvp-back {
   align-self: flex-start;
-}
-.cvp-loading .pay-form,
-.cvp-loading .pay-summary {
-  gap: 14px;
-}
-.cvp-loading__field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.cvp-sk-input {
-  display: block;
-  height: 48px;
-  border-radius: 10px;
-}
-.cvp-sk-pay {
-  display: block;
-  height: 54px;
-  border-radius: 999px;
-}
-/* the navy summary keeps a soft light shine instead of the grey one */
-.cvp-loading__summary .sk {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.18) 40%, rgba(255, 255, 255, 0.08) 80%);
-  background-size: 800px 100%;
 }

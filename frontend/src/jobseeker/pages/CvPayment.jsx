@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import Notice from '../../shared/components/Notice.jsx'
-import PaymentForm, { PaymentDone } from '../../company/components/PaymentForm.jsx'
+import PaymentForm, { PaymentDone, PaymentLoading } from '../../company/components/PaymentForm.jsx'
 import useCvReview from '../utils/useCvReview.js'
 import { OPTIMIZER_PATH, REPORT_PATH } from '../utils/cvFormat.js'
 import { ErrorState } from '../components/cvOptimizer/PageParts.jsx'
@@ -11,39 +11,6 @@ import '../styles/CvOptimizer.css'
 // then "Payment successful" → Open my report.
 
 const ITEM = 'Advanced CV report'
-
-// Grey shapes of the form and the summary while the review loads (wireframe 23)
-function PaymentLoading() {
-  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
-  return (
-    <div className="pay-body cvp-loading" role="status" aria-label="Loading your order">
-      <section className="pay-form" aria-hidden="true">
-        {line(140)}
-        {line(180, true)}
-        {[0, 1].map((i) => (
-          <div key={i} className="cvp-loading__field">
-            {line(110, true)}
-            <span className="sk cvp-sk-input" />
-          </div>
-        ))}
-        <div className="pay-two">
-          <span className="sk cvp-sk-input" />
-          <span className="sk cvp-sk-input" />
-        </div>
-        <span className="sk cvp-sk-pay" />
-      </section>
-      <aside className="pay-summary cvp-loading__summary" aria-hidden="true">
-        {line('40%', true)}
-        {line('70%')}
-        {line('55%', true)}
-        {line('65%', true)}
-        {line('60%', true)}
-        {line('100%', true)}
-        {line('80%')}
-      </aside>
-    </div>
-  )
-}
 
 export default function CvPayment() {
   const cv = useCvReview()

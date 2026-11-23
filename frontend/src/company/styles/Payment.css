@@ -340,3 +340,28 @@
     order: -1;
   }
 }
+
+/* loading: grey shapes of the form and the summary (the .sk shapes are in JobsForYou.css) */
+.pay-loading .pay-form,
+.pay-loading .pay-summary {
+  gap: 14px;
+  animation: none;
+}
+.pay-loading__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sk.pay-sk-input {
+  height: 48px;
+  border-radius: 10px;
+}
+.sk.pay-sk-btn {
+  height: 54px;
+  border-radius: 999px;
+}
+/* the navy summary keeps a soft light shine instead of the grey one */
+.pay-loading__summary .sk {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.18) 40%, rgba(255, 255, 255, 0.08) 80%);
+  background-size: 800px 100%;
+}

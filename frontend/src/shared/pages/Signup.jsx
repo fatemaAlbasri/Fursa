@@ -7,9 +7,9 @@ import PhoneInput from '../components/PhoneInput.jsx'
 import { api } from '../api.js'
 import { INDUSTRIES, LOCATIONS } from '../utils/companyOptions.js'
 import { XIcon } from '../components/icons.jsx'
-import Loading, { ButtonSpinner } from '../components/Loading.jsx'
+import { ButtonSpinner } from '../components/Loading.jsx'
 import Notice from '../components/Notice.jsx'
-import PaymentForm, { PaymentDone } from '../../company/components/PaymentForm.jsx'
+import PaymentForm, { PaymentDone, PaymentLoading } from '../../company/components/PaymentForm.jsx'
 import {
   MAJORS,
   STATUSES,
@@ -938,7 +938,7 @@ function CompanySignup() {
               {planInfo ? (
                 <PaymentForm plan={planInfo} company={form.companyName} busy={busy} onPay={finish} />
               ) : (
-                <Loading text="Loading your order…" />
+                <PaymentLoading />
               )}
             </>
           )}

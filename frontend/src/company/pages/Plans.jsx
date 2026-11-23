@@ -4,7 +4,6 @@ import { api } from '../../shared/api.js'
 import { formatSalary } from '../../shared/utils/jobFormat.js'
 import { planTagline, isPopular, planFeatures } from '../data/plans.js'
 import Notice from '../../shared/components/Notice.jsx'
-import Loading from '../../shared/components/Loading.jsx'
 
 // Change plan page
 // free plan switches straight away, paid plans go to the payment page
@@ -79,7 +78,21 @@ export default function Plans() {
       </div>
 
       <Notice notice={notice} onClose={() => setNotice(null)} />
-      {loading && <Loading text="Loading plans…" />}
+      {loading && (
+        <div className="plans plans--loading" role="status" aria-label="Loading plans">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="plan" aria-hidden="true">
+              <span className="sk sk--line" style={{ width: '40%' }} />
+              <span className="sk sk--line sk--thin" style={{ width: '70%' }} />
+              <span className="sk plan-sk-price" />
+              {[80, 65, 75, 55].map((w) => (
+                <span key={w} className="sk sk--line sk--thin" style={{ width: `${w}%` }} />
+              ))}
+              <span className="sk plan-sk-btn" />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="plans" role="radiogroup" aria-label="Plans">
         {plans.map((p) => {

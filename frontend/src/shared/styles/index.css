@@ -1733,6 +1733,21 @@ button {
 .plan:nth-child(3) {
   animation-delay: 0.16s;
 }
+/* plans loading: grey cards (the .sk shapes are in JobsForYou.css) */
+.plans--loading .plan {
+  gap: 12px;
+  cursor: default;
+}
+.sk.plan-sk-price {
+  width: 50%;
+  height: 34px;
+  margin: 6px 0;
+}
+.sk.plan-sk-btn {
+  height: 46px;
+  margin-top: auto;
+  border-radius: 999px;
+}
 .plan-bar {
   animation: fade-up 0.5s 0.24s ease backwards;
 }

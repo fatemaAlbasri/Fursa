@@ -203,8 +203,40 @@ export default function PaymentForm({ plan, company, order, busy, onPay }) {
   )
 }
 
+// Used by the plan Payment page, company sign up (step 3) and the Advanced CV report payment.
+export function PaymentLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  return (
+    <div className="pay-body pay-loading" role="status" aria-label="Loading your order">
+      <section className="pay-form" aria-hidden="true">
+        {line(140)}
+        {line(180, true)}
+        {[0, 1].map((i) => (
+          <div key={i} className="pay-loading__field">
+            {line(110, true)}
+            <span className="sk pay-sk-input" />
+          </div>
+        ))}
+        <div className="pay-two">
+          <span className="sk pay-sk-input" />
+          <span className="sk pay-sk-input" />
+        </div>
+        <span className="sk pay-sk-btn" />
+      </section>
+      <aside className="pay-summary pay-loading__summary" aria-hidden="true">
+        {line('40%', true)}
+        {line('70%')}
+        {line('55%', true)}
+        {line('65%', true)}
+        {line('60%', true)}
+        {line('100%', true)}
+        {line('80%')}
+      </aside>
+    </div>
+  )
+}
+
 // "Payment successful" with the receipt number.
-// For a plan: `plan` + `payment` (from the API). For anything else: `name`, `next` = { to, label } too.
 export function PaymentDone({ plan, payment, name, next = { to: '/company', label: 'Go to my jobs' } }) {
   return (
     <section className="pay-done">

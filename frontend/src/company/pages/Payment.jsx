@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import Notice from '../../shared/components/Notice.jsx'
-import Loading from '../../shared/components/Loading.jsx'
-import PaymentForm, { PaymentDone } from '../components/PaymentForm.jsx'
+import PaymentForm, { PaymentDone, PaymentLoading } from '../components/PaymentForm.jsx'
 
 // Payment page for a plan (upgrading from the Plans page)
 export default function Payment() {
@@ -68,7 +67,7 @@ export default function Payment() {
   return (
     <main className="container pay">
       <Notice notice={notice} onClose={() => setNotice(null)} />
-      {!plan && !notice && <Loading text="Loading your order…" />}
+      {!plan && !notice && <PaymentLoading />}
       {plan && (
         <PaymentForm plan={plan} company={company} busy={busy} onPay={pay} />
       )}
