@@ -150,5 +150,102 @@ const getOverview = async (req, res, next) => {
     next(err)
   }
 }
+const PAGE_SIZE = 10
 
-module.exports = { getOverview }
+// Page number from ?page= (1 if missing or wrong)
+const readPage = (req) => Math.max(1, parseInt(req.query.page, 10) || 1)
+
+// "noor" → "%noor%" for ILIKE, or null when there is no search
+const readSearch = (req) => {
+  const q = (req.query.q || '').trim()
+  return q ? `%${q}%` : null
+}
+
+// Every seeker with a CV flag and application count, filtered by search ($1)
+const SEEKERS_CTE = `
+  WITH s AS (
+    SELECT u.id, u.first_name, u.last_name, u.email, u.created_at,
+           sp.major, sp.graduation_status,
+           EXISTS (SELECT 1 FROM resumes r WHERE r.seeker_id = u.id) AS has_cv,
+           (SELECT COUNT(*) FROM applications a WHERE a.seeker_id = u.id) AS applications
+      FROM users u
+      JOIN seeker_profiles sp ON sp.user_id = u.id
+     WHERE u.role = 'seeker'
+       AND ($1::text IS NULL
+            OR (u.first_name || ' ' || u.last_name || ' ' || u.email) ILIKE $1)
+  )
+`
+
+const SEEKER_TABS = ['all', 'cv', 'nocv']
+
+// GET /api/admin/seekers?tab=all|cv|nocv&q=&page=
+const getSeekers = async (req, res, next) => {
+  try {
+    const tab = SEEKER_TABS.includes(req.query.tab) ? req.query.tab : 'all'
+    const search = readSearch(req)
+    const page = readPage(req)
+
+    const [cards, tabs, list] = await Promise.all([
+      // 1) Top cards (whole platform, not affected by search)
+      db.query(`
+        SELECT
+          (SELECT COUNT(*) FROM users WHERE role = 'seeker') AS seekers,
+          (SELECT COUNT(DISTINCT seeker_id) FROM resumes) AS with_cv,
+          (SELECT COUNT(DISTINCT r.seeker_id)
+             FROM cv_reviews cr JOIN resumes r ON r.id = cr.resume_id) AS used_optimizer,
+          (SELECT COUNT(DISTINCT user_id) FROM payments
+             WHERE item = 'advanced_cv_report' AND status = 'paid') AS bought_report
+      `),
+
+      // 2) Count per tab (follows the search)
+      db.query(`${SEEKERS_CTE}
+        SELECT COUNT(*) AS all,
+               COUNT(*) FILTER (WHERE has_cv)     AS cv,
+               COUNT(*) FILTER (WHERE NOT has_cv) AS nocv
+          FROM s
+      `, [search]),
+
+      // 3) One page of rows for the chosen tab
+      db.query(`${SEEKERS_CTE}
+        SELECT * FROM s
+         WHERE $2 = 'all'
+            OR ($2 = 'cv'   AND has_cv)
+            OR ($2 = 'nocv' AND NOT has_cv)
+         ORDER BY created_at DESC
+         LIMIT $3 OFFSET $4
+      `, [search, tab, PAGE_SIZE, (page - 1) * PAGE_SIZE])
+    ])
+
+    const c = cards.rows[0]
+    const t = tabs.rows[0]
+    const total = num(t[tab])
+
+    res.json({
+      cards: {
+        seekers: num(c.seekers),
+        with_cv: num(c.with_cv),
+        used_optimizer: num(c.used_optimizer),
+        bought_report: num(c.bought_report)
+      },
+      tabs: { all: num(t.all), cv: num(t.cv), nocv: num(t.nocv) },
+      seekers: list.rows.map((s) => ({
+        id: s.id,
+        name: `${s.first_name} ${s.last_name}`,
+        email: s.email,
+        major: s.major,
+        graduation_status: s.graduation_status,
+        has_cv: s.has_cv,
+        applications: num(s.applications),
+        joined: s.created_at
+      })),
+      page,
+      page_size: PAGE_SIZE,
+      total,
+      total_pages: Math.max(1, Math.ceil(total / PAGE_SIZE))
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+module.exports = { getOverview, getSeekers }

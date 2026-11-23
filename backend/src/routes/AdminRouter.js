@@ -7,7 +7,10 @@ const router = express.Router()
 // Every route in this file is admin only
 router.use(requireAuth, requireRole('admin'))
 
-// GET /api/admin/overview 
+// GET /api/admin/overview
 router.get('/overview', AdminController.getOverview)
+
+// GET /api/admin/seekers
+router.get('/seekers', AdminController.getSeekers)
 
 module.exports = router
