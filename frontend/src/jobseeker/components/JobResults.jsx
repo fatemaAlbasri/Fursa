@@ -37,10 +37,10 @@ export default function JobResults({ jobs, shown, loading, error, filters, onRet
     return (
       <div className="jfy-state">
         <h3>No jobs match your search</h3>
-        <p>Try a different word or fewer filters.</p>
+        <p>Try other words or remove a filter.</p>
         {filtering && (
           <button type="button" className="btn btn--outline" onClick={onClearFilters}>
-            Clear filters
+            Clear all
           </button>
         )}
       </div>

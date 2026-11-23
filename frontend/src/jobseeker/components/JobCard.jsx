@@ -1,49 +1,27 @@
 import { Link } from 'react-router-dom'
-import {
-  formatJobType,
-  formatWorkMode,
-  formatSalary,
-  formatDeadline,
-  daysLeft,
-  daysLeftText
-} from '../../shared/utils/jobFormat.js'
+import { formatJobType, formatWorkMode, formatDeadline } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from './CompanyLogo.jsx'
-import { PinIcon } from '../../shared/components/icons.jsx'
 
-// One job, shown two ways with the same information:
-//   JobCard = box in the grid (Jobs for you, All jobs → Grid view)
-//   JobRow  = one wide row   (All jobs → List view)
+// One job as a wide row, two kinds:
+//   JobMatchRow = Jobs for you (Top 10): tags + why it matches, ring + "View & apply"
+//   JobRow      = All jobs: Top 10 / Applied badges, what's missing, ring + "View job"
 // index staggers the fade-in a little, job by job.
 
-const salaryText = (job) => {
-  const salary = formatSalary(job.salary)
-  return salary ? `${salary} / month` : 'Salary not shown'
-}
-
-const deadlineText = (job) => {
-  const left = daysLeftText(daysLeft(job.deadline))
-  return `Deadline ${formatDeadline(job.deadline)}${left ? ` · ${left}` : ''}`
-}
-
-// Job type tag (purple for internships) + field tag (list rows)
-function JobTags({ job }) {
-  return (
-    <div className="jfy-tags">
-      <span className={job.job_type === 'internship' ? 'jfy-tag jfy-tag--internship' : 'jfy-tag'}>
-        {formatJobType(job.job_type)}
-      </span>
-      {job.field && <span className="jfy-tag jfy-tag--plain">{job.field}</span>}
-    </div>
-  )
-}
+const fadeIn = (index) => ({ animationDelay: `${Math.min(index, 8) * 40}ms` })
 
 // The signed-in seeker's match for this job (match_score from GET /api/jobs).
 // null = not scored yet → no ring; 0 is a real score and is shown.
-// The teal part fills up when the card appears (circle length 2πr = 157.08 for r = 25).
-function MatchRing({ score }) {
+// muted = pale red ring for jobs the seeker doesn't qualify for.
+// The coloured part fills up when the row appears (circle length 2πr = 157.08 for r = 25).
+function MatchRing({ score, muted }) {
   if (score == null) return null
   return (
-    <div className="jfy-ring" role="img" aria-label={`${score}% match`} title={`${score}% match`}>
+    <div
+      className={muted ? 'jfy-ring jfy-ring--muted' : 'jfy-ring'}
+      role="img"
+      aria-label={`${score}% match`}
+      title={`${score}% match`}
+    >
       <svg viewBox="0 0 60 60" aria-hidden="true">
         <circle className="jfy-ring__track" cx="30" cy="30" r="25" />
         <circle
@@ -59,7 +37,19 @@ function MatchRing({ score }) {
   )
 }
 
-// one line in the card: why it matches, e.g. "Matches 2 of 3 skills · Missing: CSS"
+const TypeTag = ({ job }) => (
+  <span className={job.job_type === 'internship' ? 'jfy-tag jfy-tag--internship' : 'jfy-tag'}>
+    {formatJobType(job.job_type)}
+  </span>
+)
+
+const CompanyLink = ({ job }) => (
+  <Link to={`/jobseeker/companies/${job.company_id}`} className="jfy-match__company">
+    {job.company_name}
+  </Link>
+)
+
+// Top 10: why it matches, e.g. "Matches 2 of 3 skills · Missing: CSS"
 function MatchWhy({ job }) {
   if (job.match_score == null) return null
   const missing = job.missing_skills || []
@@ -77,25 +67,28 @@ function MatchWhy({ job }) {
   )
 }
 
-// the line under the job: what the seeker has or is missing
+// All jobs: green = has every skill, amber = missing a nice-to-have, red = missing a must-have
 function MatchNote({ job }) {
   if (job.match_score == null) return null
   const missing = job.missing_skills || []
   const missingMust = job.missing_required || []
-
   if (missingMust.length) {
-    return <p className="jfy-note jfy-note--bad">Missing must-have: {missingMust.join(', ')}</p>
+    return <span className="jfy-note jfy-note--bad">Missing must-have: {missingMust.join(', ')}</span>
   }
   if (missing.length) {
-    return <p className="jfy-note jfy-note--warn">Missing: {missing.join(', ')}</p>
+    return <span className="jfy-note jfy-note--warn">Missing: {missing.join(', ')} (nice to have)</span>
   }
   if (job.skills_total) {
-    return <p className="jfy-note jfy-note--good">Matches all {job.skills_total} skills</p>
+    return (
+      <span className="jfy-note jfy-note--good">
+        Matches {job.skills_total} of {job.skills_total} skills
+      </span>
+    )
   }
   return null
 }
 
-// Top 10 and  Applied
+// ★ Top 10 and ✓ Applied
 function Badges({ job }) {
   if (!job.top && !job.applied) return null
   return (
@@ -106,77 +99,35 @@ function Badges({ job }) {
   )
 }
 
-const fadeIn = (index) => ({ animationDelay: `${Math.min(index, 8) * 40}ms` })
-
-export default function JobCard({ job, index }) {
-  return (
-    <article className="jfy-card" style={fadeIn(index)}>
-      <div className="jfy-card__top">
-        <CompanyLogo job={job} className="jfy-logo" />
-        <div className="jfy-card__heading">
-          <h3 className="jfy-card__title">{job.title}</h3>
-          <Badges job={job} />
-          <p className="jfy-card__company">
-            {job.company_name} · {job.location}
-          </p>
-        </div>
-        <MatchRing score={job.match_score} />
-      </div>
-
-      {/* job type, work mode, then why it matches, all on one line like the wireframe */}
-      <div className="jfy-tags">
-        <span className={job.job_type === 'internship' ? 'jfy-tag jfy-tag--internship' : 'jfy-tag'}>
-          {formatJobType(job.job_type)}
-        </span>
-        <span className="jfy-tag jfy-tag--mode">
-          <PinIcon />
-          {formatWorkMode(job.work_mode)}
-        </span>
-        <MatchWhy job={job} />
-      </div>
-
-      <p className="jfy-card__meta">
-        <span>{salaryText(job)}</span>
-        <span>{deadlineText(job)}</span>
-      </p>
-
-      <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--primary btn--block">
-        View &amp; apply
-      </Link>
-    </article>
-  )
-}
-
 export function JobRow({ job, index }) {
+  const notQualified = job.match_score != null && job.is_qualified === false
   return (
-    <article className="jfy-row" style={fadeIn(index)}>
+    <article className="jfy-match jfy-match--row" style={fadeIn(index)}>
       <CompanyLogo job={job} className="jfy-logo" />
-
-      <div className="jfy-row__info">
+      <div className="jfy-match__info">
         <div className="jfy-row__title">
           <h3 className="jfy-card__title">{job.title}</h3>
           <Badges job={job} />
         </div>
         <p className="jfy-card__company">
-          {job.company_name} · {job.location} · {formatWorkMode(job.work_mode)} · {deadlineText(job)}
+          <CompanyLink job={job} /> · {job.location} · {formatWorkMode(job.work_mode)} · Deadline{' '}
+          {formatDeadline(job.deadline)}
         </p>
-        <div className="jfy-row__bottom">
-          <JobTags job={job} />
-          <span className="jfy-row__salary">{salaryText(job)}</span>
+        <div className="jfy-tags">
+          <TypeTag job={job} />
+          <MatchNote job={job} />
         </div>
-        <MatchNote job={job} />
       </div>
-
-      <MatchRing score={job.match_score} />
-
-      <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--outline jfy-row__btn">
-        View job
-      </Link>
+      <div className="jfy-match__end">
+        <MatchRing score={job.match_score} muted={notQualified} />
+        <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--outline jfy-row__btn">
+          View job
+        </Link>
+      </div>
     </article>
   )
 }
 
-// Jobs for you (Top 10): one wide row — logo, job, tags + why it matches, then ring + button
 export function JobMatchRow({ job, index }) {
   return (
     <article className="jfy-match" style={fadeIn(index)}>
@@ -185,17 +136,11 @@ export function JobMatchRow({ job, index }) {
         <div>
           <h3 className="jfy-card__title">{job.title}</h3>
           <p className="jfy-card__company">
-            <Link to={`/jobseeker/companies/${job.company_id}`} className="jfy-match__company">
-              {job.company_name}
-            </Link>
-            {' · '}
-            {job.location} · Deadline {formatDeadline(job.deadline)}
+            <CompanyLink job={job} /> · {job.location} · Deadline {formatDeadline(job.deadline)}
           </p>
         </div>
         <div className="jfy-tags">
-          <span className={job.job_type === 'internship' ? 'jfy-tag jfy-tag--internship' : 'jfy-tag'}>
-            {formatJobType(job.job_type)}
-          </span>
+          <TypeTag job={job} />
           <span className="jfy-tag jfy-tag--mode">{formatWorkMode(job.work_mode)}</span>
           <MatchWhy job={job} />
         </div>

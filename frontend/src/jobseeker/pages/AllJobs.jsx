@@ -1,83 +1,118 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useOpenJobs from '../utils/useOpenJobs.js'
 import JobFilters, { EMPTY_FILTERS, filterJobs } from '../components/JobFilters.jsx'
 import JobResults from '../components/JobResults.jsx'
-import JobCard, { JobRow } from '../components/JobCard.jsx'
-import { GridIcon, ListIcon } from '../../shared/components/icons.jsx'
+import { JobRow, JobMatchRowsLoading } from '../components/JobCard.jsx'
 import '../styles/JobsForYou.css'
 
-// The two ways to show the jobs: same jobs, only the layout changes
-const VIEWS = [
-  { id: 'list', label: 'List view', Icon: ListIcon },
-  { id: 'grid', label: 'Grid view', Icon: GridIcon }
-]
+const PAGE_SIZE = 10
 
+// All jobs (wireframe 6b): search + filters, then every open job in one card, 10 per page
 export default function AllJobs() {
   const { jobs, loading, error, reload } = useOpenJobs()
-  const [filters, setFilters] = useState(EMPTY_FILTERS)
-  const [view, setView] = useState('list') // list = like the wireframe
+  const [filters, setFiltersState] = useState(EMPTY_FILTERS)
+  const [page, setPage] = useState(1)
+  const resultsRef = useRef(null)
+
+  // a new search / filter starts again from page 1
+  const setFilters = (next) => {
+    setFiltersState(next)
+    setPage(1)
+  }
 
   const shown = filterJobs(jobs, filters)
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE))
+  const current = Math.min(page, pages)
+  const pageJobs = shown.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+
+  const goTo = (n) => {
+    setPage(n)
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <main className="container jfy">
       <header className="jfy-head">
         <Link to="/jobseeker/jobs" className="jfy-back">
-          ← Back to Jobs for you
+          ← Back to your Top 10
         </Link>
         <h1 className="title">All jobs</h1>
-        <p className="muted">Every open job and internship on Fursa.</p>
+        <p className="muted">Every open job and internship on Fursa, with your match score on each one.</p>
       </header>
 
       <JobFilters jobs={jobs} filters={filters} onChange={setFilters} />
 
-      <div className="jfy-section-head">
-        {!loading && !error && jobs.length > 0 && (
-          <span className="jfy-found">
-            {shown.length} {shown.length === 1 ? 'job' : 'jobs'} found
-          </span>
-        )}
-        <div className="jfy-views" role="group" aria-label="Layout">
-          {VIEWS.map(({ id, label, Icon }) => (
+      <section className="jfy-panel" aria-labelledby="jfy-results-title" ref={resultsRef}>
+        <div className="jfy-panel__head">
+          <div className="jfy-panel__title">
+            <h2 id="jfy-results-title">
+              {loading ? 'Loading jobs…' : `${shown.length} ${shown.length === 1 ? 'job' : 'jobs'} found`}
+            </h2>
+            <p>
+              Sorted by match score · <span className="jfy-star">★</span> = in your Top 10
+            </p>
+          </div>
+          <label className="jfy-switch">
             <button
-              key={id}
               type="button"
-              className={view === id ? 'jfy-views__btn jfy-views__btn--active' : 'jfy-views__btn'}
-              aria-pressed={view === id}
-              aria-label={label}
-              title={label}
-              onClick={() => setView(id)}
+              role="switch"
+              aria-checked={filters.qualified}
+              className="jfy-switch__track"
+              onClick={() => setFilters({ ...filters, qualified: !filters.qualified })}
             >
-              <Icon />
+              <span className="jfy-switch__knob" />
+            </button>
+            Only jobs I qualify for
+          </label>
+        </div>
+
+        {loading ? (
+          <JobMatchRowsLoading count={6} />
+        ) : (
+          <JobResults
+            jobs={jobs}
+            shown={shown}
+            loading={false}
+            error={error}
+            filters={filters}
+            onRetry={reload}
+            onClearFilters={() => setFilters(EMPTY_FILTERS)}
+          >
+            <div className="jfy-match-list">
+              {pageJobs.map((job, index) => (
+                <JobRow key={job.id} job={job} index={index} />
+              ))}
+            </div>
+          </JobResults>
+        )}
+      </section>
+
+      {!loading && pages > 1 && (
+        <nav className="jfy-pages" aria-label="Pages">
+          {current > 1 && (
+            <button type="button" className="jfy-pages__btn jfy-pages__btn--wide" onClick={() => goTo(current - 1)}>
+              ← Prev
+            </button>
+          )}
+          {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              type="button"
+              className={n === current ? 'jfy-pages__btn jfy-pages__btn--on' : 'jfy-pages__btn'}
+              aria-current={n === current ? 'page' : undefined}
+              onClick={() => goTo(n)}
+            >
+              {n}
             </button>
           ))}
-        </div>
-      </div>
-
-      <JobResults
-        jobs={jobs}
-        shown={shown}
-        loading={loading}
-        error={error}
-        filters={filters}
-        onRetry={reload}
-        onClearFilters={() => setFilters(EMPTY_FILTERS)}
-      >
-        {view === 'grid' ? (
-          <div className="jfy-grid">
-            {shown.map((job, index) => (
-              <JobCard key={job.id} job={job} index={index} />
-            ))}
-          </div>
-        ) : (
-          <div className="jfy-list">
-            {shown.map((job, index) => (
-              <JobRow key={job.id} job={job} index={index} />
-            ))}
-          </div>
-        )}
-      </JobResults>
+          {current < pages && (
+            <button type="button" className="jfy-pages__btn jfy-pages__btn--wide" onClick={() => goTo(current + 1)}>
+              Next →
+            </button>
+          )}
+        </nav>
+      )}
     </main>
   )
 }
