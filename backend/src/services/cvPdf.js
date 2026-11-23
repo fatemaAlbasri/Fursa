@@ -122,8 +122,10 @@ const TITLE_WORD = /\b(engineer\w*|develop\w*|graduate|student|science|computing
 function cvHeader(doc, name, headerLines) {
   const { left } = doc.page.margins
   const width = doc.page.width - left - doc.page.margins.right
-  doc.font('Helvetica-Bold').fontSize(22).fillColor(BLACK).text(name.trim(), left, doc.y, { width, align: 'center' })
-  doc.moveDown(0.3)
+  if (name.trim()) {
+    doc.font('Helvetica-Bold').fontSize(22).fillColor(BLACK).text(name.trim(), left, doc.y, { width, align: 'center' })
+    doc.moveDown(0.3)
+  }
 
   const parts = headerLines
     .flatMap((line) => line.split(/\s*\|\s*/))
@@ -166,7 +168,11 @@ function joinBrokenLines(lines) {
 // The improved CV. Built from the CV's text, so the original design isn't kept, but it follows a clean classic layout
 async function renderCv(text) {
   assertPrintable(text)
-  const [name = '', ...rawLines] = printable(text.replace(/[●■◦○◆►]/g, '•')).split('\n')
+  const allLines = printable(text.replace(/[●■◦○◆►]/g, '•')).split('\n')
+  // The first line is the name, unless the CV starts straight with a section ("Summary", "Skills"…):
+  // then there is no name, and that heading stays a heading instead of being printed big as the name
+  const hasName = Boolean(allLines[0]?.trim()) && !anyHeading(allLines[0])
+  const [name = '', ...rawLines] = hasName ? allLines : ['', ...allLines]
   const lines = joinBrokenLines(rawLines)
   // When the CV writes headings in capitals, "Projects:" under a job is a sub-label, not a new section
   const capsStyle = lines.some((l) => anyHeading(l) && l === l.toUpperCase())
