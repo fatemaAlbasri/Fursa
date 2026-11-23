@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
+import Notice from '../../shared/components/Notice.jsx'
 import { CalendarIcon, LogOutIcon } from '../../shared/components/icons.jsx'
 import { userInitials } from '../../shared/utils/jobFormat.js'
 import PersonalDetails from '../components/profile/PersonalDetails.jsx'
@@ -128,12 +129,25 @@ function ProfileLoading() {
 
 export default function Profile() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // A message handed over by another page (e.g. "Password updated" from Change password)
+  const [notice, setNotice] = useState(() => location.state?.notice ?? null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0) // "Try again" bumps this to load again
   const [loggingOut, setLoggingOut] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false) // "Are you sure?" dialog is open
+
+  // Shown once: clear it from the history entry so a reload or Back doesn't show it again
+  useEffect(() => {
+    if (location.state?.notice) navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
+
+  // Once the page is there, scroll up so the message can be seen
+  useEffect(() => {
+    if (notice && !loading) window.scrollTo({ top: 0 })
+  }, [notice, loading])
 
   // Escape closes the log out dialog (= Cancel), never logs out. Ignored while logging out.
   useEffect(() => {
@@ -214,6 +228,7 @@ export default function Profile() {
 
   return (
     <main className="container pf">
+      <Notice notice={notice} onClose={() => setNotice(null)} />
       <ProfileHeader profile={profile} onLogout={() => setConfirmLogout(true)} loggingOut={loggingOut} />
       <ConfirmDialog
         open={confirmLogout}

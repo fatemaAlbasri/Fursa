@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import { formatSalary, formatDeadline } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../../jobseeker/components/CompanyLogo.jsx'
@@ -75,7 +75,14 @@ export default function CompanyProfile() {
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [notice, setNotice] = useState(null)
+  const location = useLocation()
+  // A message handed over by another page (e.g. "Password updated" from Change password)
+  const [notice, setNotice] = useState(() => location.state?.notice ?? null)
+
+  // Shown once: clear it from the history entry so a reload or Back doesn't show it again
+  useEffect(() => {
+    if (location.state?.notice) navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
 
   // get profile and plan
   useEffect(() => {
@@ -100,7 +107,7 @@ export default function CompanyProfile() {
   if (!profile) {
     return (
       <main className="container cp">
-        {notice ? (
+        {notice?.type === 'error' ? (
           <Notice notice={notice} />
         ) : (
           <Loading text="Loading your profile…" />
