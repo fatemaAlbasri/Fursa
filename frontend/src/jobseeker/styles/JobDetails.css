@@ -742,14 +742,6 @@ img.jd-logo {
   font-weight: 700;
   color: var(--white);
 }
-.jd-sent__status {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(142, 209, 209, 0.2);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
-}
 .jd-sent__text {
   font-size: 14px;
   line-height: 1.5;
@@ -844,4 +836,77 @@ img.jd-logo {
 }
 .jd-ring--muted .jd-ring__value {
   color: #b42318;
+}
+
+/* Applied box, tidier: tick + title + status in one row, full-width button */
+.jd-sent {
+  align-items: stretch;
+  gap: 16px;
+}
+.jd-sent__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.jd-sent__icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.jd-sent__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.jd-sent__title {
+  display: block;
+  font-size: 19px;
+  line-height: 1.25;
+}
+.jd-sent__state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: #b9e4e4;
+}
+/* status colours, light on the navy box */
+.jd-sent__pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(142, 209, 209, 0.18);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.jd-sent__pill--shortlisted {
+  background: rgba(125, 211, 252, 0.18);
+  color: #7dd3fc;
+}
+.jd-sent__pill--interview {
+  background: rgba(196, 181, 253, 0.2);
+  color: #c4b5fd;
+}
+.jd-sent__pill--accepted {
+  background: rgba(110, 231, 183, 0.2);
+  color: #6ee7b7;
+}
+.jd-sent__pill--rejected {
+  background: rgba(253, 164, 175, 0.2);
+  color: #fda4af;
+}
+.jd-sent__text {
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.jd-sent__btn {
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+}
+.jd-sent__btn span {
+  transition: transform 0.2s ease;
+}
+.jd-sent__btn:hover span {
+  transform: translateX(3px);
 }

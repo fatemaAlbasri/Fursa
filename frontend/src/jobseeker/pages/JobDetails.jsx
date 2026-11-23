@@ -495,7 +495,9 @@ export default function JobDetails({ preview = false }) {
         {/* ---------- Right: apply + company ---------- */}
         <aside className="jd-side">
           <section className="jd-card jd-apply">
-            <h2 className="jd-card__title">Apply for this job</h2>
+            {(preview || !me?.application_status) && (
+              <h2 className="jd-card__title">Apply for this job</h2>
+            )}
 
             {preview ? (
               // preview: show what a seeker sees, but the button does nothing
@@ -519,15 +521,22 @@ export default function JobDetails({ preview = false }) {
             ) : me?.application_status ? (
               // applied (just now, or before) → where to follow it
               <div className="jd-sent">
-                <span className="jd-sent__icon">
-                  <CheckIcon />
-                </span>
-                <h3 className="jd-sent__title">
-                  {justApplied ? 'Application sent' : 'You applied'}
-                  {!justApplied && (
-                    <span className="jd-sent__status">{capitalize(me.application_status)}</span>
-                  )}
-                </h3>
+                <div className="jd-sent__head">
+                  <span className="jd-sent__icon">
+                    <CheckIcon />
+                  </span>
+                  <div>
+                    <h2 className="jd-sent__title">
+                      {justApplied ? 'Application sent' : 'You applied'}
+                    </h2>
+                    <p className="jd-sent__state">
+                      Status
+                      <span className={`jd-sent__pill jd-sent__pill--${me.application_status}`}>
+                        {capitalize(me.application_status)}
+                      </span>
+                    </p>
+                  </div>
+                </div>
                 <p className="jd-sent__text">
                   {job.company_name} will see your CV. We will notify you when your status changes.
                 </p>
@@ -540,6 +549,7 @@ export default function JobDetails({ preview = false }) {
                   className="jd-sent__btn"
                 >
                   Track in My applications
+                  <span aria-hidden="true">→</span>
                 </Link>
               </div>
             ) : (
