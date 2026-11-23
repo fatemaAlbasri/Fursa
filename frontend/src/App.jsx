@@ -21,11 +21,9 @@ import CompanyLayout from './company/CompanyLayout.jsx'
 import CompanyJobs from './company/pages/CompanyJobs.jsx'
 import PostJob from './company/pages/PostJob.jsx'
 import JobView from './company/pages/JobView.jsx'
-import RejectApplicants from './company/pages/RejectApplicants.jsx'
 import Applicants from './company/pages/Applicants.jsx'
 import ApplicantView from './company/pages/ApplicantView.jsx'
 import CompanyProfile from './company/pages/CompanyProfile.jsx'
-import DeleteAccount from './company/pages/DeleteAccount.jsx'
 import Plans from './company/pages/Plans.jsx'
 import Payment from './company/pages/Payment.jsx'
 
@@ -93,7 +91,8 @@ export default function App() {
           path="/company/change-password"
           element={<ChangePassword role="company" />}
         />
-        <Route path="/company/delete-account" element={<DeleteAccount />} />
+        {/* deleting the account is now a pop-up on the profile */}
+        <Route path="/company/delete-account" element={<Navigate to="/company/profile" replace />} />
       </Route>
       <Route
         element={<Layout tag="Employer" right={back('/company/profile')} />}
@@ -146,7 +145,8 @@ export default function App() {
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView editing />} />
         <Route path="jobs/:id/preview" element={<JobDetails preview />} />
-        <Route path="jobs/:id/reject" element={<RejectApplicants />} />
+        {/* bulk reject pop-up on the Applicants page */}
+        <Route path="jobs/:id/reject" element={<Navigate to="/company/applicants" replace />} />
         {/* one applicant: :id = job id, :appId = application id */}
         <Route path="jobs/:id/applicants/:appId" element={<ApplicantView />} />
         <Route path="applicants" element={<Applicants />} />
