@@ -39,8 +39,8 @@ function MarkTag({ list, onJump }) {
 }
 
 // "Your CV": the CV text with the lines that have a suggestion marked, and the layout suggestion on top.
-// action = optional button in the header (the optimizer page puts "Download PDF" there)
-export default function CvPreview({ review, onJump, action }) {
+// action = optional button in the header ("Download PDF"); title / sub replace the header text (the Advanced report)
+export default function CvPreview({ review, onJump, action, title = 'Your CV', sub }) {
   const view = useMemo(() => buildCvView(review.cvText, review.suggestions), [review.cvText, review.suggestions])
   const byId = useMemo(() => new Map(review.suggestions.map((s) => [s.id, s])), [review.suggestions])
   const layout = review.suggestions.find((s) => s.section === 'layout' && s.beforeText)
@@ -49,9 +49,9 @@ export default function CvPreview({ review, onJump, action }) {
     <section className="cvo-card cvo-cv">
       <header className="cvo-cv__head">
         <div className="cvo-cv__titles">
-          <h2 className="cvo-card__title">Your CV</h2>
+          <h2 className="cvo-card__title">{title}</h2>
           <span className="cvo-cv__file">
-            {review.resume.fileName} · reviewed {formatDay(review.createdAt)}
+            {sub ?? `${review.resume.fileName} · reviewed ${formatDay(review.createdAt)}`}
           </span>
         </div>
         {action}
@@ -67,7 +67,8 @@ export default function CvPreview({ review, onJump, action }) {
           {layout && markState([layout]) !== 'plain' && (
             <div className={`cvo-mark cvo-mark--${markState([layout])} cvo-mark--layout`}>
               <span className="cvo-mark__text">
-                Section order: <strong>{layout.beforeText}</strong>
+                Section order:{' '}
+                <strong>{markState([layout]) === 'accepted' ? layout.afterText : layout.beforeText}</strong>
               </span>
               <MarkTag list={[layout]} onJump={onJump} />
             </div>
@@ -97,10 +98,12 @@ export default function CvPreview({ review, onJump, action }) {
                 </p>
               ))
             }
+            // once accepted, the line shows the new wording (as it will be in the PDF)
+            const lines = state === 'accepted' ? list.map((s) => s.afterText) : item.lines
             return (
               <div key={i} className={`cvo-mark cvo-mark--${state}`}>
                 <span className="cvo-mark__text">
-                  {item.lines.map((line, j) => (
+                  {lines.map((line, j) => (
                     <span key={j} className="cvo-mark__line">
                       {line}
                     </span>
@@ -122,9 +125,11 @@ export default function CvPreview({ review, onJump, action }) {
         <span className="cvo-legend__item">
           <span className="cvo-legend__swatch cvo-legend__swatch--accepted" /> Accepted
         </span>
-        <span className="cvo-legend__item">
-          <LockIcon /> In the Advanced report
-        </span>
+        {!review.isAdvanced && (
+          <span className="cvo-legend__item">
+            <LockIcon /> In the Advanced report
+          </span>
+        )}
       </footer>
     </section>
   )

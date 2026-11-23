@@ -4,11 +4,6 @@
    index.css loads after this file and would win otherwise. */
 
 .container.cvo {
-  --cvo-hero: #1b3d58;
-  --cvo-hero-soft: rgba(255, 255, 255, 0.08);
-  --cvo-weak: #f26b5b;
-  --cvo-fair: #f5a524;
-  --cvo-good: #3cc98a;
   --cvo-red: #c0392b;
   --cvo-red-bg: #fdeceb;
   --cvo-green: #15803d;
@@ -81,20 +76,6 @@
   color: var(--white);
 }
 
-/* Score colours (text, rings): weak / fair / good, same bands as the backend report */
-.cvo-tone--weak {
-  --tone: var(--cvo-weak);
-  color: var(--cvo-weak);
-}
-.cvo-tone--fair {
-  --tone: var(--cvo-fair);
-  color: var(--cvo-fair);
-}
-.cvo-tone--good {
-  --tone: var(--cvo-good);
-  color: var(--cvo-good);
-}
-
 /* ---------- Buttons ---------- */
 .btn.cvo-btn-accent {
   background: var(--accent);
@@ -104,14 +85,7 @@
 .btn.cvo-btn-accent:hover {
   background: #a5dcdc;
 }
-.btn.cvo-btn-outline {
-  background: var(--white);
-  color: var(--teal);
-  border-color: var(--teal);
-}
-.btn.cvo-btn-outline:hover {
-  background: var(--light);
-}
+
 .btn.cvo-btn-quiet {
   background: var(--white);
   color: var(--navy);
@@ -247,53 +221,6 @@
   white-space: nowrap;
 }
 
-/* ---------- Navy score panel ---------- */
-.cvo-hero {
-  background: var(--cvo-hero);
-  color: var(--white);
-  border-radius: 18px;
-  padding: 26px 28px;
-  display: flex;
-  align-items: center;
-  gap: 26px;
-}
-.cvo-ring {
-  --score: 0;
-  width: 104px;
-  height: 104px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(var(--tone) calc(var(--score) * 1%), rgba(255, 255, 255, 0.12) 0);
-}
-.cvo-ring__inner {
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: var(--cvo-hero);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-.cvo-ring__value {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--white);
-}
-.cvo-ring__max {
-  margin-top: 3px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-}
-.cvo-hero__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
 .cvo-steps {
   display: flex;
   align-items: center;
@@ -322,157 +249,6 @@
   font-weight: 700;
   align-self: flex-start;
   margin-top: 4px;
-}
-.cvo-hero__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding-top: 16px;
-}
-.cvo-hero__count {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.8);
-}
-.cvo-hero__count strong {
-  color: var(--white);
-}
-
-/* report: ring + "1 of 6 accepted" on the left, three score tiles on the right */
-.cvo-hero--report {
-  gap: 22px;
-}
-.cvo-hero__now {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-.cvo-hero__label {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.7);
-}
-.cvo-hero__big {
-  margin-top: 2px;
-  font-size: 18px;
-  font-weight: 800;
-}
-.cvo-tiles {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.cvo-tile {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-}
-.cvo-tile__label {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.75);
-}
-.cvo-tile__score {
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-.cvo-tile__note {
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* before a review: "Your CV is ready to review" / "Reviewing your CV…" */
-.cvo-hero--start {
-  align-items: flex-start;
-}
-.cvo-hero__badge {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: var(--teal);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.cvo-hero__badge svg {
-  width: 26px;
-  height: 26px;
-}
-.cvo-hero__badge--busy {
-  background: rgba(255, 255, 255, 0.08);
-}
-.cvo-hero__start {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-}
-.cvo-hero__title {
-  font-size: 22px;
-  font-weight: 800;
-}
-.cvo-hero__text {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 14.5px;
-  line-height: 1.5;
-}
-.cvo-hero__file {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  align-self: flex-start;
-  max-width: 100%;
-  background: var(--cvo-hero-soft);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-.cvo-hero__file svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-}
-.cvo-hero__perks {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 22px;
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.85);
-}
-.cvo-hero__perks li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.cvo-hero__perks svg {
-  width: 15px;
-  height: 15px;
-  color: var(--cvo-good);
-}
-.cvo-hero__error {
-  background: rgba(242, 107, 91, 0.16);
-  border: 1px solid rgba(242, 107, 91, 0.4);
-  color: #ffd9d4;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-.cvo-hero__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px 20px;
-  margin-top: 6px;
 }
 
 /* ---------- Loading / message cards ---------- */
@@ -506,18 +282,7 @@
 .cvo-state--error .cvo-state__title {
   color: var(--error);
 }
-.cvo-spinner {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 3px solid var(--light);
-  border-top-color: var(--teal);
-  animation: cvo-spin 0.8s linear infinite;
-}
-.cvo-spinner--light {
-  border-color: rgba(255, 255, 255, 0.2);
-  border-top-color: var(--accent);
-}
+
 @keyframes cvo-spin {
   to {
     transform: rotate(360deg);
@@ -531,30 +296,12 @@
   gap: 18px;
   align-items: start;
 }
-.cvo-cols--report {
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-}
+
 .cvo-col {
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-width: 0;
-}
-.cvo-col__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-.cvo-col__title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--navy);
-}
-.cvo-col__note {
-  font-size: 12px;
-  color: var(--slate);
 }
 
 /* ---------- Your CV ---------- */
@@ -978,29 +725,6 @@
   text-decoration: line-through;
 }
 
-/* NEXT STEP box (report) */
-.cvo-next {
-  background: var(--light);
-  border: 1px solid #c5e7e7;
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.cvo-next__label {
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #0f6b6d;
-}
-.cvo-next__text {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--navy);
-}
-
 /* ---------- Comparison ---------- */
 .cvo-compare {
   gap: 8px;
@@ -1059,13 +783,6 @@
   padding-top: 4px;
 }
 
-/* ---------- Report download buttons ---------- */
-.cvo-downloads {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
 /* ---------- Unlock dialog (inside ConfirmDialog's <p>) ---------- */
 .cvo-price {
   display: flex;
@@ -1101,16 +818,11 @@
 
 /* ---------- Smaller screens ---------- */
 @media (max-width: 960px) {
-  .cvo-cols,
-  .cvo-cols--report {
+  .cvo-cols {
     grid-template-columns: minmax(0, 1fr);
   }
   .cvo-missing--grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .cvo-hero--report {
-    flex-direction: column;
-    align-items: stretch;
   }
 }
 @media (max-width: 640px) {
@@ -1124,15 +836,7 @@
   .cvo-head {
     flex-wrap: wrap;
   }
-  .cvo-hero {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 20px;
-    gap: 18px;
-  }
-  .cvo-hero > .cvo-ring {
-    align-self: center;
-  }
+
   .cvo-steps {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1147,23 +851,7 @@
   .cvo-step__prefix {
     font-size: 0.7em;
   }
-  .cvo-hero__foot .btn {
-    width: 100%;
-  }
-  .cvo-tiles {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .cvo-tile {
-    flex-direction: row;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 2px 10px;
-  }
-  .cvo-tile__score {
-    order: -1;
-    font-size: 24px;
-  }
-  .cvo-downloads,
+
   .cvo-missing--grid,
   .cvo-diff {
     grid-template-columns: minmax(0, 1fr);
@@ -1173,15 +861,6 @@
   }
   .cvo-locked__row {
     grid-template-columns: 16px 78px minmax(0, 1fr);
-  }
-  .cvo-hero__actions .btn {
-    width: 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cvo-spinner {
-    animation-duration: 2s;
   }
 }
 
@@ -1327,6 +1006,37 @@
   border: 0;
   box-shadow: none;
   background: none;
+}
+
+/* Advanced report (wireframe 9): every rewrite in one card, split by a thin line */
+.cvo-rewrites {
+  gap: 18px;
+}
+.cvo-rewrites .cvo-sugg + .cvo-sugg {
+  padding-top: 18px;
+  border-top: 1px solid #eef2f5;
+}
+.cvo-rewrites .cvo-sugg {
+  scroll-margin-top: calc(var(--nav-h, 72px) + 24px);
+}
+/* "Show all 7 tips" on the left, "Upload a new CV →" on the right */
+.cvo-add__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* the comparison list starts right under the card's title line */
+.cvo-compare .cvo-compare__list {
+  margin-top: -6px;
+}
+.cvo-compare .cvo-compare__row:first-child {
+  border-top: 0;
+}
+/* the "Now" ring moves when you accept or undo a suggestion */
+.cvo-ring2__bar {
+  transition: stroke-dasharray 0.5s ease;
 }
 
 /* "5 more suggestions are in the Advanced report · Unlock →" */

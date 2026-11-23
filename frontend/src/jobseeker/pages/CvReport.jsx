@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Notice from '../../shared/components/Notice.jsx'
 import useCvReview from '../utils/useCvReview.js'
-import { formatBhd, formatFullDate, scoreTone, OPTIMIZER_PATH } from '../utils/cvFormat.js'
-import { PageHead, LoadingState, ErrorState } from '../components/cvOptimizer/PageParts.jsx'
-import ScoreRing from '../components/cvOptimizer/ScoreRing.jsx'
+import { formatBhd, formatFullDate, OPTIMIZER_PATH } from '../utils/cvFormat.js'
+import { PageHead, ErrorState } from '../components/cvOptimizer/PageParts.jsx'
+import { Panel, StrengthRing, Arrow, ReviewLoading } from '../components/cvOptimizer/StrengthParts.jsx'
+import CvPreview from '../components/cvOptimizer/CvPreview.jsx'
 import SuggestionCard from '../components/cvOptimizer/SuggestionCard.jsx'
 import MissingList from '../components/cvOptimizer/MissingList.jsx'
 import ComparisonList from '../components/cvOptimizer/ComparisonList.jsx'
@@ -12,18 +13,10 @@ import DownloadButton from '../components/cvOptimizer/DownloadButton.jsx'
 import UploadButton from '../components/cvOptimizer/UploadButton.jsx'
 import '../styles/CvOptimizer.css'
 
-// One score box in the navy panel: "Now 44 when reviewed"
-function Tile({ label, score, note }) {
-  return (
-    <div className="cvo-tile">
-      <span className="cvo-tile__label">{label}</span>
-      <span className={`cvo-tile__score cvo-tone--${scoreTone(score)}`}>{score}</span>
-      <span className="cvo-tile__note">{note}</span>
-    </div>
-  )
-}
+const MISSING_SHOWN = 4 // "Show all N tips" opens the rest
 
-// Advanced CV report: only for a review that has been unlocked; otherwise back to the optimizer page
+// Advanced CV report (wireframe 9): only for a review that has been unlocked; otherwise back to the optimizer page.
+// CV strength, every rewrite to accept or dismiss, what only the seeker can add, the improved CV and the comparison.
 export default function CvReport() {
   const cv = useCvReview()
   const { phase, review, user } = cv
@@ -33,6 +26,7 @@ export default function CvReport() {
   // Uploading a new CV from here: the optimizer page takes over once it's done, with the outcome message
   const [leaving, setLeaving] = useState(false)
   const leavingRef = useRef(false)
+  const [allMissing, setAllMissing] = useState(false)
 
   // Opened from a line's "1 suggestion →" on the optimizer page: scroll to that card
   const ready = phase === 'ready' && review?.isAdvanced
@@ -52,8 +46,8 @@ export default function CvReport() {
   if (phase === 'loading' || leaving) {
     return (
       <main className="container cvo">
-        <PageHead title="Advanced CV report" sub={back} />
-        <LoadingState text={leaving ? 'Uploading your new CV…' : 'Loading your report…'} />
+        <PageHead title="Advanced CV report" sub={back} badge="Advanced" />
+        <ReviewLoading label={leaving ? 'Uploading your new CV' : 'Loading your report'} />
       </main>
     )
   }
@@ -97,87 +91,106 @@ export default function CvReport() {
     else setNotice(next)
   }
 
+  const total = review.suggestions.length
+  const missing = allMissing ? review.missing : review.missing.slice(0, MISSING_SHOWN)
+  // a line's "1 suggestion →" in the CV: its card is on this page
+  const jumpTo = (id) => document.getElementById(`cvo-s-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
   return (
     <main className="container cvo">
       <PageHead title="Advanced CV report" sub={sub} badge="Advanced" />
       {noticeBar}
 
-      {/* ---------- Scores ---------- */}
-      <section className="cvo-hero cvo-hero--report">
-        <div className="cvo-hero__now">
-          <ScoreRing score={review.currentScore} />
-          <div>
-            <p className="cvo-hero__label">Your score now</p>
-            <p className="cvo-hero__big">
-              {accepted} of {review.suggestions.length} accepted
-            </p>
-          </div>
-        </div>
-        <div className="cvo-tiles">
-          <Tile label="Now" score={review.strengthScore} note="when reviewed" />
-          <Tile label="After the rewrites" score={review.potentialScore} note="if you accept all" />
-          <Tile label="Up to" score={review.reachableScore} note="if you add what's missing" />
-        </div>
-      </section>
-
-      <div className="cvo-downloads">
-        <DownloadButton path="/cv/optimizer/report" fileName="cv-report.pdf" className="btn btn--primary btn--block">
-          Download full report (PDF)
-        </DownloadButton>
-        <DownloadButton
-          path="/cv/optimizer/improved-cv"
-          fileName="improved-cv.pdf"
-          className="btn btn--block cvo-btn-outline"
-        >
-          Download improved CV (PDF)
-        </DownloadButton>
-      </div>
-
-      <div className="cvo-cols cvo-cols--report">
-        {/* ---------- Rewrites ---------- */}
-        <section className="cvo-col">
-          <header className="cvo-col__head">
-            <h2 className="cvo-col__title">Section-by-section rewrite</h2>
-            <span className="cvo-col__note">Uses only what is already in your CV</span>
-          </header>
-          {review.suggestions.length > 0 ? (
-            review.suggestions.map((s) => (
-              <SuggestionCard
-                key={s.id}
-                suggestion={s}
-                busy={cv.saving}
-                saving={cv.busyId === s.id}
-                onDecide={cv.decide}
-              />
-            ))
-          ) : (
-            <div className="cvo-card">
-              <p className="cvo-muted">No rewrites needed: your CV is already well worded.</p>
-            </div>
+      {/* ---------- CV strength: now → if you accept all → if you add what's missing ---------- */}
+      <Panel
+        title="Your CV strength"
+        sub={`${accepted} of ${total} ${total === 1 ? 'suggestion' : 'suggestions'} accepted · your score updates as you decide`}
+        action={
+          <DownloadButton path="/cv/optimizer/report" fileName="cv-report.pdf" className="btn btn--primary">
+            Download full report (PDF)
+          </DownloadButton>
+        }
+        aria-label="CV score"
+      >
+        <div className="cvo-rings">
+          <StrengthRing score={review.currentScore} label="Now" />
+          <Arrow />
+          <StrengthRing score={review.potentialScore} label="If you accept all" sub="possible" faded />
+          {review.reachableScore !== review.potentialScore && (
+            <>
+              <Arrow />
+              <StrengthRing score={review.reachableScore} label="If you add what's missing" sub="possible" faded />
+            </>
           )}
-        </section>
+        </div>
+      </Panel>
 
-        {/* ---------- What to add + comparison ---------- */}
-        <aside className="cvo-col">
+      <div className="cvo-cols cvo-cols--opt">
+        {/* ---------- Left: every rewrite, then what only you can add ---------- */}
+        <div className="cvo-col">
+          <Panel
+            title="Section-by-section rewrite"
+            sub="Uses only what is already in your CV · accept or dismiss each one"
+            className="cvo-rewrites"
+          >
+            {total > 0 ? (
+              review.suggestions.map((s) => (
+                <SuggestionCard
+                  key={s.id}
+                  suggestion={s}
+                  plain
+                  busy={cv.saving}
+                  saving={cv.busyId === s.id}
+                  onDecide={cv.decide}
+                />
+              ))
+            ) : (
+              <p className="cvo-muted">No rewrites needed: your CV is already well worded.</p>
+            )}
+          </Panel>
+
           {review.missing.length > 0 && (
-            <section className="cvo-card cvo-add">
-              <h2 className="cvo-card__title">What only you can add</h2>
-              <p className="cvo-muted">
-                We never invent facts. Add these to your CV if they are true, then upload it again to get a new score.
-              </p>
-              <MissingList key={review.id} reviewId={review.id} items={review.missing} variant="list" />
-              <div className="cvo-next">
-                <span className="cvo-next__label">Next step</span>
-                <p className="cvo-next__text">
-                  Add the items above that are true for you, then upload your CV again (up to {review.reachableScore}{' '}
-                  / 100).
-                </p>
+            <Panel
+              title="What only you can add"
+              sub="We never invent facts. Add these if they are true, then upload your CV again."
+              action={<span className="cvo-add__goal">Up to {review.reachableScore} / 100</span>}
+              className="cvo-add"
+            >
+              <MissingList key={review.id} reviewId={review.id} items={missing} variant="list" />
+              <div className="cvo-add__foot">
+                {review.missing.length > MISSING_SHOWN ? (
+                  <button type="button" className="cvo-link" onClick={() => setAllMissing(!allMissing)}>
+                    {allMissing ? 'Show less' : `Show all ${review.missing.length} tips`}
+                  </button>
+                ) : (
+                  <span />
+                )}
                 <UploadButton onUpload={uploadNew} onNotice={showUploadNotice} className="cvo-link">
                   Upload a new CV →
                 </UploadButton>
               </div>
-            </section>
+            </Panel>
           )}
+        </div>
+
+        {/* ---------- Right: the improved CV, how it compares, the receipt ---------- */}
+        <div className="cvo-col">
+          <CvPreview
+            review={review}
+            onJump={jumpTo}
+            title="Your improved CV"
+            sub="Updates as you accept suggestions"
+            action={
+              <DownloadButton
+                path="/cv/optimizer/improved-cv"
+                fileName="improved-cv.pdf"
+                className="cvo-dl"
+                title="Includes only the suggestions you accepted"
+              >
+                Download PDF
+              </DownloadButton>
+            }
+          />
 
           {review.comparison && <ComparisonList comparison={review.comparison} major={review.major} />}
 
@@ -187,7 +200,7 @@ export default function CvReport() {
               {review.payment.isSimulated && ' · simulated'}
             </p>
           )}
-        </aside>
+        </div>
       </div>
     </main>
   )

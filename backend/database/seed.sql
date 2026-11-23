@@ -54,7 +54,7 @@ INSERT INTO seeker_skills (seeker_id, skill_id) VALUES
 -- ---------- Resumes (Fatima has an old CV and a current one) ----------
 INSERT INTO resumes (id, seeker_id, file_name, file_url, parsed_text, parsed_experience, parsed_languages, is_current, uploaded_at) VALUES
  (1, 6,  'fatima_cv_old.pdf', '/uploads/cv/1.pdf', 'IT graduate looking for a job.', 'None stated', 'English, Arabic', false, '2026-09-20'),
- (2, 6,  'my_cv.pdf',         '/uploads/cv/2.pdf', 'IT graduate looking for a job. Made a website for my senior project.', '6-month internship', 'English, Arabic', true, '2026-10-08'),
+ (2, 6,  'my_cv.pdf',         '/uploads/cv/2.pdf', E'Fatima Ali\nfatima@example.com | +973 3300 0001 | Manama, Bahrain\nIT graduate looking for a job.\n\nEducation\nBSc Computer Science, University of Bahrain\n\nProjects\nMade a website for my senior project.\n\nSkills\nJS, react, databases\n\nHobbies\nReading, football', '6-month internship', 'English, Arabic', true, '2026-10-08'),
  (3, 7,  'noor_cv.pdf',       '/uploads/cv/3.pdf', 'Computer Science graduate ...', '1-year internship', 'English, Arabic', true, '2026-10-01'),
  (4, 8,  'zainab_cv.pdf',     '/uploads/cv/4.pdf', 'IT student ...', 'None stated', 'English', true, '2026-10-02'),
  (5, 9,  'ali_cv.pdf',        '/uploads/cv/5.pdf', 'Computer Engineering graduate ...', '3-month internship', 'English, Arabic', true, '2026-09-25'),
@@ -168,7 +168,7 @@ INSERT INTO cv_suggestions (review_id, section, before_text, after_text, reason,
  (1,'projects', 'Made a website for my senior project.', 'Built the React frontend for my senior project and connected it to a PostgreSQL database.', 'Shows the tools you used. Uses only what you already did.', 5, false, 'pending'),
  (1,'skills',   'JS, react, databases', 'JavaScript · React · SQL (PostgreSQL)', 'Full skill names are recognised by employers and by Fursa matching.', 2, false, 'pending'),
  (1,'education','BSc Computer Science, University of Bahrain', 'BSc Computer Science, University of Bahrain (2026) · Courses: Web Development, Database Systems', 'Courses show your skills when you have little work experience.', 1, false, 'pending'),
- (1,'layout',   'Education → Hobbies → Projects → Skills', 'Summary → Projects → Skills → Education', 'Puts your strongest section first.', 1, false, 'dismissed');
+ (1,'layout',   'Education → Projects → Skills', 'Projects → Skills → Education', 'Puts your strongest section first.', 1, false, 'dismissed');
 
 -- ---------- Notifications ----------
 INSERT INTO notifications (user_id, application_id, job_id, type, title, message, is_read, created_at) VALUES
