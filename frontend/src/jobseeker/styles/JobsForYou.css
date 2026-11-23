@@ -1248,3 +1248,140 @@ img.jfy-logo {
     transition: none;
   }
 }
+
+/* phone: score ring at the top right, next to the job title, button full width underneath */
+@media (max-width: 640px) {
+  .jfy-match {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'logo info ring'
+      'btn btn btn';
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 14px;
+  }
+  .jfy-match > .jfy-logo {
+    grid-area: logo;
+  }
+  .jfy-match__info {
+    grid-area: info;
+  }
+  .jfy-match__end {
+    display: contents; /* its ring and button go into the grid above */
+  }
+  .jfy-match__end .jfy-ring,
+  .jfy-match__end .sk--ring {
+    grid-area: ring;
+  }
+  .jfy-match__end .btn,
+  .jfy-match__end .sk--btn {
+    grid-area: btn;
+    width: 100%;
+  }
+  .jfy-match .jfy-ring,
+  .jfy-match--row .jfy-ring {
+    width: 56px;
+    height: 56px;
+  }
+  .jfy-match .jfy-ring__value,
+  .jfy-match--row .jfy-ring__value {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0e6466;
+  }
+}
+
+/* ===== Job rows: title line + details, whole row opens the job ===== */
+.jfy-match__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.jfy-match__details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Company · Manama · Hybrid · Deadline 1 Dec 2026
+   Every part starts with a dot; the list is pulled left by one dot and the box clips it,
+   so the dot at the start of each line is hidden, only the dots between parts show. */
+.jfy-meta {
+  overflow: hidden;
+  font-size: 14px;
+  color: var(--slate);
+}
+.jfy-meta__items {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 2px;
+  margin-left: -16px;
+}
+.jfy-meta__items > * {
+  white-space: nowrap; /* "1 Dec 2026" never breaks in the middle */
+}
+.jfy-meta__items > *::before {
+  content: '·';
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  color: #9fb0bf;
+}
+
+.jfy-match {
+  position: relative;
+  cursor: pointer;
+}
+.jfy-match--loading {
+  cursor: default;
+}
+.jfy-match__link {
+  color: inherit;
+}
+/* the title link stretches over the whole row */
+.jfy-match__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.jfy-match__link:focus-visible {
+  outline: none;
+}
+.jfy-match__link:focus-visible::after {
+  box-shadow: 0 0 0 3px var(--focus);
+}
+/* company link and the button sit above it, so they still go to their own page */
+.jfy-match__company,
+.jfy-match__end .btn {
+  position: relative;
+  z-index: 1;
+}
+.jfy-match:not(.jfy-match--loading):hover .jfy-card__title {
+  color: var(--teal);
+}
+.jfy-card__title {
+  transition: color 0.15s;
+}
+
+/* phone: logo · title · ring on top, the details full width under them, button last */
+@media (max-width: 640px) {
+  .jfy-match {
+    grid-template-areas:
+      'logo head ring'
+      'details details details'
+      'btn btn btn';
+    align-items: center;
+    row-gap: 12px;
+  }
+  .jfy-match__info {
+    display: contents;
+  }
+  .jfy-match__head {
+    grid-area: head;
+  }
+  .jfy-match__details {
+    grid-area: details;
+  }
+}

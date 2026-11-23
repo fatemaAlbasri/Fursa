@@ -5,9 +5,11 @@ import CompanyLogo from './CompanyLogo.jsx'
 // One job as a wide row, two kinds:
 //   JobMatchRow = Jobs for you (Top 10): tags + why it matches, ring + "View & apply"
 //   JobRow      = All jobs: Top 10 / Applied badges, what's missing, ring + "View job"
-// index staggers the fade-in a little, job by job.
+// The whole row opens the job (the title link covers the row); the company name and the
+// button still work on their own. index staggers the fade-in a little, job by job.
 
 const fadeIn = (index) => ({ animationDelay: `${Math.min(index, 8) * 40}ms` })
+const jobPath = (job) => `/jobseeker/jobs/${job.id}`
 
 // The signed-in seeker's match for this job (match_score from GET /api/jobs).
 // null = not scored yet → no ring; 0 is a real score and is shown.
@@ -43,11 +45,33 @@ const TypeTag = ({ job }) => (
   </span>
 )
 
-const CompanyLink = ({ job }) => (
-  <Link to={`/jobseeker/companies/${job.company_id}`} className="jfy-match__company">
-    {job.company_name}
-  </Link>
+// title = link to the job; its ::after stretches over the whole row (see .jfy-match__link)
+const Title = ({ job }) => (
+  <h3 className="jfy-card__title">
+    <Link to={jobPath(job)} className="jfy-match__link">
+      {job.title}
+    </Link>
+  </h3>
 )
+
+// "Company · Manama · Hybrid · Deadline 1 Dec" — each part stays on one line when it wraps,
+// and the dot at the start of a wrapped line is hidden (see .jfy-meta in the CSS)
+function Meta({ job, withMode }) {
+  return (
+    <p className="jfy-meta">
+      <span className="jfy-meta__items">
+        <span>
+          <Link to={`/jobseeker/companies/${job.company_id}`} className="jfy-match__company">
+            {job.company_name}
+          </Link>
+        </span>
+        <span>{job.location}</span>
+        {withMode && <span>{formatWorkMode(job.work_mode)}</span>}
+        <span>Deadline {formatDeadline(job.deadline)}</span>
+      </span>
+    </p>
+  )
+}
 
 // Top 10: why it matches, e.g. "Matches 2 of 3 skills · Missing: CSS"
 function MatchWhy({ job }) {
@@ -105,22 +129,21 @@ export function JobRow({ job, index }) {
     <article className="jfy-match jfy-match--row" style={fadeIn(index)}>
       <CompanyLogo job={job} className="jfy-logo" />
       <div className="jfy-match__info">
-        <div className="jfy-row__title">
-          <h3 className="jfy-card__title">{job.title}</h3>
+        <div className="jfy-match__head">
+          <Title job={job} />
           <Badges job={job} />
         </div>
-        <p className="jfy-card__company">
-          <CompanyLink job={job} /> · {job.location} · {formatWorkMode(job.work_mode)} · Deadline{' '}
-          {formatDeadline(job.deadline)}
-        </p>
-        <div className="jfy-tags">
-          <TypeTag job={job} />
-          <MatchNote job={job} />
+        <div className="jfy-match__details">
+          <Meta job={job} withMode />
+          <div className="jfy-tags">
+            <TypeTag job={job} />
+            <MatchNote job={job} />
+          </div>
         </div>
       </div>
       <div className="jfy-match__end">
         <MatchRing score={job.match_score} muted={notQualified} />
-        <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--outline jfy-row__btn">
+        <Link to={jobPath(job)} className="btn btn--outline jfy-row__btn">
           View job
         </Link>
       </div>
@@ -133,21 +156,21 @@ export function JobMatchRow({ job, index }) {
     <article className="jfy-match" style={fadeIn(index)}>
       <CompanyLogo job={job} className="jfy-logo jfy-match__logo" />
       <div className="jfy-match__info">
-        <div>
-          <h3 className="jfy-card__title">{job.title}</h3>
-          <p className="jfy-card__company">
-            <CompanyLink job={job} /> · {job.location} · Deadline {formatDeadline(job.deadline)}
-          </p>
+        <div className="jfy-match__head">
+          <Title job={job} />
         </div>
-        <div className="jfy-tags">
-          <TypeTag job={job} />
-          <span className="jfy-tag jfy-tag--mode">{formatWorkMode(job.work_mode)}</span>
-          <MatchWhy job={job} />
+        <div className="jfy-match__details">
+          <Meta job={job} />
+          <div className="jfy-tags">
+            <TypeTag job={job} />
+            <span className="jfy-tag jfy-tag--mode">{formatWorkMode(job.work_mode)}</span>
+            <MatchWhy job={job} />
+          </div>
         </div>
       </div>
       <div className="jfy-match__end">
         <MatchRing score={job.match_score} />
-        <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--primary jfy-match__btn">
+        <Link to={jobPath(job)} className="btn btn--primary jfy-match__btn">
           View &amp; apply
         </Link>
       </div>
@@ -155,20 +178,24 @@ export function JobMatchRow({ job, index }) {
   )
 }
 
-// Grey placeholder rows in the same shape, while the jobs load (wireframe 23 · Loading a list)
+// Grey placeholder rows in the same shape, while the jobs load 
 export function JobMatchRowsLoading({ count = 4 }) {
   return (
     <div className="jfy-match-list" role="status" aria-label="Loading jobs">
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="jfy-match jfy-match--loading" aria-hidden="true">
-          <span className="sk jfy-match__logo" />
+          <span className="sk jfy-logo jfy-match__logo" />
           <div className="jfy-match__info">
-            <span className="sk sk--line" style={{ width: '55%' }} />
-            <span className="sk sk--line sk--thin" style={{ width: '40%' }} />
-            <div className="jfy-tags">
-              <span className="sk sk--pill" />
-              <span className="sk sk--pill" />
-              <span className="sk sk--line sk--thin" style={{ width: '30%' }} />
+            <div className="jfy-match__head">
+              <span className="sk sk--line" style={{ width: '55%' }} />
+            </div>
+            <div className="jfy-match__details">
+              <span className="sk sk--line sk--thin" style={{ width: '40%' }} />
+              <div className="jfy-tags">
+                <span className="sk sk--pill" />
+                <span className="sk sk--pill" />
+                <span className="sk sk--line sk--thin" style={{ width: '30%' }} />
+              </div>
             </div>
           </div>
           <div className="jfy-match__end">
