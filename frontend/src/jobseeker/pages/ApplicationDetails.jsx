@@ -287,6 +287,57 @@ function SentCard({ application }) {
   )
 }
 
+// Grey shapes in the same layout as the page while it loads
+// The same for every status: header, timeline, the status card and What you sent.
+function DetailsLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  return (
+    <div className="ad-loading" role="status" aria-label="Loading application">
+      <section className="ad-card ad-header" aria-hidden="true">
+        <span className="sk ad-logo" />
+        <div className="ad-header__text ad-loading__text">
+          {line('45%')}
+          {line('70%', true)}
+        </div>
+        <span className="ad-header__status">
+          <span className="sk sk--pill" />
+        </span>
+      </section>
+      <div className="ad-layout" aria-hidden="true">
+        <section className="ad-card ad-loading__text">
+          {line(90)}
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="ad-loading__step">
+              <span className="sk ad-sk-dot" />
+              <div className="ad-loading__text">
+                {line(110)}
+                {line(70, true)}
+              </div>
+            </div>
+          ))}
+        </section>
+        <div className="ad-side">
+          <section className="ad-card ad-loading__text">
+            {line(150)}
+            {line('90%', true)}
+            {line('75%', true)}
+            <div className="ad-loading__boxes">
+              <span className="sk ad-sk-box" />
+              <span className="sk ad-sk-box" />
+            </div>
+            <span className="sk sk--btn" />
+          </section>
+          <section className="ad-card ad-loading__text">
+            {line(120)}
+            <span className="sk ad-sk-file" />
+            {line(110, true)}
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ApplicationDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -373,10 +424,7 @@ export default function ApplicationDetails() {
     return (
       <main className="container ad">
         {backLink}
-        <div className="ad-state" role="status">
-          <span className="ad-spinner" aria-hidden="true" />
-          Loading application…
-        </div>
+        <DetailsLoading />
       </main>
     )
   }
