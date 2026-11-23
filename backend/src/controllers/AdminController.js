@@ -332,4 +332,74 @@ const getCompanies = async (req, res, next) => {
     next(err)
   }
 }
-module.exports = { getOverview, getSeekers, getCompanies }
+
+// Every posted job (drafts hidden), filtered by search ($1)
+// active = open and deadline not passed, closed = closed by hand or expired
+const JOBS_CTE = `
+  WITH jb AS (
+    SELECT j.id, j.title, j.job_type, j.created_at, j.deadline,
+           co.id AS company_id, co.name AS company_name, co.logo_url AS company_logo,
+           CASE WHEN j.status = 'open' AND j.deadline >= CURRENT_DATE
+                THEN 'active' ELSE 'closed' END AS status,
+           (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) AS applicants
+      FROM jobs j
+      JOIN companies co ON co.id = j.company_id
+     WHERE j.status <> 'draft'
+       AND ($1::text IS NULL OR (j.title || ' ' || co.name) ILIKE $1)
+  )
+`
+
+const JOB_TABS = ['all', 'active', 'closed']
+
+// GET /api/admin/jobs?status=all|active|closed&q=&page=
+const getJobs = async (req, res, next) => {
+  try {
+    const status = JOB_TABS.includes(req.query.status) ? req.query.status : 'all'
+    const search = readSearch(req)
+    const page = readPage(req)
+
+    const [tabs, list] = await Promise.all([
+      // 1) Count per tab (follows the search)
+      db.query(`${JOBS_CTE}
+        SELECT COUNT(*) AS all,
+               COUNT(*) FILTER (WHERE status = 'active') AS active,
+               COUNT(*) FILTER (WHERE status = 'closed') AS closed
+          FROM jb
+      `, [search]),
+
+      // 2) One page of rows for the chosen tab
+      db.query(`${JOBS_CTE}
+        SELECT * FROM jb
+         WHERE $2 = 'all' OR status = $2
+         ORDER BY created_at DESC
+         LIMIT $3 OFFSET $4
+      `, [search, status, PAGE_SIZE, (page - 1) * PAGE_SIZE])
+    ])
+
+    const t = tabs.rows[0]
+    const counts = { all: num(t.all), active: num(t.active), closed: num(t.closed) }
+    const total = counts[status]
+
+    res.json({
+      tabs: counts,
+      jobs: list.rows.map((j) => ({
+        id: j.id,
+        title: j.title,
+        company: { id: j.company_id, name: j.company_name, logo_url: j.company_logo },
+        job_type: j.job_type,
+        applicants: num(j.applicants),
+        posted: j.created_at,
+        deadline: j.deadline,
+        status: j.status
+      })),
+      page,
+      page_size: PAGE_SIZE,
+      total,
+      total_pages: Math.max(1, Math.ceil(total / PAGE_SIZE))
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+module.exports = { getOverview, getSeekers, getCompanies, getJobs }

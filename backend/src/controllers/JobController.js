@@ -154,6 +154,33 @@ const getCompanyOneJob = async (req, res, next) => {
 
 // Numbers for the stat boxes on the company "View job" page
 // applicants = everyone who applied, qualified = has every must-have (match_scores.is_qualified),
+
+// GET /api/admin/jobs/:id → view any posted job, open or closed (admin)
+const getAdminOneJob = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) {
+      return res.status(400).json({ error: 'Invalid job id' })
+    }
+
+    const { rows } = await db.query(
+      `${ONE_JOB_SELECT}
+        WHERE j.id = $1 AND j.status <> 'draft'`,
+      [jobId]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' })
+    }
+
+    const job = rows[0]
+    delete job.jd_embedding
+    job.stats = await jobStats(jobId)
+    res.json({ job })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // newCount = still 'applied' (not reviewed yet)
 const jobStats = async (jobId) => {
   const { rows } = await db.query(
@@ -1236,6 +1263,7 @@ module.exports = {
   getCompanyJobs,
   getOneJob,
   getCompanyOneJob,
+  getAdminOneJob,
   createJob,
   editJob,
   deleteJob,
