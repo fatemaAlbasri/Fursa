@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import Loading from '../../shared/components/Loading.jsx'
 import Notice from '../../shared/components/Notice.jsx'
 import { api } from '../../shared/api.js'
 import { formatJobType } from '../../shared/utils/jobFormat.js'
 import { formatBhd, formatCount } from '../utils/format.js'
+import { SkLine, StatsLoading } from '../components/AdminSkeleton.jsx'
 import '../styles/Admin.css'
 import '../styles/AdminOverview.css'
 
@@ -53,6 +53,51 @@ function Bar({ value, max, kind }) {
   )
 }
 
+// Grey shapes in the same layout as the overview, while it loads
+function OverviewLoading() {
+  const panelTitle = (
+    <div className="admin-sk-lines ov-sk-title">
+      <SkLine width="40%" />
+      <SkLine width="25%" thin />
+    </div>
+  )
+  return (
+    <div role="status" aria-label="Loading overview">
+      <StatsLoading />
+      <div className="ov-row ov-row--two" aria-hidden="true">
+        <section className="admin-panel">
+          {panelTitle}
+          <div className="ov-chart ov-chart--loading">
+            {[45, 60, 40, 70, 50, 85].map((h, i) => (
+              <span key={i} className="sk ov-sk-bar" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </section>
+        <section className="admin-panel">
+          {panelTitle}
+          <div className="admin-sk-lines">
+            {[90, 70, 55, 40, 65].map((w, i) => (
+              <SkLine key={i} width={`${w}%`} />
+            ))}
+          </div>
+        </section>
+      </div>
+      <div className="ov-row ov-row--three" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <section key={i} className="admin-panel">
+            {panelTitle}
+            <div className="admin-sk-lines">
+              {[80, 65, 75].map((w, n) => (
+                <SkLine key={n} width={`${w}%`} thin />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function AdminOverview() {
   const [period, setPeriod] = useState('month')
   const [data, setData] = useState(null)
@@ -72,8 +117,23 @@ export default function AdminOverview() {
     }
   }, [period])
 
+  const head = (
+    <div className="admin-head">
+      <div>
+        <h1>Overview</h1>
+        <p>How Fursa is doing</p>
+      </div>
+    </div>
+  )
+
+  // First load: title + grey shapes of the page (or the error)
   if (!data) {
-    return error ? <Notice notice={{ type: 'error', text: error }} /> : <Loading />
+    return (
+      <>
+        {head}
+        {error ? <Notice notice={{ type: 'error', text: error }} /> : <OverviewLoading />}
+      </>
+    )
   }
 
   const { revenue, revenue_breakdown: rev } = data
@@ -116,12 +176,7 @@ export default function AdminOverview() {
 
   return (
     <>
-      <div className="admin-head">
-        <div>
-          <h1>Overview</h1>
-          <p>How Fursa is doing</p>
-        </div>
-      </div>
+      {head}
 
       <Notice notice={error && { type: 'error', text: error }} />
 

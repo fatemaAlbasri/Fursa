@@ -1,5 +1,5 @@
-import Loading from '../../shared/components/Loading.jsx'
 import Notice from '../../shared/components/Notice.jsx'
+import { ListLoading } from '../components/AdminSkeleton.jsx'
 import ListToolbar from '../components/ListToolbar.jsx'
 import Pager from '../components/Pager.jsx'
 import useAdminList from '../utils/useAdminList.js'
@@ -16,8 +16,27 @@ export default function AdminSeekers() {
   const list = useAdminList('/admin/seekers', 'tab')
   const { data, error } = list
 
+  const head = (
+    <div className="admin-head">
+      <div>
+        <h1>Job seekers</h1>
+        <p>Everyone looking for a job on Fursa.</p>
+      </div>
+    </div>
+  )
+
+  // First load: title + grey shapes of the page (or the error)
   if (!data) {
-    return error ? <Notice notice={{ type: 'error', text: error }} /> : <Loading />
+    return (
+      <>
+        {head}
+        {error ? (
+          <Notice notice={{ type: 'error', text: error }} />
+        ) : (
+          <ListLoading label="Loading job seekers" tabs={3} columns={6} />
+        )}
+      </>
+    )
   }
 
   const c = data.cards
@@ -30,12 +49,7 @@ export default function AdminSeekers() {
 
   return (
     <>
-      <div className="admin-head">
-        <div>
-          <h1>Job seekers</h1>
-          <p>Everyone looking for a job on Fursa.</p>
-        </div>
-      </div>
+      {head}
 
       <Notice notice={error && { type: 'error', text: error }} />
 

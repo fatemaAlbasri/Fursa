@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import Loading from '../../shared/components/Loading.jsx'
 import Notice from '../../shared/components/Notice.jsx'
 import CompanyLogo from '../../jobseeker/components/CompanyLogo.jsx'
 import { api } from '../../shared/api.js'
@@ -13,8 +12,44 @@ import {
   splitLines
 } from '../../shared/utils/jobFormat.js'
 import { formatCount } from '../utils/format.js'
+import { SkLine, StatsLoading } from '../components/AdminSkeleton.jsx'
 import '../styles/Admin.css'
 import '../styles/AdminJobView.css'
+
+// Grey shapes in the same layout as the job page, while it loads
+function JobLoading() {
+  return (
+    <div role="status" aria-label="Loading job">
+      <section className="admin-panel aj-head" aria-hidden="true">
+        <span className="sk aj-head__logo" />
+        <div className="aj-head__text admin-sk-lines">
+          <SkLine width="45%" />
+          <SkLine width="30%" thin />
+        </div>
+        <span className="sk sk--pill" />
+      </section>
+      <StatsLoading count={3} className="aj-stats" />
+      <div className="aj-layout" aria-hidden="true">
+        <div className="aj-main">
+          {[0, 1].map((i) => (
+            <section key={i} className="admin-panel admin-sk-lines">
+              <SkLine width="30%" />
+              <SkLine width="95%" thin />
+              <SkLine width="85%" thin />
+              <SkLine width="60%" thin />
+            </section>
+          ))}
+        </div>
+        <aside className="admin-panel aj-side admin-sk-lines">
+          <SkLine width="45%" />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <SkLine key={i} width="100%" thin />
+          ))}
+        </aside>
+      </div>
+    </div>
+  )
+}
 
 // One job, open or closed, as the admin sees it (no apply button, no match score)
 export default function AdminJobView() {
@@ -52,7 +87,7 @@ export default function AdminJobView() {
     return (
       <>
         {backLink}
-        <Loading />
+        <JobLoading />
       </>
     )
   }

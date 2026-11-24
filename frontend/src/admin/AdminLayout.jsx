@@ -7,7 +7,6 @@ import {
   BriefcaseIcon,
   LogOutIcon
 } from '../shared/components/icons.jsx'
-import Loading from '../shared/components/Loading.jsx'
 import { api } from '../shared/api.js'
 import { userInitials } from '../shared/utils/jobFormat.js'
 import './styles/AdminLayout.css'
@@ -42,8 +41,6 @@ export default function AdminLayout() {
     navigate('/')
   }
 
-  if (!user) return <Loading />
-
   return (
     <div className="admin">
       <aside className="admin__side">
@@ -69,26 +66,27 @@ export default function AdminLayout() {
         </nav>
 
         <div className="admin__me">
-          <div className="admin__user">
-            <span className="admin__avatar">
-              {userInitials(user.first_name, user.last_name)}
-            </span>
-            <div>
-              <div className="admin__name">
-                {user.first_name} {user.last_name}
+          {user && (
+            <div className="admin__user">
+              <span className="admin__avatar">
+                {userInitials(user.first_name, user.last_name)}
+              </span>
+              <div>
+                <div className="admin__name">
+                  {user.first_name} {user.last_name}
+                </div>
+                <div className="admin__email">{user.email}</div>
               </div>
-              <div className="admin__email">{user.email}</div>
             </div>
-          </div>
+          )}
           <button type="button" className="admin__logout" onClick={logout}>
             <LogOutIcon /> Log out
           </button>
         </div>
       </aside>
 
-      <main className="admin__main">
-        <Outlet />
-      </main>
+      {/* the menu shows right away; the page waits until we know this is the admin */}
+      <main className="admin__main">{user && <Outlet />}</main>
     </div>
   )
 }

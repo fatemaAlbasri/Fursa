@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import Loading from '../../shared/components/Loading.jsx'
 import Notice from '../../shared/components/Notice.jsx'
 import CompanyLogo from '../../jobseeker/components/CompanyLogo.jsx'
 import { formatJobType } from '../../shared/utils/jobFormat.js'
+import { ListLoading } from '../components/AdminSkeleton.jsx'
 import ListToolbar from '../components/ListToolbar.jsx'
 import Pager from '../components/Pager.jsx'
 import useAdminList from '../utils/useAdminList.js'
@@ -28,18 +28,32 @@ export default function AdminJobs() {
   const list = useAdminList('/admin/jobs', 'status')
   const { data, error } = list
 
+  const head = (
+    <div className="admin-head">
+      <div>
+        <h1>Jobs</h1>
+        <p>Every job posted on Fursa.</p>
+      </div>
+    </div>
+  )
+
+  // First load: title + grey shapes of the page (or the error)
   if (!data) {
-    return error ? <Notice notice={{ type: 'error', text: error }} /> : <Loading />
+    return (
+      <>
+        {head}
+        {error ? (
+          <Notice notice={{ type: 'error', text: error }} />
+        ) : (
+          <ListLoading label="Loading jobs" stats={false} tabs={3} columns={7} />
+        )}
+      </>
+    )
   }
 
   return (
     <>
-      <div className="admin-head">
-        <div>
-          <h1>Jobs</h1>
-          <p>Every job posted on Fursa.</p>
-        </div>
-      </div>
+      {head}
 
       <Notice notice={error && { type: 'error', text: error }} />
 

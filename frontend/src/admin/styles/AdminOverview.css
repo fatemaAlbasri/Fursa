@@ -159,3 +159,14 @@
     grid-template-columns: 1fr;
   }
 }
+/* Loading shapes */
+.ov-sk-title {
+  margin-bottom: 18px;
+}
+.ov-chart--loading {
+  align-items: flex-end;
+}
+.sk.ov-sk-bar {
+  flex: 1;
+  border-radius: 6px 6px 0 0;
+}

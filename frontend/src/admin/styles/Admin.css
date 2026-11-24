@@ -396,3 +396,62 @@ img.admin-logo {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Loading: grey shapes (the .sk shapes are in JobsForYou.css) */
+.admin-sk-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-sk-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sk.admin-sk-tab {
+  width: 96px;
+  height: 36px;
+  border-radius: 999px;
+}
+.sk.admin-sk-search {
+  flex: 1 1 260px;
+  max-width: 420px;
+  height: var(--input-h);
+  border-radius: 999px;
+}
+.admin-sk-row {
+  display: grid;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gray);
+}
+.admin-sk-row--head {
+  background: var(--bg);
+  padding: 14px 20px;
+}
+.admin-sk-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-sk-who .admin-sk-lines {
+  flex: 1;
+  gap: 8px;
+}
+.sk.admin-sk-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+/* phone: only the name column, like a short list */
+@media (max-width: 700px) {
+  .admin-sk-row {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-sk-row > :nth-child(n + 2) {
+    display: none;
+  }
+}
