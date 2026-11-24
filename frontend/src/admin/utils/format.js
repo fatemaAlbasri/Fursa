@@ -17,3 +17,16 @@ export function formatShortDate(date) {
     ...(sameYear ? {} : { year: 'numeric' })
   })
 }
+
+// Same person/company always gets the same circle colour
+const AVATAR_COLORS = ['var(--teal)', 'var(--navy)', 'var(--slate)', 'var(--teal-hover)']
+export const avatarColor = (id) => AVATAR_COLORS[id % AVATAR_COLORS.length]
+
+// "Noor Ahmed" → "NA"
+export const nameInitials = (name) =>
+  name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('')
