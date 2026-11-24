@@ -45,6 +45,7 @@ import AdminOverview from './admin/pages/AdminOverview.jsx'
 import AdminSeekers from './admin/pages/AdminSeekers.jsx'
 import AdminCompanies from './admin/pages/AdminCompanies.jsx'
 import AdminJobs from './admin/pages/AdminJobs.jsx'
+import AdminJobView from './admin/pages/AdminJobView.jsx'
 
 const SEEKER_LINKS = [
   { to: '/jobseeker/jobs', label: 'Jobs for you', icon: <HomeIcon /> },
@@ -170,6 +171,7 @@ export default function App() {
         <Route path="companies" element={<AdminCompanies />} />
         <Route path="companies/:id" element={<CompanyDetails admin />} />
         <Route path="jobs" element={<AdminJobs />} />
+        <Route path="jobs/:id" element={<AdminJobView />} />
       </Route>
       
       <Route path="*" element={<Navigate to="/" replace />} />
