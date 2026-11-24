@@ -307,3 +307,92 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* Company logo in a table (CompanyLogo with className "admin-logo") */
+.admin-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--teal);
+  color: var(--white);
+  font-weight: 700;
+}
+img.admin-logo {
+  object-fit: cover;
+  background: var(--white);
+  border: 1px solid var(--gray);
+}
+/* letter box colour from the company id (same colours as the job seeker pages) */
+.admin-logo--1 {
+  background: #6d4ae8;
+}
+.admin-logo--2 {
+  background: #3a96c7;
+}
+.admin-logo--3 {
+  background: var(--navy);
+}
+
+/* Small coloured label (plan, job status) */
+.admin-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-pill--free,
+.admin-pill--closed {
+  background: var(--gray);
+  color: var(--slate);
+}
+.admin-pill--starter {
+  background: var(--light);
+  color: var(--teal-hover);
+}
+.admin-pill--growth {
+  background: var(--navy);
+  color: var(--white);
+}
+.admin-pill--active {
+  background: #e3f8ef;
+  color: #067647;
+}
+
+/* "View" button at the end of a row */
+.admin-actions {
+  text-align: right;
+}
+.admin-view {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--navy);
+  font-size: var(--label-size);
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.admin-view:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+/* Text for screen readers only */
+.admin-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

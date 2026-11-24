@@ -47,7 +47,8 @@ const logoInfo = (company) => ({
 })
 
 // One open job: match ring (only when there is a score), title, type, mode, deadline
-function JobRow({ job }) {
+// admin = opened from the admin pages: the button opens the admin job view instead of apply
+function JobRow({ job, admin }) {
   return (
     <article className="co-job">
       {/* same colours as the job lists: teal 80+, amber below 80, pale red = doesn't qualify */}
@@ -71,8 +72,11 @@ function JobRow({ job }) {
           </span>
         </p>
       </div>
-      <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--primary co-job__btn">
-        View &amp; apply
+      <Link
+        to={admin ? `/admin/jobs/${job.id}` : `/jobseeker/jobs/${job.id}`}
+        className="btn btn--primary co-job__btn"
+      >
+        {admin ? 'View job' : 'View & apply'}
       </Link>
     </article>
   )
@@ -161,7 +165,8 @@ function CompanyLoading() {
   )
 }
 
-export default function CompanyDetails() {
+// admin = the same page opened from /admin/companies/:id (no match scores or tips, links go back to admin)
+export default function CompanyDetails({ admin = false }) {
   const { id } = useParams() // the company id from the URL
   const navigate = useNavigate()
 
@@ -239,8 +244,9 @@ export default function CompanyDetails() {
     }
   }, [id, navigate, reloadKey])
 
+  const listPath = admin ? '/admin/companies' : '/jobseeker/companies'
   const backLink = (
-    <Link to="/jobseeker/companies" className="co-back">
+    <Link to={listPath} className="co-back">
       ← All companies
     </Link>
   )
@@ -261,7 +267,7 @@ export default function CompanyDetails() {
         <div className="co-state">
           <h2>Company not found</h2>
           <p>This company doesn't exist or is no longer on Fursa.</p>
-          <Link to="/jobseeker/companies" className="btn btn--primary">
+          <Link to={listPath} className="btn btn--primary">
             See all companies
           </Link>
         </div>
@@ -336,7 +342,7 @@ export default function CompanyDetails() {
             {jobs.length > 0 ? (
               <div className="co-jobs">
                 {jobs.map((job) => (
-                  <JobRow key={job.id} job={job} />
+                  <JobRow key={job.id} job={job} admin={admin} />
                 ))}
               </div>
             ) : (
@@ -383,7 +389,7 @@ export default function CompanyDetails() {
             </div>
           </section>
 
-          {standOut.length > 0 && <StandOut company={company} skills={standOut} />}
+          {!admin && standOut.length > 0 && <StandOut company={company} skills={standOut} />}
         </aside>
       </div>
     </main>

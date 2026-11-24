@@ -168,6 +168,7 @@ export default function App() {
         <Route index element={<AdminOverview />} />
         <Route path="seekers" element={<AdminSeekers />} />
         <Route path="companies" element={<AdminCompanies />} />
+        <Route path="companies/:id" element={<CompanyDetails admin />} />
         <Route path="jobs" element={<AdminJobs />} />
       </Route>
       
