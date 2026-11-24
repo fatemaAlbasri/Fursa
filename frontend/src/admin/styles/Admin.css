@@ -1,0 +1,134 @@
+/* Page title + subtitle (and anything on the right) */
+.admin-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.admin-head h1 {
+  font-size: var(--title-size);
+  font-weight: 700;
+}
+.admin-head p {
+  margin-top: 4px;
+  color: var(--slate);
+  font-size: var(--text-size);
+}
+
+/* Row of number cards */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.admin-stat {
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+.admin-stat__value {
+  font-size: 24px;
+  font-weight: 700;
+}
+.admin-stat__label {
+  font-size: var(--label-size);
+  color: var(--slate);
+}
+.admin-stat__hint {
+  margin-top: 6px;
+  font-size: var(--hint-size);
+  font-weight: 700;
+  color: #067647;
+}
+.admin-stat__hint--down {
+  color: var(--error);
+}
+.admin-stat__hint--flat {
+  color: var(--slate);
+}
+
+/* White box with a title */
+.admin-panel {
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  min-width: 0;
+}
+.admin-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.admin-panel__title {
+  font-size: var(--section-size);
+  font-weight: 700;
+}
+.admin-panel__sub {
+  margin-top: 2px;
+  font-size: var(--hint-size);
+  color: var(--slate);
+}
+
+/* Pill tabs (period, plan, status...) */
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--navy);
+  font: inherit;
+  font-size: var(--text-size);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.admin-tab:hover {
+  border-color: var(--teal);
+}
+.admin-tab--active,
+.admin-tab--active:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+  font-weight: 700;
+}
+.admin-tab__count {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--gray);
+  color: var(--slate);
+}
+.admin-tab--active .admin-tab__count {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--white);
+}
+
+@media (max-width: 1100px) {
+  .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+}

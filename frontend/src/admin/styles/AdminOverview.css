@@ -1,0 +1,161 @@
+.ov-row {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.ov-row--two {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.ov-row--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Sign-ups chart */
+.ov-legend {
+  display: flex;
+  gap: 14px;
+  font-size: var(--hint-size);
+  color: var(--slate);
+}
+.ov-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ov-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.ov-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  height: 200px;
+}
+.ov-chart__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ov-chart__bars {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.ov-bar-wrap {
+  width: min(22px, 40%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+.ov-bar__num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate);
+}
+.ov-bar {
+  width: 100%;
+  min-height: 2px;
+  /* --h = 0..1 (this value ÷ biggest value), 18px leaves room for the number */
+  height: calc((100% - 18px) * var(--h));
+  border-radius: 6px 6px 0 0;
+  transition: height 0.4s ease;
+}
+.ov-bar--seekers {
+  background: var(--teal);
+}
+.ov-bar--companies {
+  background: var(--navy);
+}
+.ov-chart__label {
+  font-size: var(--hint-size);
+  color: var(--slate);
+}
+
+/* Horizontal bars */
+.ov-bars {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ov-bars__row {
+  display: grid;
+  grid-template-columns: 96px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-size);
+}
+.ov-bars__track {
+  height: 10px;
+  background: var(--light);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ov-bars__fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+.ov-bars__num {
+  text-align: right;
+  font-weight: 700;
+}
+
+/* Name / value rows (industries, revenue) */
+.ov-list {
+  list-style: none;
+  padding: 0;
+}
+.ov-list__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray);
+}
+.ov-list__row:last-child {
+  border-bottom: 0;
+}
+.ov-list__name {
+  font-weight: 600;
+  font-size: var(--text-size);
+}
+.ov-list__meta {
+  font-size: var(--hint-size);
+  color: var(--slate);
+}
+.ov-list__value {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ov-periods {
+  margin-bottom: 8px;
+}
+.ov-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 2px solid var(--gray);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+@media (max-width: 1100px) {
+  .ov-row--two,
+  .ov-row--three {
+    grid-template-columns: 1fr;
+  }
+}
