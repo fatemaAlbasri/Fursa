@@ -46,8 +46,9 @@ export default function SignIn() {
         body: { ...form, role }
       })
       localStorage.setItem('token', token)
-      navigate(user.role === 'employer' ? '/company' : '/jobseeker')
-    } catch (err) {
+      const HOME = { admin: '/admin', employer: '/company', seeker: '/jobseeker' }
+      navigate(HOME[user.role] || '/jobseeker')
+        } catch (err) {
       setErrors(
         err.fields || { password: err.error || 'Could not reach the server' }
       )

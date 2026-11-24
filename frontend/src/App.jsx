@@ -40,6 +40,12 @@ import ApplicationDetails from './jobseeker/pages/ApplicationDetails.jsx'
 import Profile from './jobseeker/pages/Profile.jsx'
 import UserInitials from './jobseeker/components/UserInitials.jsx'
 
+import AdminLayout from './admin/AdminLayout.jsx'
+import AdminOverview from './admin/pages/AdminOverview.jsx'
+import AdminSeekers from './admin/pages/AdminSeekers.jsx'
+import AdminCompanies from './admin/pages/AdminCompanies.jsx'
+import AdminJobs from './admin/pages/AdminJobs.jsx'
+
 const SEEKER_LINKS = [
   { to: '/jobseeker/jobs', label: 'Jobs for you', icon: <HomeIcon /> },
   { to: '/jobseeker/companies', label: 'Companies', icon: <BuildingIcon /> },
@@ -157,6 +163,14 @@ export default function App() {
         <Route path="profile" element={<CompanyProfile />} />
       </Route>
 
+      {/* admin pages */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminOverview />} />
+        <Route path="seekers" element={<AdminSeekers />} />
+        <Route path="companies" element={<AdminCompanies />} />
+        <Route path="jobs" element={<AdminJobs />} />
+      </Route>
+      
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
