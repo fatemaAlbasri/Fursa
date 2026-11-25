@@ -149,13 +149,13 @@ export default function Landing() {
       <section id="pricing" className="section">
         <p className="section__eyebrow reveal">Pricing for employers</p>
         <h2 className="section__title reveal" style={delay(1, 0.08)}>Simple plans for hiring</h2>
-        <p className="section__sub reveal" style={delay(2, 0.08)}>Always free for job seekers. Companies start free and upgrade for AI ranking.</p>
+        <p className="section__sub reveal" style={delay(2, 0.08)}>Free for job seekers, with an optional advanced CV optimizer. Companies start free and upgrade for AI ranking.</p>
         <div className="pricing">
           {PLANS.map((p, i) => (
             <article key={p.id} className={`${p.popular ? 'price price--popular' : 'price'} reveal`} style={delay(i)}>
               <div className="price__head">
                 <h3>{p.name}</h3>
-                {p.popular && <span className="price__badge">Most popular</span>}
+                {p.popular && <span className="price__badge">Recommend</span>}
               </div>
               <p className="price__tagline">{p.tagline}</p>
               <p className="price__amount">{p.price} <span>/ month</span></p>
