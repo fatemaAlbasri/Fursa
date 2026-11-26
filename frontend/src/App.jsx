@@ -21,11 +21,9 @@ import CompanyLayout from './company/CompanyLayout.jsx'
 import CompanyJobs from './company/pages/CompanyJobs.jsx'
 import PostJob from './company/pages/PostJob.jsx'
 import JobView from './company/pages/JobView.jsx'
-import RejectApplicants from './company/pages/RejectApplicants.jsx'
 import Applicants from './company/pages/Applicants.jsx'
 import ApplicantView from './company/pages/ApplicantView.jsx'
 import CompanyProfile from './company/pages/CompanyProfile.jsx'
-import DeleteAccount from './company/pages/DeleteAccount.jsx'
 import Plans from './company/pages/Plans.jsx'
 import Payment from './company/pages/Payment.jsx'
 
@@ -36,10 +34,18 @@ import Companies from './jobseeker/pages/Companies.jsx'
 import CompanyDetails from './jobseeker/pages/CompanyDetails.jsx'
 import CvOptimizer from './jobseeker/pages/CvOptimizer.jsx'
 import CvReport from './jobseeker/pages/CvReport.jsx'
+import CvPayment from './jobseeker/pages/CvPayment.jsx'
 import MyApplications from './jobseeker/pages/MyApplications.jsx'
 import ApplicationDetails from './jobseeker/pages/ApplicationDetails.jsx'
 import Profile from './jobseeker/pages/Profile.jsx'
 import UserInitials from './jobseeker/components/UserInitials.jsx'
+
+import AdminLayout from './admin/AdminLayout.jsx'
+import AdminOverview from './admin/pages/AdminOverview.jsx'
+import AdminSeekers from './admin/pages/AdminSeekers.jsx'
+import AdminCompanies from './admin/pages/AdminCompanies.jsx'
+import AdminJobs from './admin/pages/AdminJobs.jsx'
+import AdminJobView from './admin/pages/AdminJobView.jsx'
 
 const SEEKER_LINKS = [
   { to: '/jobseeker/jobs', label: 'Jobs for you', icon: <HomeIcon /> },
@@ -92,7 +98,8 @@ export default function App() {
           path="/company/change-password"
           element={<ChangePassword role="company" />}
         />
-        <Route path="/company/delete-account" element={<DeleteAccount />} />
+        {/* deleting the account is now a pop-up on the profile */}
+        <Route path="/company/delete-account" element={<Navigate to="/company/profile" replace />} />
       </Route>
       <Route
         element={<Layout tag="Employer" right={back('/company/profile')} />}
@@ -127,6 +134,7 @@ export default function App() {
         <Route path="companies/:id" element={<CompanyDetails />} />
         <Route path="cv-optimizer" element={<CvOptimizer />} />
         <Route path="cv-optimizer/report" element={<CvReport />} />
+        <Route path="cv-optimizer/pay" element={<CvPayment />} />
         <Route path="applications" element={<MyApplications />} />
         <Route path="applications/:id" element={<ApplicationDetails />} />
         <Route
@@ -144,7 +152,8 @@ export default function App() {
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView editing />} />
         <Route path="jobs/:id/preview" element={<JobDetails preview />} />
-        <Route path="jobs/:id/reject" element={<RejectApplicants />} />
+        {/* bulk reject pop-up on the Applicants page */}
+        <Route path="jobs/:id/reject" element={<Navigate to="/company/applicants" replace />} />
         {/* one applicant: :id = job id, :appId = application id */}
         <Route path="jobs/:id/applicants/:appId" element={<ApplicantView />} />
         <Route path="applicants" element={<Applicants />} />
@@ -155,6 +164,16 @@ export default function App() {
         <Route path="profile" element={<CompanyProfile />} />
       </Route>
 
+      {/* admin pages */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminOverview />} />
+        <Route path="seekers" element={<AdminSeekers />} />
+        <Route path="companies" element={<AdminCompanies />} />
+        <Route path="companies/:id" element={<CompanyDetails admin />} />
+        <Route path="jobs" element={<AdminJobs />} />
+        <Route path="jobs/:id" element={<AdminJobView />} />
+      </Route>
+      
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

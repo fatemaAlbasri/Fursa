@@ -1,0 +1,139 @@
+/* "← All jobs" above the page */
+.admin-back {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: none;
+}
+.admin-back:hover {
+  text-decoration: underline;
+}
+
+/* Title box */
+.aj-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.aj-head__logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  font-size: 22px;
+}
+.aj-head__text {
+  flex: 1;
+  min-width: 0;
+}
+.aj-head__text h1 {
+  font-size: var(--title-size);
+  font-weight: 700;
+}
+.aj-head__text p {
+  margin-top: 4px;
+  color: var(--slate);
+  font-size: var(--text-size);
+}
+.aj-head__text a {
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: none;
+}
+.aj-head__text a:hover {
+  text-decoration: underline;
+}
+
+.aj-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Main column + details on the right */
+.aj-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.aj-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.aj-main .admin-panel__title,
+.aj-side .admin-panel__title {
+  margin-bottom: 10px;
+}
+.aj-text {
+  font-size: var(--text-size);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.aj-list {
+  padding-left: 20px;
+  font-size: var(--text-size);
+  line-height: 1.7;
+}
+.aj-sub {
+  margin: 12px 0 8px;
+  font-size: var(--label-size);
+  font-weight: 700;
+  color: var(--slate);
+}
+.aj-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.aj-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--light);
+  color: var(--navy);
+  font-size: var(--label-size);
+  font-weight: 600;
+}
+.aj-chip--must {
+  background: var(--teal);
+  color: var(--white);
+}
+
+/* Label / value list */
+.aj-info {
+  display: flex;
+  flex-direction: column;
+}
+.aj-info__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray);
+  font-size: var(--text-size);
+}
+.aj-info__item:last-child {
+  border-bottom: 0;
+}
+.aj-info dt {
+  color: var(--slate);
+}
+.aj-info dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .aj-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .aj-head {
+    flex-wrap: wrap;
+  }
+  .aj-stats {
+    grid-template-columns: 1fr;
+  }
+}

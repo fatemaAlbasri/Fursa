@@ -1,15 +1,12 @@
 const db = require('../config/db')
 const { inTransaction } = require('../config/transaction')
-const { sendMail } = require('../config/mailer')
-
-const PAYMENT_METHODS = ['card']
-
-// Price + VAT 10% , total = subtotal + vat exactly
-const PLAN_COLUMNS = `
-  p.id, p.name, p.price_bhd_month, p.max_active_jobs,
-  p.has_ai_ranking, p.has_match_reasons, p.has_bulk_actions, p.has_hiring_summary,
-  ROUND(p.price_bhd_month * 0.10, 3) AS vat_bhd,
-  p.price_bhd_month + ROUND(p.price_bhd_month * 0.10, 3) AS total_bhd`
+const {
+  PAYMENT_METHODS,
+  PLAN_COLUMNS,
+  paymentOut,
+  startSubscription,
+  emailReceipt
+} = require('../services/planPayment')
 
 const planOut = (p) => ({
   id: p.id,
@@ -24,22 +21,6 @@ const planOut = (p) => ({
     bulk_actions: p.has_bulk_actions,
     hiring_summary: p.has_hiring_summary
   }
-})
-
-const receiptNo = (id) => `FUR-${String(id).padStart(6, '0')}`
-
-const paymentOut = (p) => ({
-  id: p.id,
-  receipt_no: receiptNo(p.id),
-  item: p.item,
-  plan_name: p.plan_name || null,
-  method: p.method,
-  subtotal_bhd: Number(p.subtotal_bhd),
-  vat_bhd: Number(p.vat_bhd),
-  total_bhd: Number(p.total_bhd),
-  status: p.status,
-  is_simulated: p.is_simulated,
-  paid_at: p.paid_at
 })
 
 // GET /api/plans
@@ -131,35 +112,13 @@ const subscribe = async (req, res, next) => {
       if (current[0]) {
         await client.query("UPDATE subscriptions SET status = 'cancelled' WHERE id = $1", [current[0].id])
       }
-      const { rows: sub } = await client.query(
-        `INSERT INTO subscriptions (company_id, plan_id, renews_at)
-         VALUES ($1, $2, CASE WHEN $3::boolean THEN now() + interval '1 month' END)
-         RETURNING id, started_at, renews_at`,
-        [company.id, plan.id, isPaid]
-      )
-
-      let payment = null
-      if (isPaid) {
-        const { rows: pay } = await client.query(
-          `INSERT INTO payments (user_id, subscription_id, item, method, subtotal_bhd, vat_bhd, total_bhd, status, is_simulated, paid_at)
-           VALUES ($1, $2, 'plan', $3, $4, $5, $6, 'paid', true, now())
-           RETURNING id, item, method, subtotal_bhd, vat_bhd, total_bhd, status, is_simulated, paid_at`,
-          [req.user.id, sub[0].id, method, plan.price_bhd_month, plan.vat_bhd, plan.total_bhd]
-        )
-        payment = { ...pay[0], plan_name: plan.name }
-      }
-
-      await client.query(
-        `INSERT INTO notifications (user_id, type, title, message) VALUES ($1, 'plan', $2, $3)`,
-        [
-          req.user.id,
-          `You are now on the ${plan.name} plan`,
-          isPaid
-            ? `Paid BHD ${Number(plan.total_bhd).toFixed(3)} (simulated). Receipt ${receiptNo(payment.id)}.`
-            : 'Your plan was changed to Free.'
-        ]
-      )
-      return { plan, subscription: sub[0], payment }
+      const { subscription, payment } = await startSubscription(client, {
+        userId: req.user.id,
+        companyId: company.id,
+        plan,
+        method
+      })
+      return { plan, subscription, payment }
     })
 
     if (result.error) {
@@ -172,21 +131,9 @@ const subscribe = async (req, res, next) => {
       payment: result.payment && paymentOut(result.payment)
     })
 
-    // "Email me the receipt" (ticked by default in the wireframe), sent after answering
+    // "Email me the receipt" (ticked by default in the wireframe)
     if (result.payment && req.body?.emailReceipt !== false) {
-      const p = paymentOut(result.payment)
-      db.query('SELECT email, first_name FROM users WHERE id = $1', [req.user.id])
-        .then(({ rows }) =>
-          sendMail({
-            to: rows[0].email,
-            subject: `Fursa receipt ${p.receipt_no}`,
-            text:
-              `Hi ${rows[0].first_name},\n\n${p.plan_name} plan · monthly\n` +
-              `Subtotal: BHD ${p.subtotal_bhd.toFixed(3)}\nVAT (10%): BHD ${p.vat_bhd.toFixed(3)}\n` +
-              `Total: BHD ${p.total_bhd.toFixed(3)}\n\nPilot version: this payment is simulated. No card was charged.`
-          })
-        )
-        .catch((err) => console.error('Receipt email failed:', err.message))
+      emailReceipt(req.user.id, result.payment)
     }
   } catch (err) {
     next(err)

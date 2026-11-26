@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- for crypt() password hashing (bcry
 INSERT INTO plans (id, name, price_bhd_month, max_active_jobs, has_ai_ranking, has_match_reasons, has_bulk_actions, has_hiring_summary) VALUES
  (1, 'Free',    0.000,  1,    false, false, false, false),
  (2, 'Starter', 15.000, 2,    true,  true,  true,  false),
- (3, 'Growth',  35.000, NULL, true,  true,  true,  true);
+ (3, 'Growth',  25.000, NULL, true,  true,  true,  true);
 
 -- ---------- Skills (a starter list, users can add more) ----------
 INSERT INTO skills (id, name) VALUES
@@ -21,18 +21,18 @@ INSERT INTO skills (id, name) VALUES
  (31,'Project Management'),(32,'Accounting');
 
 -- ---------- Users (1 admin, 4 employers, 6 seekers) ----------
-INSERT INTO users (id, first_name, last_name, email, password_hash, role) VALUES
- (1,  'Admin',  'Fursa',     'admin@fursa.bh',        crypt('Fursa@123', gen_salt('bf')), 'admin'),
- (2,  'Huda',   'Saleh',     'hr@nakhlatech.bh',      crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (3,  'Yousif', 'Kamal',     'hr@pearlsoft.bh',       crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (4,  'Mariam', 'Isa',       'hr@dilmunit.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (5,  'Khalid', 'Nasser',    'hr@seefdata.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer'),
- (6,  'Fatima', 'Ali',       'fatima@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (7,  'Noor',   'Ahmed',     'noor@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (8,  'Zainab', 'Mohammed',  'zainab@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (9,  'Ali',    'Hasan',     'ali@example.com',       crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (10, 'Sara',   'Jaffar',    'sara@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker'),
- (11, 'Hamad',  'Rashid',    'hamad@example.com',     crypt('Fursa@123', gen_salt('bf')), 'seeker');
+INSERT INTO users (id, first_name, last_name, email, password_hash, role, created_at) VALUES
+ (1,  'Admin',  'Fursa',     'admin@fursa.bh',        crypt('Fursa@123', gen_salt('bf')), 'admin',    '2026-06-01'),
+ (2,  'Huda',   'Saleh',     'hr@nakhlatech.bh',      crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-06-15'),
+ (3,  'Yousif', 'Kamal',     'hr@pearlsoft.bh',       crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-07-20'),
+ (4,  'Mariam', 'Isa',       'hr@dilmunit.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-09-10'),
+ (5,  'Khalid', 'Nasser',    'hr@seefdata.bh',        crypt('Fursa@123', gen_salt('bf')), 'employer', '2026-11-20'),
+ (6,  'Fatima', 'Ali',       'fatima@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-07-05'),
+ (7,  'Noor',   'Ahmed',     'noor@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-08-12'),
+ (8,  'Zainab', 'Mohammed',  'zainab@example.com',    crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-09-03'),
+ (9,  'Ali',    'Hasan',     'ali@example.com',       crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-10-18'),
+ (10, 'Sara',   'Jaffar',    'sara@example.com',      crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-11-02'),
+ (11, 'Hamad',  'Rashid',    'hamad@example.com',     crypt('Fursa@123', gen_salt('bf')), 'seeker',   '2026-11-21');
 
 -- ---------- Seeker profiles ----------
 INSERT INTO seeker_profiles (user_id, phone, major, graduation_status, years_experience, job_types, work_modes) VALUES
@@ -54,8 +54,8 @@ INSERT INTO seeker_skills (seeker_id, skill_id) VALUES
 -- ---------- Resumes (Fatima has an old CV and a current one) ----------
 INSERT INTO resumes (id, seeker_id, file_name, file_url, parsed_text, parsed_experience, parsed_languages, is_current, uploaded_at) VALUES
  (1, 6,  'fatima_cv_old.pdf', '/uploads/cv/1.pdf', 'IT graduate looking for a job.', 'None stated', 'English, Arabic', false, '2026-09-20'),
- (2, 6,  'my_cv.pdf',         '/uploads/cv/2.pdf', 'IT graduate looking for a job. Made a website for my senior project.', '6-month internship', 'English, Arabic', true, '2026-10-08'),
- (3, 7,  'noor_cv.pdf',       '/uploads/cv/3.pdf', 'Computer Science graduate ...', '1-year internship', 'English, Arabic', true, '2026-10-01'),
+ (2, 6,  'my_cv.pdf',         '/uploads/cv/2.pdf', E'Fatima Ali\nfatima@example.com | +973 3300 0001 | Manama, Bahrain\nIT graduate looking for a job.\n\nEducation\nBSc Computer Science, University of Bahrain\n\nProjects\nMade a website for my senior project.\n\nSkills\nJS, react, databases\n\nHobbies\nReading, football', '6-month internship', 'English, Arabic', true, '2026-10-08'),
+ (3, 7,  'noor_cv.pdf',       '/uploads/cv/3.pdf', E'Noor Ahmed\nnoor.ahmed@example.com | Riffa, Bahrain\n\nAbout me\nComputer science student looking for a job.\n\nObjective\nTo get a job in a good company and learn new things.\n\nEducation\nUniversity of Bahrain - computer science\nGPA 3.4 / 4\n\nExperience\nDid an internship at a local software company.\nMade a small inventory app for the company.\n\nSkills\njavascript, react, sql, git, programming, computers\n\nLanguages\nenglish, arabic', '1-year internship', 'English, Arabic', true, '2026-10-01'),
  (4, 8,  'zainab_cv.pdf',     '/uploads/cv/4.pdf', 'IT student ...', 'None stated', 'English', true, '2026-10-02'),
  (5, 9,  'ali_cv.pdf',        '/uploads/cv/5.pdf', 'Computer Engineering graduate ...', '3-month internship', 'English, Arabic', true, '2026-09-25'),
  (6, 10, 'sara_cv.pdf',       '/uploads/cv/6.pdf', 'Information Systems graduate ...', 'None stated', 'English', true, '2026-09-27'),
@@ -76,9 +76,9 @@ INSERT INTO subscriptions (id, company_id, plan_id, status, started_at, renews_a
 
 -- ---------- Jobs ----------
 INSERT INTO jobs (id, company_id, job_type, work_mode, location, title, description, responsibilities, salary, deadline, field, major_must_have, min_years, max_years, language, status, created_at) VALUES
- (1, 1, 'full_time', 'onsite', 'Manama', 'Junior Frontend Developer', 'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 450.000, '2026-10-30', 'Computer Science', true, 0, 2, 'English', 'open', '2026-10-05'),
- (2, 2, 'internship', 'hybrid', 'Seef', 'Software Engineering Intern', 'Three-month internship in our product team.', 'Write and test code; join daily stand-ups.', NULL, '2026-10-25', 'Computer Science', false, 0, 1, 'English', 'open', '2026-10-08'),
- (3, 3, 'full_time', 'onsite', 'Muharraq', 'IT Support Officer', 'First-line IT support for clients.', 'Answer tickets; set up devices; basic networking.', 380.000, '2026-11-02', 'Information Technology', false, 0, 2, 'Arabic', 'open', '2026-10-01'),
+ (1, 1, 'full_time', 'onsite', 'Manama', 'Junior Frontend Developer', 'Build the React frontend of our client apps.', 'Build UI screens; fix bugs; work with the backend team.', 450.000, '2026-12-31', 'Computer Science', true, 0, 2, 'English', 'open', '2026-10-05'),
+ (2, 2, 'internship', 'hybrid', 'Seef', 'Software Engineering Intern', 'Three-month internship in our product team.', 'Write and test code; join daily stand-ups.', NULL, '2027-01-15', 'Computer Science', false, 0, 1, 'English', 'open', '2026-10-08'),
+ (3, 3, 'full_time', 'onsite', 'Muharraq', 'IT Support Officer', 'First-line IT support for clients.', 'Answer tickets; set up devices; basic networking.', 380.000, '2026-12-20', 'Information Technology', false, 0, 2, 'Arabic', 'open', '2026-10-01'),
  (4, 4, 'internship', 'remote',  'Manama', 'Data Analyst Trainee', 'Learn to build reports for clients.', 'Clean data; build dashboards.', NULL, '2026-11-05', 'Information Systems', false, 0, 1, 'English', 'open', '2026-09-20'),
  (5, 1, 'part_time', 'hybrid', 'Manama', 'Web Developer Trainee', 'Entry-level web role.', 'Build pages with HTML, CSS and JavaScript.', NULL, '2026-10-30', 'Computer Science', false, 0, 1, 'English', 'draft', '2026-10-10');
 
@@ -168,7 +168,7 @@ INSERT INTO cv_suggestions (review_id, section, before_text, after_text, reason,
  (1,'projects', 'Made a website for my senior project.', 'Built the React frontend for my senior project and connected it to a PostgreSQL database.', 'Shows the tools you used. Uses only what you already did.', 5, false, 'pending'),
  (1,'skills',   'JS, react, databases', 'JavaScript · React · SQL (PostgreSQL)', 'Full skill names are recognised by employers and by Fursa matching.', 2, false, 'pending'),
  (1,'education','BSc Computer Science, University of Bahrain', 'BSc Computer Science, University of Bahrain (2026) · Courses: Web Development, Database Systems', 'Courses show your skills when you have little work experience.', 1, false, 'pending'),
- (1,'layout',   'Education → Hobbies → Projects → Skills', 'Summary → Projects → Skills → Education', 'Puts your strongest section first.', 1, false, 'dismissed');
+ (1,'layout',   'Education → Projects → Skills', 'Projects → Skills → Education', 'Puts your strongest section first.', 1, false, 'dismissed');
 
 -- ---------- Notifications ----------
 INSERT INTO notifications (user_id, application_id, job_id, type, title, message, is_read, created_at) VALUES
@@ -182,7 +182,7 @@ INSERT INTO notifications (user_id, application_id, job_id, type, title, message
 -- ---------- Payments (simulated) ----------
 INSERT INTO payments (user_id, subscription_id, cv_review_id, item, method, subtotal_bhd, vat_bhd, total_bhd, status, is_simulated, paid_at) VALUES
  (2, 1,    NULL, 'plan',               'card',       15.000, 1.500, 16.500, 'paid', true, '2026-10-12'),
- (3, 2,    NULL, 'plan',               'benefitpay', 35.000, 3.500, 38.500, 'paid', true, '2026-10-01'),
+ (3, 2,    NULL, 'plan',               'benefitpay', 25.000, 2.500, 27.500, 'paid', true, '2026-10-01'),
  (6, NULL, 1,    'advanced_cv_report', 'card',        2.000, 0.200,  2.200, 'paid', true, '2026-10-12');
 
 -- ---------- Reset ID counters (because we inserted IDs by hand) ----------

@@ -85,12 +85,13 @@ export default function ChangePassword({ role }) {
         method: 'PUT',
         body: { currentPassword: form.currentPassword, newPassword: form.newPassword }
       })
-      setAlert({ type: 'success', text: `${message}. Use your new password next time you sign in.` })
-      setForm(EMPTY)
+      // Back to the profile, which shows this message at the top
+      navigate(profilePath, {
+        state: { notice: { type: 'success', text: `${message}. Use your new password next time you sign in.` } }
+      })
     } catch (err) {
       if (err.fields) setErrors(err.fields)
       else setAlert({ type: 'error', text: err.error || 'Could not reach the server' })
-    } finally {
       setLoading(false)
     }
   }

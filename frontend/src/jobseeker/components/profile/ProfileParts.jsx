@@ -1,14 +1,75 @@
-// Small building blocks shared by the Profile page cards (styles: jobseeker/styles/Profile.css, "pf-").
+import { PencilIcon } from '../../../shared/components/icons.jsx'
 
-// White card with a title row. `action` = the button on the right (e.g. "Edit").
-export function Section({ title, optional = false, action, children, labelledBy }) {
+// Small building blocks shared by the Profile page cards 
+
+// Icons only this page uses 
+const Svg = ({ children }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {children}
+  </svg>
+)
+export const UserIcon = () => (
+  <Svg>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+  </Svg>
+)
+export const MailIcon = () => (
+  <Svg>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 7l9 6 9-6" />
+  </Svg>
+)
+export const PhoneIcon = () => (
+  <Svg>
+    <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+  </Svg>
+)
+export const BookIcon = () => (
+  <Svg>
+    <path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z" />
+    <path d="M4 19V5" />
+  </Svg>
+)
+export const CapIcon = () => (
+  <Svg>
+    <path d="M2 9l10-5 10 5-10 5z" />
+    <path d="M6 11v5c3 2 9 2 12 0v-5" />
+  </Svg>
+)
+export const ShieldIcon = () => (
+  <Svg>
+    <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+  </Svg>
+)
+
+// White card: icon square + title + grey line under it, then the content. `action` = the button on the right.
+export function Section({ title, sub, icon, optional = false, action, children, labelledBy }) {
   return (
     <section className="card pf-card" aria-labelledby={labelledBy}>
       <div className="pf-card__head">
-        <h2 id={labelledBy} className="pf-card__title">
-          {title}
-          {optional && <span className="pf-card__opt"> (optional)</span>}
-        </h2>
+        <div className="pf-card__titles">
+          {icon && (
+            <span className="pf-card__icon" aria-hidden="true">
+              {icon}
+            </span>
+          )}
+          <div>
+            <h2 id={labelledBy} className="pf-card__title">
+              {title}
+              {optional && <span className="pf-card__opt"> (optional)</span>}
+            </h2>
+            {sub && <p className="pf-card__sub">{sub}</p>}
+          </div>
+        </div>
         {action}
       </div>
       {children}
@@ -19,18 +80,26 @@ export function Section({ title, optional = false, action, children, labelledBy 
 // "Edit" / "Edit skills" button in a card's title row
 export function EditButton({ onClick, children = 'Edit', label }) {
   return (
-    <button type="button" className="btn btn--outline pf-edit" onClick={onClick} aria-label={label}>
+    <button type="button" className="pf-ghost" onClick={onClick} aria-label={label}>
+      <PencilIcon />
       {children}
     </button>
   )
 }
 
-// Read-only box: small label above the saved value
-export function InfoTile({ label, children }) {
+// Read-only box: icon, small label above the saved value. wide = across both columns
+export function InfoTile({ label, icon, wide = false, children }) {
   return (
-    <div className="pf-tile">
-      <span className="pf-tile__label">{label}</span>
-      <span className="pf-tile__value">{children}</span>
+    <div className={wide ? 'pf-tile pf-tile--wide' : 'pf-tile'}>
+      {icon && (
+        <span className="pf-tile__icon" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <div className="pf-tile__text">
+        <span className="pf-tile__label">{label}</span>
+        <span className="pf-tile__value">{children}</span>
+      </div>
     </div>
   )
 }

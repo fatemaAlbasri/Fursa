@@ -38,7 +38,8 @@ export const analyseCv = () => request('/cv/optimizer', { method: 'POST' })
 export const setSuggestionStatus = (id, status) =>
   request(`/cv/optimizer/suggestions/${id}`, { method: 'PATCH', body: { status } })
 // "card" is the only method the backend accepts (simulated payment, no card details are sent)
-export const unlockReport = () => request('/cv/optimizer/unlock', { method: 'POST', body: { method: 'card' } })
+export const unlockReport = (emailReceipt) =>
+  request('/cv/optimizer/unlock', { method: 'POST', body: { method: 'card', emailReceipt } })
 
 export function uploadCv(file) {
   const data = new FormData()

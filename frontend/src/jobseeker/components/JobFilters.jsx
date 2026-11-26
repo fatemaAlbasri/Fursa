@@ -1,17 +1,29 @@
 import { formatJobType, formatWorkMode } from '../../shared/utils/jobFormat.js'
+import { MAJORS, LOCATIONS } from '../../company/data/jobs.js'
+import { SearchBox, FilterChips } from './FilterParts.jsx'
 
-// Search + filters box shared by Jobs for you and All jobs.
+// Search + filters box on All jobs.
 // The backend returns all open jobs, so filtering happens here in the browser (filterJobs).
 
 // Values the backend allows (jobs.job_type / jobs.work_mode in schema.sql)
 const JOB_TYPES = ['full_time', 'part_time', 'internship']
 const WORK_MODES = ['onsite', 'hybrid', 'remote']
 
-export const EMPTY_FILTERS = { search: '', type: '', mode: '', field: '', location: '' }
+// qualified = "Only jobs I qualify for" (the switch above the results)
+export const EMPTY_FILTERS = { search: '', type: '', mode: '', field: '', location: '', qualified: false }
 
-// Unique, sorted, non-empty values of one job column (for the Field / Location menus)
-const optionsFrom = (jobs, key) =>
-  [...new Set(jobs.map((job) => job[key]).filter(Boolean))].sort()
+// Field / Location menus: the usual list (same as the Post a job form) + anything else
+// a company typed in, so every choice is there even when only a few jobs are loaded
+const optionsFrom = (jobs, key, usual) => {
+  const known = new Set(usual.map((v) => v.toLowerCase()))
+  const extra = jobs
+    .map((job) => job[key]?.trim())
+    .filter((v) => v && !known.has(v.toLowerCase()))
+  return [...usual, ...new Set(extra)].sort()
+}
+
+// "manama " and "Manama" are the same place
+const same = (a, b) => (a || '').trim().toLowerCase() === b.trim().toLowerCase()
 
 // The jobs that pass the search + every chosen filter
 export function filterJobs(jobs, filters) {
@@ -23,28 +35,41 @@ export function filterJobs(jobs, filters) {
         job.company_name.toLowerCase().includes(search)) &&
       (!filters.type || job.job_type === filters.type) &&
       (!filters.mode || job.work_mode === filters.mode) &&
-      (!filters.field || job.field === filters.field) &&
-      (!filters.location || job.location === filters.location)
+      (!filters.field || same(job.field, filters.field)) &&
+      (!filters.location || same(job.location, filters.location)) &&
+      // not scored yet (null) still shows
+      (!filters.qualified || job.is_qualified !== false)
   )
+}
+
+// What is switched on, as removable chips: [{ key, label }]
+function activeChips(filters) {
+  const chips = []
+  if (filters.search.trim()) chips.push({ key: 'search', label: `"${filters.search.trim()}"` })
+  if (filters.type) chips.push({ key: 'type', label: formatJobType(filters.type) })
+  if (filters.mode) chips.push({ key: 'mode', label: formatWorkMode(filters.mode) })
+  if (filters.field) chips.push({ key: 'field', label: filters.field })
+  if (filters.location) chips.push({ key: 'location', label: filters.location })
+  if (filters.qualified) chips.push({ key: 'qualified', label: 'Only jobs I qualify for' })
+  return chips
 }
 
 // jobs = all loaded jobs (fills the Field / Location menus), onChange(newFilters)
 export default function JobFilters({ jobs, filters, onChange }) {
   const change = (e) => onChange({ ...filters, [e.target.name]: e.target.value })
+  const remove = (key) => onChange({ ...filters, [key]: EMPTY_FILTERS[key] })
+  const chips = activeChips(filters)
 
   return (
     <section className="card jfy-filters" aria-label="Search and filters">
-      <div className="field">
-        <label htmlFor="jfy-search">Search</label>
-        <input
-          id="jfy-search"
-          name="search"
-          type="search"
-          placeholder="Job title or company"
-          value={filters.search}
-          onChange={change}
-        />
-      </div>
+      <SearchBox
+        id="jfy-search"
+        label="Search"
+        placeholder="Job title or company"
+        value={filters.search}
+        onChange={change}
+        onClear={() => remove('search')}
+      />
       <div className="field">
         <label htmlFor="jfy-type">Job type</label>
         <select id="jfy-type" name="type" value={filters.type} onChange={change}>
@@ -71,7 +96,7 @@ export default function JobFilters({ jobs, filters, onChange }) {
         <label htmlFor="jfy-field">Field</label>
         <select id="jfy-field" name="field" value={filters.field} onChange={change}>
           <option value="">All fields</option>
-          {optionsFrom(jobs, 'field').map((field) => (
+          {optionsFrom(jobs, 'field', MAJORS).map((field) => (
             <option key={field}>{field}</option>
           ))}
         </select>
@@ -80,11 +105,14 @@ export default function JobFilters({ jobs, filters, onChange }) {
         <label htmlFor="jfy-location">Location</label>
         <select id="jfy-location" name="location" value={filters.location} onChange={change}>
           <option value="">All Bahrain</option>
-          {optionsFrom(jobs, 'location').map((location) => (
+          {optionsFrom(jobs, 'location', LOCATIONS).map((location) => (
             <option key={location}>{location}</option>
           ))}
         </select>
       </div>
+
+      {/* what's switched on, each with its own ×, and Clear all */}
+      <FilterChips chips={chips} onRemove={remove} onClearAll={() => onChange(EMPTY_FILTERS)} />
     </section>
   )
 }

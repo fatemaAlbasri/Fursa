@@ -1,81 +1,41 @@
-/* ===== Profile (job seeker) =====
-   Navy header, then one white card per section: Personal details, My skills, Job preferences, My CV, Account.
-   Uses the shared .card, .btn, .field, .choice-box and .skills styles from index.css.
-   Every class here starts with "pf-". Rules that change a shared class (.container, .card, .btn)
-   use two classes, because index.css loads after this file and would win otherwise. */
-
-/* colours used only on this page */
-.container.pf {
-  --pf-tile: #f2f8f8;
-  --pf-pref: #d6efef;
-  --pf-pref-text: #0e6f71;
-  --pf-danger: #b42318;
-  --pf-danger-line: #f5c2bd;
-  --pf-danger-bg: #fdecea;
-  --pf-logout: #f4a59b;
+.container.pf,
+.container.cp {
+  --pf-line: #e8eef2;
+  --pf-soft: #eaf7f7;
+  --pf-soft-line: #cde7e7;
+  --pf-chip: #ddf1f1;
+  --pf-chip-text: #0e6466;
+  --pf-danger: #d92d20;
+  --pf-danger-hover: #b42318;
 }
 
-/* page body: narrower than the job lists, like the reference */
 .container.pf {
-  max-width: 760px;
-  gap: 16px;
-  padding-top: 24px;
+  max-width: 920px;
+  gap: 22px;
+  padding-top: 32px;
   padding-bottom: 48px;
 }
 
-/* ---------- Header ---------- */
-.pf-header {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 20px 22px;
-  border-radius: var(--radius);
-  background: var(--navy);
-  color: var(--white);
-  box-shadow: 0 8px 24px rgba(24, 59, 86, 0.18);
-}
-.pf-header__avatar {
-  flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--accent);
-  color: var(--navy);
-  font-size: 20px;
-  font-weight: 800;
-}
-.pf-header__info {
-  flex: 1;
-  min-width: 0;
-}
-.pf-header__name {
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-.pf-header__meta {
-  margin-top: 3px;
-  font-size: var(--text-size);
-  color: var(--gray);
-  overflow-wrap: anywhere;
-}
-.btn.pf-logout {
-  flex-shrink: 0;
-  background: transparent;
-  color: var(--pf-logout);
-  border-color: var(--pf-logout);
-}
-.btn.pf-logout:hover:not(:disabled) {
-  background: rgba(244, 165, 155, 0.12);
-}
-
-/* ---------- Cards ---------- */
+/* Cards */
 .card.pf-card {
-  padding: 20px;
-  gap: 14px;
+  gap: 18px;
+  padding: 24px 26px;
+  border: 1px solid var(--pf-line);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(24, 59, 86, 0.06);
+  animation: fade-up 0.4s ease backwards;
+}
+.container.pf > .pf-card:nth-of-type(3) {
+  animation-delay: 0.05s;
+}
+.container.pf > .pf-card:nth-of-type(4) {
+  animation-delay: 0.1s;
+}
+.container.pf > .pf-card:nth-of-type(5) {
+  animation-delay: 0.15s;
+}
+.container.pf > .pf-card:nth-of-type(6) {
+  animation-delay: 0.2s;
 }
 .pf-card__head {
   display: flex;
@@ -83,49 +43,280 @@
   justify-content: space-between;
   gap: 12px;
 }
+.pf-card__titles {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.pf-card__icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--teal), #159a9c);
+  color: var(--white);
+}
+.pf-card__icon svg {
+  width: 20px;
+  height: 20px;
+}
 .pf-card__title {
-  font-size: var(--section-size);
+  font-size: 18px;
   font-weight: 700;
   color: var(--navy);
 }
 .pf-card__opt {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--slate);
+  color: #8a9bab;
 }
-.btn.pf-edit {
-  padding: 8px 16px;
+.pf-card__sub {
+  margin-top: 2px;
+  font-size: 13px;
+  color: #6b8196;
 }
 
-/* two columns of read-only boxes (and of form fields while editing) */
+/* light pill button: Edit, Download */
+.pf-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--pf-soft-line);
+  border-radius: 999px;
+  background: #f2fafa;
+  color: var(--teal);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.pf-ghost:hover:not(:disabled) {
+  background: var(--pf-soft);
+}
+.pf-ghost:disabled {
+  cursor: progress;
+  opacity: 0.8;
+}
+.pf-ghost svg {
+  width: 16px;
+  height: 16px;
+}
+/* white pill with a border: Log out, Change password */
+.pf-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #cbd5df;
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.pf-outline:hover:not(:disabled) {
+  background: var(--pf-soft);
+}
+.pf-outline svg {
+  width: 18px;
+  height: 18px;
+}
+
+/*  Header: banner, initials over it, name, chips, Log out  */
+.card.pf-header {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--pf-line);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(24, 59, 86, 0.06);
+  animation: fade-up 0.4s ease backwards;
+}
+.pf-header__banner {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+  background: linear-gradient(100deg, var(--navy) 0%, var(--teal) 55%, var(--accent) 100%);
+}
+.pf-header__dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
+  opacity: 0.6;
+}
+.pf-header__shape {
+  position: absolute;
+}
+.pf-header__shape--1 {
+  width: 260px;
+  height: 260px;
+  right: -60px;
+  top: -120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+.pf-header__shape--2 {
+  width: 160px;
+  height: 160px;
+  right: 170px;
+  top: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+}
+.pf-header__shape--3 {
+  width: 90px;
+  height: 90px;
+  left: 46%;
+  top: -30px;
+  border-radius: 26px;
+  transform: rotate(20deg);
+  background: rgba(255, 255, 255, 0.08);
+}
+.pf-header__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 22px;
+  padding: 0 30px 26px;
+}
+/* white square with the initials, in a teal gradient frame, half over the banner */
+.pf-header__avatar {
+  position: relative; /* above the banner it overlaps */
+  z-index: 1;
+  flex-shrink: 0;
+  margin-top: -56px;
+  padding: 4px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  box-shadow: 0 12px 28px rgba(16, 42, 61, 0.22);
+}
+.pf-header__avatar > span {
+  width: 100px;
+  height: 100px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--white);
+  color: var(--teal);
+  font-size: 36px;
+  font-weight: 700;
+}
+.pf-header__info {
+  flex: 1 1 280px;
+  min-width: 0;
+  padding-top: 14px;
+}
+.pf-header__name {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+.pf-header__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #f2f5f8;
+  color: #3e5468;
+  font-size: 13px;
+}
+.pf-chip svg {
+  width: 14px;
+  height: 14px;
+}
+.pf-chip--teal {
+  background: var(--pf-soft);
+  color: var(--teal);
+  font-weight: 600;
+}
+.pf-outline.pf-logout {
+  border: 1.5px solid var(--teal);
+  color: var(--teal);
+  font-weight: 700;
+  padding: 0 20px;
+}
+
+/*  Tiles: two columns of read-only boxes (and of form fields while editing)  */
 .pf-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 .pf-tile {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--pf-tile);
+  padding: 14px 16px;
+  border: 1px solid var(--pf-line);
+  border-radius: 14px;
+  background: var(--white);
+  transition: border-color 0.15s;
+}
+.pf-tile:hover {
+  border-color: #b9e4e4;
+}
+.pf-tile--wide {
+  grid-column: 1 / -1;
+}
+.pf-tile__icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--pf-soft);
+  color: var(--teal);
+}
+.pf-tile__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.pf-tile__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .pf-tile__label {
   font-size: 12px;
-  color: var(--slate);
+  font-weight: 600;
+  color: #6b8196;
 }
 .pf-tile__value {
-  font-size: 15px;
   font-weight: 600;
   color: var(--navy);
   overflow-wrap: anywhere;
 }
 .pf-empty {
-  font-size: var(--text-size);
+  font-size: 14px;
   font-weight: 500;
-  color: var(--slate);
+  color: #8a9bab;
 }
 
 /* edit forms */
@@ -140,7 +331,7 @@
   gap: 10px;
 }
 
-/* ---------- My skills ---------- */
+/*  My skills  */
 .pf-skills {
   list-style: none;
   padding: 0;
@@ -149,95 +340,379 @@
   gap: 8px;
 }
 .pf-skill {
-  padding: 5px 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border: 1px solid var(--pf-soft-line);
   border-radius: 999px;
-  background: var(--teal);
-  color: var(--white);
-  font-size: 12px;
+  background: var(--pf-soft);
+  color: var(--pf-chip-text);
+  font-size: 13px;
   font-weight: 700;
 }
-.pf-note {
-  font-size: var(--hint-size);
-  color: var(--slate);
-}
 
-/* ---------- Job preferences ---------- */
+/*  Job preferences  */
 .pf-prefs {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .pf-pref {
-  padding: 4px 11px;
+  padding: 5px 12px;
   border-radius: 999px;
-  background: var(--pf-pref);
-  color: var(--pf-pref-text);
-  font-size: 12px;
+  background: var(--pf-chip);
+  color: var(--pf-chip-text);
+  font-size: 13px;
   font-weight: 700;
 }
 
-/* ---------- My CV ---------- */
-.pf-cv {
-  display: flex;
-  align-items: center;
+/*  My CV: one tile with the file, Download and Replace  */
+.pf-tile.pf-cv {
+  flex-wrap: wrap;
   gap: 14px;
 }
-.pf-cv__icon {
+.pf-cv__badge {
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
-  background: var(--pf-pref);
-  color: var(--teal);
+  background: #fef3f2;
+  color: var(--pf-danger);
+  font-size: 11px;
+  font-weight: 700;
 }
-.pf-cv__icon svg {
-  width: 22px;
-  height: 22px;
+.pf-cv__badge--doc {
+  background: #eff4ff;
+  color: #1d4ed8;
 }
 .pf-cv__info {
-  flex: 1;
+  flex: 1 1 180px;
   min-width: 0;
 }
-.pf-cv__meta {
-  margin-top: 2px;
-  font-size: 13px;
-  color: var(--slate);
+.pf-cv__name {
+  font-weight: 600;
+  color: var(--navy);
   overflow-wrap: anywhere;
+}
+.pf-cv__meta {
+  font-size: 13px;
+  color: #6b8196;
 }
 .pf-cv__actions {
   display: flex;
   gap: 8px;
-  flex-shrink: 0;
+}
+.btn.pf-cv__upload {
+  min-height: 40px;
+  padding: 0 18px;
+  white-space: nowrap;
 }
 
-/* ---------- Account ---------- */
+/*  Account: Change password on the left, Delete on the right  */
 .pf-account {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+.btn.pf-danger {
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  background: var(--pf-danger);
+  color: var(--white);
+  font-weight: 700;
+}
+.btn.pf-danger:hover:not(:disabled) {
+  background: var(--pf-danger-hover);
+}
+.btn.pf-danger svg {
+  width: 18px;
+  height: 18px;
+}
+
+/*  "Delete your account?" pop-up (wireframe 21)  */
+.pf-del-overlay {
+  overflow-y: auto;
+  animation: fade-in 0.2s ease both;
+}
+.pf-del {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  margin: auto;
+  padding: 32px;
+  border: 1px solid #e5eaf0;
+  border-top: 6px solid var(--pf-danger);
+  border-radius: 20px;
+  background: var(--white);
+  box-shadow: 0 24px 60px rgba(16, 42, 61, 0.25);
+  animation: pf-del-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes pf-del-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+.pf-del__form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.pf-del__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #5b7186;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.pf-del__close:hover:not(:disabled) {
+  background: #f2f5f8;
+}
+.pf-del__close svg {
+  width: 18px;
+  height: 18px;
+}
+.pf-del__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 32px;
+}
+.pf-del__icon {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #fdecea;
+  color: var(--pf-danger);
+}
+.pf-del__icon svg {
+  width: 30px;
+  height: 30px;
+}
+.pf-del__title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--navy);
+}
+.pf-del__who {
+  margin-top: 2px;
+  font-size: 15px;
+  color: #5b7186;
+  overflow-wrap: anywhere;
+}
+/* "What will be deleted" */
+.pf-del__lost {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid #f7b4ae;
+  border-radius: 14px;
+  background: #fff4f2;
+}
+.pf-del__lost-title {
+  font-weight: 700;
+  color: #912018;
+}
+.pf-del__lost ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pf-del__lost li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  color: #3e5468;
+}
+.pf-del__lost li svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--pf-danger);
+  stroke-width: 2.5;
+}
+/* "Just need a break? You can log out instead." */
+.pf-del__alt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--pf-soft);
+  font-size: 14px;
+  color: #3e5468;
+}
+.pf-del__alt > svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--teal);
+}
+.pf-del__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--teal);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pf-del__link:hover {
+  text-decoration: underline;
+}
+.pf-del__field {
+  margin: 0;
+}
+.pf-del__field .field__error {
+  color: var(--error);
+}
+.pf-del__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
-.btn.pf-danger {
+.pf-del__keep,
+.pf-del__delete {
+  min-height: 50px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    background-color 0.15s,
+    filter 0.15s;
+}
+.pf-del__keep {
+  flex: 1 1 160px;
+  border: 1px solid #cbd5df;
   background: var(--white);
-  color: var(--pf-danger);
-  border-color: var(--pf-danger-line);
+  color: var(--navy);
 }
-.btn.pf-danger:hover:not(:disabled) {
-  background: var(--pf-danger-bg);
-  border-color: var(--pf-danger);
+.pf-del__keep:hover:not(:disabled) {
+  background: #f2f5f8;
 }
-/* password box inside the delete dialog (.dialog p would make the error grey) */
-.dialog .pf-dialog-field {
-  margin-top: 4px;
+.pf-del__delete {
+  flex: 2 1 220px;
+  border: 0;
+  background: var(--pf-danger-hover);
+  color: var(--white);
 }
-.dialog .pf-dialog-field .field__error {
-  color: var(--error);
-  font-size: var(--hint-size);
+.pf-del__delete:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.pf-del__delete:disabled {
+  cursor: progress;
+  opacity: 0.85;
+}
+.pf-del__delete svg {
+  width: 18px;
+  height: 18px;
+}
+/* after deleting: grey tick, message, Go to the home page */
+.pf-del--done {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 32px;
+  border-top-width: 1px;
+  border-top-color: #e5eaf0;
+  text-align: center;
+}
+.pf-del__done-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef2f5;
+  color: #5b7186;
+  animation: pop 0.35s ease both;
+}
+.pf-del__done-icon svg {
+  width: 30px;
+  height: 30px;
+  stroke-width: 2.5;
+}
+.pf-del--done .pf-del__title {
+  font-size: 26px;
+}
+.pf-del__bye {
+  max-width: 420px;
+  color: #5b7186;
+}
+.btn.pf-del__home {
+  min-height: 48px;
+  padding: 0 24px;
 }
 
-/* ---------- Load error ---------- */
+/*  Loading: grey shapes of the page (the .sk shapes are in JobsForYou.css)  */
+.pf-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.pf-loading .card {
+  animation: none;
+}
+.pf-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* the banner, icon squares and avatar keep the grey shine, not their colours */
+.pf-loading .pf-header__banner {
+  background: linear-gradient(90deg, #e3eaef 0%, #edf2f5 40%, #e3eaef 80%);
+  background-size: 800px 100%;
+  animation: sk-shine 1.4s linear infinite;
+}
+.pf-loading .pf-header__avatar {
+  background: var(--white);
+}
+.pf-loading .pf-header__avatar > .sk {
+  display: block;
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.pf-loading .sk.pf-card__icon,
+.pf-loading .sk.pf-tile__icon {
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.pf-loading__chip {
+  width: 170px;
+}
+
+/*  Load error  */
 .card.pf-state {
   align-items: center;
   text-align: center;
@@ -252,46 +727,94 @@
   font-size: var(--text-size);
 }
 
-/* ---------- Tablet / phone ---------- */
+/*  Tablet / phone  */
 @media (max-width: 640px) {
   .container.pf {
-    padding-top: 16px;
-  }
-  .pf-header {
-    flex-wrap: wrap;
-    padding: 18px;
-    gap: 14px;
-  }
-  .pf-header__avatar {
-    width: 52px;
-    height: 52px;
-    font-size: 18px;
-  }
-  .pf-header__name {
-    font-size: 19px;
-  }
-  .btn.pf-logout {
-    width: 100%;
+    gap: 16px;
+    padding-top: 20px;
   }
   .card.pf-card {
-    padding: 16px;
+    padding: 18px;
+  }
+  .pf-header__banner {
+    height: 110px;
+  }
+  .pf-header__body {
+    gap: 14px;
+    padding: 0 18px 20px;
+  }
+  .pf-header__avatar {
+    margin-top: -44px;
+  }
+  .pf-header__avatar > span {
+    width: 80px;
+    height: 80px;
+    font-size: 28px;
+  }
+  .pf-header__info {
+    flex-basis: 100%;
+    padding-top: 0;
+  }
+  .pf-header__name {
+    font-size: 24px;
+  }
+  .pf-outline.pf-logout {
+    width: 100%;
+  }
+  .pf-card__head {
+    align-items: flex-start;
   }
   .pf-grid {
     grid-template-columns: 1fr;
   }
-  .pf-cv {
-    flex-wrap: wrap;
-  }
   .pf-cv__actions {
     width: 100%;
   }
-  .pf-cv__actions .btn {
+  .pf-cv__actions > * {
     flex: 1;
   }
-  .pf-account .btn {
+  .pf-account > * {
     flex: 1 1 100%;
   }
   .pf-actions .btn {
     flex: 1;
+  }
+  .pf-del {
+    padding: 24px 20px;
+  }
+  .pf-del__head {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .pf-del__icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+  .pf-del__icon svg {
+    width: 24px;
+    height: 24px;
+  }
+  .pf-del__title {
+    font-size: 22px;
+  }
+  .pf-del__lost li {
+    font-size: 14px;
+  }
+}
+/* very narrow: the title icon gets out of the way of the Edit button */
+@media (max-width: 380px) {
+  .pf-card__head .pf-card__icon {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.pf-card,
+  .card.pf-header,
+  .pf-loading .pf-header__banner,
+  .pf-del-overlay,
+  .pf-del,
+  .pf-del__done-icon {
+    animation: none;
   }
 }

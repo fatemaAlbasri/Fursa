@@ -4,7 +4,7 @@ import { buildCvView } from '../../jobseeker/utils/cvText.js'
 import { api } from '../../shared/api.js'
 import { userInitials } from '../../shared/utils/jobFormat.js'
 import { STATUS_LABELS, avatarColor } from '../data/applicants.js'
-import Loading, { ButtonSpinner } from '../../shared/components/Loading.jsx'
+import { ButtonSpinner } from '../../shared/components/Loading.jsx'
 import StatusPill from '../../shared/components/StatusPill'
 import { LockIcon } from '../../shared/components/icons.jsx'
 import ScoreRing from '../components/ScoreRing.jsx'
@@ -224,6 +224,64 @@ function ScheduleForm({
   )
 }
 
+// The same for every status: header, AI match, CV, the status card and History.
+function ApplicantLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  return (
+    <div className="apd-loading" role="status" aria-label="Loading applicant">
+      <section className="apd-head" aria-hidden="true">
+        <span className="sk apd-avatar" />
+        <div className="apd-head__who apd-loading__text">
+          {line('60%')}
+          {line('85%', true)}
+        </div>
+        <span className="sk sk--pill" />
+        <span className="sk apd-sk-ring" />
+      </section>
+      <div className="apd-body" aria-hidden="true">
+        <div className="apd-main">
+          <section className="apd-card">
+            {line(200)}
+            {line('60%', true)}
+            <div className="apd-skills">
+              {[0, 1, 2, 3].map((i) => (
+                <span key={i} className="sk apd-sk-box" />
+              ))}
+            </div>
+          </section>
+          <section className="apd-card">
+            {line(60)}
+            {[90, 75, 95, 60, 85, 70].map((w, i) => (
+              <span key={i} className="sk sk--line sk--thin" style={{ width: `${w}%` }} />
+            ))}
+          </section>
+        </div>
+        <aside className="apd-side">
+          <section className="apd-card">
+            {line(80, true)}
+            {line(180)}
+            {line('70%', true)}
+            <span className="sk apd-sk-btn" />
+            <span className="sk apd-sk-btn" />
+          </section>
+          <section className="apd-card">
+            {line(70)}
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="apd-loading__step">
+                <span className="sk apd-sk-dot" />
+                <div className="apd-loading__text">
+                  {line(120)}
+                  {line(50, true)}
+                </div>
+              </div>
+            ))}
+          </section>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
 function ApplicantPage() {
   const { id, appId } = useParams()
 
@@ -266,7 +324,7 @@ function ApplicantPage() {
             {error}
           </p>
         ) : (
-          <Loading text="Loading applicant…" />
+          <ApplicantLoading />
         )}
       </main>
     )

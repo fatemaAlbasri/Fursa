@@ -1,54 +1,153 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../../shared/api.js'
-import Loading from '../../shared/components/Loading.jsx'
 import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
-import { LogOutIcon } from '../../shared/components/icons.jsx'
+import Notice from '../../shared/components/Notice.jsx'
+import { CalendarIcon, LogOutIcon } from '../../shared/components/icons.jsx'
 import { userInitials } from '../../shared/utils/jobFormat.js'
 import PersonalDetails from '../components/profile/PersonalDetails.jsx'
 import SkillsCard from '../components/profile/SkillsCard.jsx'
 import PreferencesCard from '../components/profile/PreferencesCard.jsx'
 import CvCard from '../components/profile/CvCard.jsx'
 import AccountCard from '../components/profile/AccountCard.jsx'
+import { CapIcon } from '../components/profile/ProfileParts.jsx'
 import '../styles/Profile.css'
 
 // =====================================================================
 // Profile (/jobseeker/profile).
-// Header (initials, name, major · status · email, Log out) and one card per section:
+// Header (wireframe 11: banner, initials, name, major · status and join date chips, Log out) and one card per section:
 // Personal details, My skills, Job preferences, My CV, Account.
 // Data: GET /api/profile (the signed-in seeker only). Each card saves through its own endpoint
 // and only changes its own fields, so editing one section never touches another.
 // =====================================================================
 
-// Navy header card
+// "Joined Oct 2026"
+const joined = (date) => (date ? new Date(date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '')
+
+// Banner with soft shapes, the initials overlapping it, then name, chips and Log out
 function ProfileHeader({ profile, onLogout, loggingOut }) {
   const name = `${profile.first_name} ${profile.last_name}`
-  const meta = [profile.major, profile.graduation_status, profile.email].filter(Boolean).join(' · ')
+  const study = [profile.major, profile.graduation_status].filter(Boolean).join(' · ')
   return (
-    <section className="pf-header" aria-label="Your profile">
-      <span className="pf-header__avatar" aria-hidden="true">
-        {userInitials(profile.first_name, profile.last_name)}
-      </span>
-      <div className="pf-header__info">
-        <h1 className="pf-header__name">{name}</h1>
-        <p className="pf-header__meta">{meta}</p>
+    <section className="card pf-header" aria-label="Your profile">
+      <div className="pf-header__banner" aria-hidden="true">
+        <span className="pf-header__dots" />
+        <span className="pf-header__shape pf-header__shape--1" />
+        <span className="pf-header__shape pf-header__shape--2" />
+        <span className="pf-header__shape pf-header__shape--3" />
       </div>
-      <button type="button" className="btn pf-logout" onClick={onLogout} disabled={loggingOut}>
-        <LogOutIcon />
-        {loggingOut ? 'Logging out…' : 'Log out'}
-      </button>
+      <div className="pf-header__body">
+        <span className="pf-header__avatar" aria-hidden="true">
+          <span>{userInitials(profile.first_name, profile.last_name)}</span>
+        </span>
+        <div className="pf-header__info">
+          <h1 className="pf-header__name">{name}</h1>
+          <div className="pf-header__chips">
+            {study && (
+              <span className="pf-chip pf-chip--teal">
+                <CapIcon />
+                {study}
+              </span>
+            )}
+            {profile.created_at && (
+              <span className="pf-chip">
+                <CalendarIcon />
+                Joined {joined(profile.created_at)}
+              </span>
+            )}
+          </div>
+        </div>
+        <button type="button" className="pf-outline pf-logout" onClick={onLogout} disabled={loggingOut}>
+          <LogOutIcon />
+          {loggingOut ? 'Logging out…' : 'Log out'}
+        </button>
+      </div>
     </section>
+  )
+}
+
+// Grey shapes in the same layout as the page while it loads (wireframe 23)
+function ProfileLoading() {
+  const line = (width, thin) => <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  const head = (
+    <div className="pf-card__head">
+      <div className="pf-card__titles">
+        <span className="sk pf-card__icon" />
+        <div className="pf-loading__text">
+          {line(140)}
+          {line(200, true)}
+        </div>
+      </div>
+      <span className="sk sk--btn" />
+    </div>
+  )
+  return (
+    <div className="pf-loading" role="status" aria-label="Loading your profile">
+      <section className="card pf-header" aria-hidden="true">
+        <div className="pf-header__banner" />
+        <div className="pf-header__body">
+          <span className="pf-header__avatar">
+            <span className="sk" />
+          </span>
+          <div className="pf-header__info pf-loading__text">
+            {line(220)}
+            <div className="pf-header__chips">
+              <span className="sk sk--pill pf-loading__chip" />
+              <span className="sk sk--pill" />
+            </div>
+          </div>
+          <span className="sk sk--btn" />
+        </div>
+      </section>
+      <section className="card pf-card" aria-hidden="true">
+        {head}
+        <div className="pf-grid">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="pf-tile">
+              <span className="sk pf-tile__icon" />
+              <div className="pf-loading__text pf-tile__text">
+                {line('40%', true)}
+                {line('70%')}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      {[0, 1].map((i) => (
+        <section key={i} className="card pf-card" aria-hidden="true">
+          {head}
+          <div className="pf-header__chips">
+            {[90, 70, 110, 80].map((w) => (
+              <span key={w} className="sk sk--pill" style={{ width: w }} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   )
 }
 
 export default function Profile() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // A message handed over by another page (e.g. "Password updated" from Change password)
+  const [notice, setNotice] = useState(() => location.state?.notice ?? null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0) // "Try again" bumps this to load again
   const [loggingOut, setLoggingOut] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false) // "Are you sure?" dialog is open
+
+  // Shown once: clear it from the history entry so a reload or Back doesn't show it again
+  useEffect(() => {
+    if (location.state?.notice) navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
+
+  // Once the page is there, scroll up so the message can be seen
+  useEffect(() => {
+    if (notice && !loading) window.scrollTo({ top: 0 })
+  }, [notice, loading])
 
   // Escape closes the log out dialog (= Cancel), never logs out. Ignored while logging out.
   useEffect(() => {
@@ -108,7 +207,7 @@ export default function Profile() {
   if (loading) {
     return (
       <main className="container pf">
-        <Loading text="Loading your profile…" />
+        <ProfileLoading />
       </main>
     )
   }
@@ -129,6 +228,7 @@ export default function Profile() {
 
   return (
     <main className="container pf">
+      <Notice notice={notice} onClose={() => setNotice(null)} />
       <ProfileHeader profile={profile} onLogout={() => setConfirmLogout(true)} loggingOut={loggingOut} />
       <ConfirmDialog
         open={confirmLogout}
@@ -147,7 +247,7 @@ export default function Profile() {
         onSaved={update}
       />
       <CvCard cv={profile.cv} onSaved={(cv) => update({ cv })} />
-      <AccountCard />
+      <AccountCard email={profile.email} onLogout={() => setConfirmLogout(true)} />
     </main>
   )
 }

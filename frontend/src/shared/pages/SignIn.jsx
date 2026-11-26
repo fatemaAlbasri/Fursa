@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PasswordInput from '../components/PasswordInput.jsx'
 import { api } from '../api.js'
+import { ButtonSpinner } from '../components/Loading.jsx'
 
 function Field({ label, error, extra, children }) {
   return (
@@ -23,6 +24,7 @@ export default function SignIn() {
   )
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
+  const [busy, setBusy] = useState(false)
 
   const navigate = useNavigate()
 
@@ -37,22 +39,25 @@ export default function SignIn() {
     setErrors(errs)
     if (Object.keys(errs).length) return
 
+    setBusy(true)
     try {
       const { token, user } = await api('/auth/signin', {
         method: 'POST',
         body: { ...form, role }
       })
       localStorage.setItem('token', token)
-      navigate(user.role === 'employer' ? '/company' : '/jobseeker')
-    } catch (err) {
+      const HOME = { admin: '/admin', employer: '/company', seeker: '/jobseeker' }
+      navigate(HOME[user.role] || '/jobseeker')
+        } catch (err) {
       setErrors(
         err.fields || { password: err.error || 'Could not reach the server' }
       )
+      setBusy(false) // on success the page changes, so only stop on errors
     }
   }
 
   return (
-    <div className="split">
+    <div className="split split--signin">
       <aside className="split__brand">
         <Link to="/" className="logo">
           <img src="/white-full-logo.png" alt="Fursa" className="logo__full" />
@@ -61,9 +66,11 @@ export default function SignIn() {
           <h1>
             Unlock Your <span className="accent">Chance.</span>
           </h1>
-          <p>
-            See the jobs and internships that match your skills, and improve
-            your CV with AI.
+          {/* key={role} fades the text in again when the role changes */}
+          <p key={role} className="swap">
+            {isCompany
+              ? 'Post a job and get your applicants ranked, with a clear reason for every score.'
+              : 'See the jobs and internships that match your skills, and improve your CV with AI.'}
           </p>
         </div>
         <div className="dots">
@@ -128,11 +135,18 @@ export default function SignIn() {
             <PasswordInput value={form.password} onChange={change} />
           </Field>
 
-          <button className="btn btn--primary btn--block" type="submit">
-            {/* key={role} restarts the fade-in each time the role changes */}
-            <span key={role} className="swap">
-              {isCompany ? 'Sign in as company' : 'Sign in as job seeker'}
-            </span>
+          <button className="btn btn--primary btn--block" type="submit" disabled={busy} aria-busy={busy}>
+            {busy ? (
+              <>
+                <ButtonSpinner />
+                Signing in…
+              </>
+            ) : (
+              // key={role} restarts the fade-in each time the role changes
+              <span key={role} className="swap">
+                {isCompany ? 'Sign in as company' : 'Sign in as job seeker'}
+              </span>
+            )}
           </button>
 
           <p className="center muted">

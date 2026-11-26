@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PasswordInput from '../components/PasswordInput.jsx'
 import PasswordStrength, { checkPassword } from '../components/PasswordStrength.jsx'
 import { api } from '../api.js'
+import PasswordSteps from '../components/PasswordSteps.jsx'
 
 function Field({ label, error, children }) {
   return (
@@ -79,6 +80,7 @@ export default function ResetPassword() {
 
   return (
     <main className="pw">
+      <PasswordSteps step={3} />
       <form className="card" onSubmit={submit} noValidate autoComplete="off">
         <div className="pw-head">
           <span className="pw-head__icon">

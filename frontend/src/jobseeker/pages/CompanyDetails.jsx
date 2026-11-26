@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
-import { formatJobType, formatWorkMode, formatDeadline } from '../../shared/utils/jobFormat.js'
+import { formatJobType, formatWorkMode, formatDeadline, matchTier } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
 import '../styles/Companies.css'
 
@@ -47,11 +47,17 @@ const logoInfo = (company) => ({
 })
 
 // One open job: match ring (only when there is a score), title, type, mode, deadline
-function JobRow({ job }) {
+// admin = opened from the admin pages: the button opens the admin job view instead of apply
+function JobRow({ job, admin }) {
   return (
     <article className="co-job">
+      {/* same colours as the job lists: teal 80+, amber below 80, pale red = doesn't qualify */}
       {job.match_score != null && (
-        <div className="co-ring" style={{ '--score': job.match_score }} aria-label={`${job.match_score}% match`}>
+        <div
+          className={`co-ring co-ring--${job.is_qualified === false ? 'muted' : matchTier(job.match_score)}`}
+          style={{ '--score': job.match_score }}
+          aria-label={`${job.match_score}% match`}
+        >
           <span className="co-ring__value">{job.match_score}%</span>
         </div>
       )}
@@ -66,8 +72,11 @@ function JobRow({ job }) {
           </span>
         </p>
       </div>
-      <Link to={`/jobseeker/jobs/${job.id}`} className="btn btn--primary co-job__btn">
-        View &amp; apply
+      <Link
+        to={admin ? `/admin/jobs/${job.id}` : `/jobseeker/jobs/${job.id}`}
+        className="btn btn--primary co-job__btn"
+      >
+        {admin ? 'View job' : 'View & apply'}
       </Link>
     </article>
   )
@@ -101,7 +110,63 @@ function StandOut({ company, skills }) {
   )
 }
 
-export default function CompanyDetails() {
+// Grey shapes in the same layout as the company page, while it loads (wireframe 23)
+function CompanyLoading() {
+  const line = (width, thin) => (
+    <span className={thin ? 'sk sk--line sk--thin' : 'sk sk--line'} style={{ width }} />
+  )
+  return (
+    <div className="co-loading" role="status" aria-label="Loading company">
+      <section className="co-hero" aria-hidden="true">
+        <span className="sk co-hero__banner" />
+        <div className="co-hero__body">
+          <span className="sk co-logo" />
+          <div className="co-hero__text co-loading__text">
+            {line('40%')}
+            {line('55%', true)}
+          </div>
+          <span className="sk sk--btn" />
+        </div>
+      </section>
+      <div className="co-layout" aria-hidden="true">
+        <div className="co-main">
+          <section className="co-section">
+            {line('30%')}
+            {line('95%', true)}
+            {line('80%', true)}
+          </section>
+          <section className="co-section">
+            {line('25%')}
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="co-job co-job--loading">
+                <span className="sk sk--ring" />
+                <div className="co-job__info co-loading__text">
+                  {line('50%')}
+                  <span className="sk sk--pill" />
+                </div>
+                <span className="sk sk--btn" />
+              </div>
+            ))}
+          </section>
+        </div>
+        <div className="co-side">
+          <section className="co-section">
+            {line('45%')}
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="co-loading__text">
+                {line('35%', true)}
+                {line('60%')}
+              </div>
+            ))}
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// admin = the same page opened from /admin/companies/:id (no match scores or tips, links go back to admin)
+export default function CompanyDetails({ admin = false }) {
   const { id } = useParams() // the company id from the URL
   const navigate = useNavigate()
 
@@ -179,8 +244,9 @@ export default function CompanyDetails() {
     }
   }, [id, navigate, reloadKey])
 
+  const listPath = admin ? '/admin/companies' : '/jobseeker/companies'
   const backLink = (
-    <Link to="/jobseeker/companies" className="co-back">
+    <Link to={listPath} className="co-back">
       ← All companies
     </Link>
   )
@@ -190,10 +256,7 @@ export default function CompanyDetails() {
     return (
       <main className="container co">
         {backLink}
-        <div className="co-state" role="status">
-          <span className="co-spinner" aria-hidden="true" />
-          Loading company…
-        </div>
+        <CompanyLoading />
       </main>
     )
   }
@@ -204,7 +267,7 @@ export default function CompanyDetails() {
         <div className="co-state">
           <h2>Company not found</h2>
           <p>This company doesn't exist or is no longer on Fursa.</p>
-          <Link to="/jobseeker/companies" className="btn btn--primary">
+          <Link to={listPath} className="btn btn--primary">
             See all companies
           </Link>
         </div>
@@ -279,7 +342,7 @@ export default function CompanyDetails() {
             {jobs.length > 0 ? (
               <div className="co-jobs">
                 {jobs.map((job) => (
-                  <JobRow key={job.id} job={job} />
+                  <JobRow key={job.id} job={job} admin={admin} />
                 ))}
               </div>
             ) : (
@@ -326,7 +389,7 @@ export default function CompanyDetails() {
             </div>
           </section>
 
-          {standOut.length > 0 && <StandOut company={company} skills={standOut} />}
+          {!admin && standOut.length > 0 && <StandOut company={company} skills={standOut} />}
         </aside>
       </div>
     </main>

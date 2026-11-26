@@ -60,7 +60,7 @@ const getOneCompany = async (req, res, next) => {
     // Open jobs, best match for this seeker first (match_score is null when not scored yet → last)
     const { rows: jobs } = await db.query(
       `SELECT j.id, j.title, j.job_type, j.work_mode, j.location, j.deadline,
-              ms.score AS match_score
+              ms.score AS match_score, ms.is_qualified
          FROM jobs j
          LEFT JOIN match_scores ms ON ms.job_id = j.id AND ms.seeker_id = $2
         WHERE j.company_id = $1 AND ${OPEN_JOB}

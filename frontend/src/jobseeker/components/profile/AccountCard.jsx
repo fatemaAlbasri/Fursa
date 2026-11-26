@@ -1,45 +1,19 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { api } from '../../../shared/api.js'
-import ConfirmDialog from '../../../shared/components/ConfirmDialog.jsx'
-import PasswordInput from '../../../shared/components/PasswordInput.jsx'
-import { TrashIcon } from '../../../shared/components/icons.jsx'
-import { errorText } from './ProfileParts.jsx'
+import { Link } from 'react-router-dom'
+import { LockIcon, TrashIcon } from '../../../shared/components/icons.jsx'
+import { Section, ShieldIcon } from './ProfileParts.jsx'
+import DeleteAccountDialog from './DeleteAccountDialog.jsx'
 
-// "Account": Change password (the existing page) and Delete my account.
-// Deleting asks for confirmation + the current password: DELETE /api/auth/profile/account { password }.
-export default function AccountCard() {
-  const navigate = useNavigate()
+// "Account": Change password (the existing page) and Delete my account (a pop-up, wireframe 21).
+// onLogout = "log out instead" in the pop-up (the page's own Log out confirmation).
+export default function AccountCard({ email, onLogout }) {
   const [open, setOpen] = useState(false)
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-
-  const close = () => {
-    setOpen(false)
-    setPassword('')
-    setError('')
-  }
-
-  async function deleteAccount() {
-    if (!password) return setError('Enter your password to confirm')
-    setBusy(true)
-    setError('')
-    try {
-      await api('/auth/profile/account', { method: 'DELETE', body: { password } })
-      localStorage.removeItem('token')
-      navigate('/', { replace: true })
-    } catch (err) {
-      setError(err.fields?.password || errorText(err))
-      setBusy(false)
-    }
-  }
 
   return (
-    <section className="card pf-card" aria-labelledby="pf-account-title">
-      <h2 id="pf-account-title" className="pf-card__title">Account</h2>
+    <Section title="Account" sub="Password and account settings" icon={<ShieldIcon />} labelledBy="pf-account-title">
       <div className="pf-account">
-        <Link to="/jobseeker/change-password" className="btn btn--cancel">
+        <Link to="/jobseeker/change-password" className="pf-outline">
+          <LockIcon />
           Change password
         </Link>
         <button type="button" className="btn pf-danger" onClick={() => setOpen(true)}>
@@ -48,30 +22,19 @@ export default function AccountCard() {
         </button>
       </div>
 
-      <ConfirmDialog
+      <DeleteAccountDialog
         open={open}
-        title="Delete your account?"
-        message="This permanently deletes your profile, CV, applications and notifications. This can't be undone."
-        confirmLabel="Delete my account"
-        danger
-        busy={busy}
-        onConfirm={deleteAccount}
-        onCancel={close}
-      >
-        <div className="field pf-dialog-field">
-          <label htmlFor="pf-delete-password">Enter your password to confirm</label>
-          <PasswordInput
-            id="pf-delete-password"
-            name="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value)
-              setError('')
-            }}
-          />
-          {error && <p className="field__error" role="alert">{error}</p>}
-        </div>
-      </ConfirmDialog>
-    </section>
+        who={email}
+        alt={{
+          text: 'Just need a break? You can',
+          label: 'log out instead.',
+          onClick: () => {
+            setOpen(false)
+            onLogout()
+          }
+        }}
+        onClose={() => setOpen(false)}
+      />
+    </Section>
   )
 }

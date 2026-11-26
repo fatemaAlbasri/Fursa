@@ -362,7 +362,7 @@ img.ma-logo {
   border: 1.5px dashed #c3d0db;
 }
 
-/* ---------- Loading / empty / error ---------- */
+/* Empty / error */
 .ma-state {
   background: var(--white);
   border: 1px solid var(--gray);
@@ -392,18 +392,54 @@ img.ma-logo {
 .ma-state--error h3 {
   color: var(--error);
 }
-.ma-spinner {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 3px solid var(--light);
-  border-top-color: var(--teal);
-  animation: ma-spin 0.8s linear infinite;
+
+/* Loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) */
+.ma-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
-@keyframes ma-spin {
-  to {
-    transform: rotate(360deg);
-  }
+.ma-loading .ma-stat {
+  gap: 8px;
+}
+/* the logo keeps the grey shine, not its teal colour */
+.ma-loading .sk.ma-logo {
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.ma-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ma-sk-tab {
+  display: block;
+  flex-shrink: 0;
+  width: 92px;
+  height: 36px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.ma-card--loading {
+  pointer-events: none;
+}
+.ma-sk-steps {
+  grid-area: progress;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.ma-sk-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ma-sk-step__icon {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
 }
 
 /* ---------- Smaller screens ---------- */
@@ -416,9 +452,40 @@ img.ma-logo {
       'progress progress progress progress';
   }
 }
+/* phones and small tablets: all five counts stay in one compact row,
+   the tabs stay in one row and scroll sideways instead of wrapping */
 @media (max-width: 760px) {
   .ma-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .ma-stat {
+    padding: 12px 6px;
+    align-items: center;
+    text-align: center;
+  }
+  .ma-stat__label {
+    font-size: 11.5px;
+    line-height: 1.2;
+  }
+  .ma-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 2px 16px 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ma-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  /* the row fades out at the right edge, so it's clear there are more tabs to scroll to */
+  .ma-tabs {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+  .ma-tab {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 }
 /* phones: pill under the text, smaller step boxes */
@@ -426,25 +493,55 @@ img.ma-logo {
   .ma-head .title {
     font-size: 24px;
   }
+  /* the five counts become one card with thin lines between them */
+  .ma-summary {
+    gap: 0;
+    padding: 12px 0;
+    background: var(--white);
+    border: 1px solid var(--gray);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(24, 59, 86, 0.05);
+  }
   .ma-stat {
-    padding: 12px;
+    min-width: 0;
+    padding: 0 2px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .ma-stat + .ma-stat {
+    border-left: 1px solid var(--gray);
   }
   .ma-stat__count {
     font-size: 20px;
+  }
+  .ma-stat__label {
+    font-size: 10.5px;
+    white-space: nowrap;
   }
   .ma-tab {
     padding: 7px 14px;
     font-size: 13px;
   }
+  /* the whole card is the link, so no › here: the title and details get the full width */
   .ma-card {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
-      'logo info chevron'
-      'logo status chevron'
-      'progress progress progress';
+      'logo info'
+      'logo status'
+      'progress progress';
     column-gap: 12px;
     row-gap: 10px;
     padding: 16px;
+  }
+  .ma-card__chevron {
+    display: none;
+  }
+  .ma-logo {
+    width: 40px;
+    height: 40px;
+    align-self: start;
   }
   .ma-card__status .status-pill {
     min-width: 0;
@@ -460,12 +557,16 @@ img.ma-logo {
     height: 15px;
   }
 }
+/* very narrow phones: "Shortlisted" still fits on one line */
+@media (max-width: 360px) {
+  .ma-stat__label {
+    font-size: 9.5px;
+    letter-spacing: -0.01em;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .ma-card,
   .ma-tab {
     transition: none;
-  }
-  .ma-spinner {
-    animation-duration: 2s;
   }
 }

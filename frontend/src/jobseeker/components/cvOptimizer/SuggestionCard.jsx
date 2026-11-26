@@ -8,7 +8,8 @@ const STATUS_LABEL = { accepted: 'Accepted', pending: 'Not decided yet', dismiss
 // variant "preview" = the free card on the optimizer page, "report" = a card in the Advanced report.
 // onDecide(id, status) saves the status and returns an error message or null.
 // busy = any suggestion is saving (buttons disabled on every card); saving = this one is.
-export default function SuggestionCard({ suggestion: s, variant = 'report', busy = false, saving = false, onDecide }) {
+// plain = no card box of its own (when it sits inside another card).
+export default function SuggestionCard({ suggestion: s, variant = 'report', busy = false, saving = false, plain = false, onDecide }) {
   const [error, setError] = useState('')
   const isNew = !s.beforeText // a section the CV doesn't have yet
   const showStatus = variant === 'report' || s.status !== 'pending'
@@ -21,7 +22,7 @@ export default function SuggestionCard({ suggestion: s, variant = 'report', busy
   }
 
   return (
-    <article id={`cvo-s-${s.id}`} className={`cvo-card cvo-sugg cvo-sugg--${s.status}`}>
+    <article id={`cvo-s-${s.id}`} className={`${plain ? '' : 'cvo-card '}cvo-sugg cvo-sugg--${s.status}`}>
       <div className="cvo-sugg__head">
         <span className="cvo-chip">{s.section}</span>
         {variant === 'preview' && s.isFreePreview && <span className="cvo-tag cvo-tag--free">Free preview</span>}

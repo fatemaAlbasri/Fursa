@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
+import BackToTop from '../components/BackToTop.jsx';
 
 const NAV_LINKS = [
   { href: '#how-it-works', label: 'How it works' },
@@ -69,9 +70,13 @@ function useReveal() {
     }
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
+        const el = e.target;
         if (e.isIntersecting) {
-          e.target.classList.add('is-visible');
-          observer.unobserve(e.target);
+          el.classList.add('is-visible');
+        } else {
+          el.classList.remove('is-visible');
+          // if it went out from the top, bring it back from the top
+          el.classList.toggle('reveal--above', e.boundingClientRect.top < 0);
         }
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
@@ -98,19 +103,19 @@ function StepsCard({ id, title, icon, steps, dark, index }) {
   );
 }
 
+const authButtons = (
+  <span className="topbar__actions">
+    <Link to="/signin" className="btn btn--ghost">Sign in</Link>
+    <Link to="/signup" className="btn btn--teal">Create account</Link>
+  </span>
+);
+
 export default function Landing() {
   useReveal();
   return (
     <div className="landing">
-      <Navbar
-        links={NAV_LINKS}
-        right={
-          <span className="topbar__actions">
-            <Link to="/signin" className="btn btn--ghost">Sign in</Link>
-            <Link to="/signup" className="btn btn--teal">Create account</Link>
-          </span>
-        }
-      />
+      {/* on phones the buttons show inside the menu */}
+      <Navbar links={NAV_LINKS} right={authButtons} menuExtra={authButtons} />
 
       <section className="hero">
         <div className="hero__bg" role="img" aria-label="Two graduates reviewing a job match on the Fursa platform in an office" />
@@ -144,13 +149,13 @@ export default function Landing() {
       <section id="pricing" className="section">
         <p className="section__eyebrow reveal">Pricing for employers</p>
         <h2 className="section__title reveal" style={delay(1, 0.08)}>Simple plans for hiring</h2>
-        <p className="section__sub reveal" style={delay(2, 0.08)}>Always free for job seekers. Companies start free and upgrade for AI ranking.</p>
+        <p className="section__sub reveal" style={delay(2, 0.08)}>Free for job seekers, with an optional advanced CV optimizer. Companies start free and upgrade for AI ranking.</p>
         <div className="pricing">
           {PLANS.map((p, i) => (
             <article key={p.id} className={`${p.popular ? 'price price--popular' : 'price'} reveal`} style={delay(i)}>
               <div className="price__head">
                 <h3>{p.name}</h3>
-                {p.popular && <span className="price__badge">Most popular</span>}
+                {p.popular && <span className="price__badge">Recommend</span>}
               </div>
               <p className="price__tagline">{p.tagline}</p>
               <p className="price__amount">{p.price} <span>/ month</span></p>
@@ -175,6 +180,7 @@ export default function Landing() {
         </div>
       </section>
 
+      <BackToTop />
       <footer className="footer">© 2026 Fursa</footer>
     </div>
   );

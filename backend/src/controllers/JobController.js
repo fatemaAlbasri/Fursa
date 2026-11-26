@@ -154,6 +154,33 @@ const getCompanyOneJob = async (req, res, next) => {
 
 // Numbers for the stat boxes on the company "View job" page
 // applicants = everyone who applied, qualified = has every must-have (match_scores.is_qualified),
+
+// GET /api/admin/jobs/:id → view any posted job, open or closed (admin)
+const getAdminOneJob = async (req, res, next) => {
+  try {
+    const jobId = parseJobId(req)
+    if (!jobId) {
+      return res.status(400).json({ error: 'Invalid job id' })
+    }
+
+    const { rows } = await db.query(
+      `${ONE_JOB_SELECT}
+        WHERE j.id = $1 AND j.status <> 'draft'`,
+      [jobId]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' })
+    }
+
+    const job = rows[0]
+    delete job.jd_embedding
+    job.stats = await jobStats(jobId)
+    res.json({ job })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // newCount = still 'applied' (not reviewed yet)
 const jobStats = async (jobId) => {
   const { rows } = await db.query(
@@ -173,7 +200,9 @@ const seekerJobInfo = async (seekerId, jobId) => {
     `SELECT sp.major, sp.years_experience,
             COALESCE((SELECT array_agg(skill_id) FROM seeker_skills WHERE seeker_id = $1), '{}') AS skill_ids,
             (SELECT score FROM match_scores WHERE job_id = $2 AND seeker_id = $1) AS match_score,
+            (SELECT is_qualified FROM match_scores WHERE job_id = $2 AND seeker_id = $1) AS is_qualified,
             (SELECT file_name FROM resumes WHERE seeker_id = $1 AND is_current) AS cv_file_name,
+            (SELECT id FROM applications WHERE job_id = $2 AND seeker_id = $1) AS application_id,
             (SELECT status FROM applications WHERE job_id = $2 AND seeker_id = $1) AS application_status
        FROM seeker_profiles sp
       WHERE sp.user_id = $1`,
@@ -1234,6 +1263,7 @@ module.exports = {
   getCompanyJobs,
   getOneJob,
   getCompanyOneJob,
+  getAdminOneJob,
   createJob,
   editJob,
   deleteJob,

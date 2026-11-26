@@ -4,11 +4,19 @@ import { CheckIcon } from '../../../shared/components/icons.jsx'
 export default function ComparisonList({ comparison, major }) {
   const met = comparison.filter((c) => c.met).length
   return (
-    <section className="cvo-card cvo-compare">
-      <h2 className="cvo-card__title">How your CV compares with strong {major || 'entry-level'} CVs</h2>
-      <p className="cvo-muted">
-        Yours has <strong>{met} of {comparison.length}</strong> after the changes.
-      </p>
+    <section className="cvo-card cvo-panel cvo-compare">
+      <div className="cvo-panel__head">
+        <div>
+          <h2 className="cvo-card__title">How your CV compares</h2>
+          <p className="cvo-panel__sub">
+            With strong {major || 'entry-level'} CVs · yours has{' '}
+            <strong>
+              {met} of {comparison.length}
+            </strong>{' '}
+            after the changes
+          </p>
+        </div>
+      </div>
       <ul className="cvo-compare__list">
         {comparison.map((c) => (
           <li key={c.key} className={c.met ? 'cvo-compare__row cvo-compare__row--met' : 'cvo-compare__row'}>

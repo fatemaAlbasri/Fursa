@@ -8,6 +8,7 @@ const { saveParsedCv } = require('../services/cvParser')
 const { rescoreSeeker } = require('../services/matching')
 const { skillIds } = require('../services/skills')
 const { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone } = require('../utils/fields')
+const { PAYMENT_METHODS, PLAN_COLUMNS, paymentOut, startSubscription, emailReceipt } = require('../services/planPayment')
 
 // The frontend says 'jobseeker' / 'company', the database says 'seeker' / 'employer'
 const ROLES = {
@@ -39,6 +40,23 @@ function validateAccount(body, errors) {
   if (!isEmail(clean(body.email))) errors.email = 'Enter a valid email'
   if (typeof body.password !== 'string' || body.password.length < 8)
     errors.password = 'At least 8 characters'
+}
+
+const EMAIL_TAKEN = 'An account with this email already exists'
+const NAME_TAKEN = 'A company with this name already exists'
+
+// Is the email / company name already used? → { email?, companyName? } messages
+async function takenFields(email, companyName) {
+  const taken = {}
+  if (isEmail(email)) {
+    const { rows } = await db.query('SELECT 1 FROM users WHERE email = lower($1)', [email])
+    if (rows[0]) taken.email = EMAIL_TAKEN
+  }
+  if (companyName) {
+    const { rows } = await db.query('SELECT 1 FROM companies WHERE lower(trim(name)) = lower($1)', [companyName])
+    if (rows[0]) taken.companyName = NAME_TAKEN
+  }
+  return taken
 }
 
 async function createUser(client, body, role) {
@@ -88,8 +106,8 @@ async function createSeeker(client, userId, body, phone, skills, cv) {
   return null
 }
 
-// Every company starts on Free. A paid plan becomes active only after payment.
-async function createCompany(client, userId, phone, body, logo) {
+// The company starts on the plan it chose: a paid plan is paid for here, in the same step (simulated card)
+async function createCompany(client, userId, phone, body, logo, plan) {
   const { rows } = await client.query(
     `INSERT INTO companies (user_id, name, logo_url, website, phone, industry, location, about)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
@@ -104,10 +122,13 @@ async function createCompany(client, userId, phone, body, logo) {
       clean(body.about) || null
     ]
   )
-  await client.query(
-    `INSERT INTO subscriptions (company_id, plan_id) SELECT $1, id FROM plans WHERE name = 'Free'`,
-    [rows[0].id]
-  )
+  const companyId = rows[0].id
+  if (Number(plan.price_bhd_month) > 0) {
+    const { payment } = await startSubscription(client, { userId, companyId, plan, method: body.method })
+    return payment
+  }
+  await client.query(`INSERT INTO subscriptions (company_id, plan_id) VALUES ($1, $2)`, [companyId, plan.id])
+  return null
 }
 
 async function signup(req, res, next) {
@@ -143,23 +164,26 @@ async function signup(req, res, next) {
     if (!clean(body.location)) errors.location = 'Required'
     try {
       const { rows } = await db.query(
-        `SELECT id, name, price_bhd_month FROM plans WHERE lower(name) = lower($1)`,
+        `SELECT ${PLAN_COLUMNS} FROM plans p WHERE lower(p.name) = lower($1)`,
         [clean(body.plan) || 'free']
       )
       plan = rows[0]
-      if (clean(body.companyName)) {
-        const taken = await db.query(
-          `SELECT 1 FROM companies WHERE lower(trim(name)) = lower($1)`,
-          [clean(body.companyName)]
-        )
-        if (taken.rows[0])
-          errors.companyName = 'A company with this name already exists'
-      }
     } catch (err) {
       removeFiles(files)
       return next(err)
     }
     if (!plan) errors.plan = 'Unknown plan'
+    else if (Number(plan.price_bhd_month) > 0 && !PAYMENT_METHODS.includes(body.method))
+      errors.method = 'Pay to start a paid plan'
+  }
+
+  // same email / company name → shown under that field, together with the other errors
+  try {
+    const taken = await takenFields(clean(body.email), role === 'employer' ? clean(body.companyName) : '')
+    for (const [field, msg] of Object.entries(taken)) errors[field] ??= msg
+  } catch (err) {
+    removeFiles(files)
+    return next(err)
   }
 
   if (Object.keys(errors).length) {
@@ -180,6 +204,7 @@ async function signup(req, res, next) {
     await client.query('BEGIN')
     const userId = await createUser(client, body, role)
     let resumeId = null
+    let payment = null
     if (role === 'seeker') {
       resumeId = await createSeeker(
         client,
@@ -190,19 +215,18 @@ async function signup(req, res, next) {
         req.files?.cv?.[0]
       )
     } else {
-      await createCompany(client, userId, phone, body, req.files?.logo?.[0])
+      payment = await createCompany(client, userId, phone, body, req.files?.logo?.[0], plan)
     }
     await client.query('COMMIT')
 
     const user = await loadUser(userId)
     const result = { token: signToken(user), user }
 
-    if (plan)
-      result.needsPayment =
-        Number(plan.price_bhd_month) > 0
-          ? { planId: plan.id, plan: plan.name }
-          : false
+    if (payment) result.payment = paymentOut(payment)
     res.status(201).json(result)
+
+    // form data sends text, so the unticked box arrives as 'false'
+    if (payment && body.emailReceipt !== 'false') emailReceipt(userId, payment)
 
     // Read the CV and score the seeker after answering, so sign up doesn't wait for it
     if (role === 'seeker') {
@@ -220,14 +244,14 @@ async function signup(req, res, next) {
     removeFiles(files)
     if (err.code === '23505' && err.constraint === 'users_email_key') {
       return res.status(409).json({
-        error: 'An account with this email already exists',
-        fields: { email: 'Already registered' }
+        error: EMAIL_TAKEN,
+        fields: { email: EMAIL_TAKEN }
       })
     }
     if (err.code === '23505' && err.constraint === 'companies_name_key') {
       return res.status(409).json({
-        error: 'A company with this name already exists',
-        fields: { companyName: 'Already registered' }
+        error: NAME_TAKEN,
+        fields: { companyName: NAME_TAKEN }
       })
     }
     next(err)
@@ -441,7 +465,7 @@ async function deleteAccount(req, res, next) {
   }
   try {
     const { rows } = await client.query(
-      'SELECT password_hash FROM users WHERE id = $1',
+      'SELECT password_hash, email, first_name FROM users WHERE id = $1',
       [req.user.id]
     )
     if (!rows[0]) return res.status(401).json({ error: 'Please sign in' })
@@ -462,6 +486,14 @@ async function deleteAccount(req, res, next) {
     await client.query('COMMIT')
 
     res.json({ message: 'Your account has been deleted' })
+    // Confirmation email, sent after answering: a failed email never undoes the delete
+    sendMail({
+      to: rows[0].email,
+      subject: 'Your Fursa account has been deleted',
+      text:
+        `Hi ${rows[0].first_name},\n\nYour Fursa account and everything in it have been deleted, as you asked.\n` +
+        'If this wasn\'t you, please contact us.\n\nThe Fursa team'
+    }).catch((err) => console.error('Delete confirmation email failed:', err.message))
   } catch (err) {
     await client.query('ROLLBACK')
     next(err)
@@ -474,8 +506,20 @@ function logout(req, res) {
   res.json({ message: 'You are logged out' })
 }
 
+// POST /api/auth/signup/check { email, companyName? } → { fields } (empty = both free)
+// Lets company sign up warn on step 1, before choosing a plan and paying.
+async function checkSignup(req, res, next) {
+  try {
+    const fields = await takenFields(clean(req.body?.email), clean(req.body?.companyName))
+    res.json({ fields })
+  } catch (err) {
+    next(err)
+  }
+}
+
 module.exports = {
   signup,
+  checkSignup,
   signin,
   me,
   logout,

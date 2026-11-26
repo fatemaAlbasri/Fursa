@@ -16,15 +16,6 @@ export function PageHead({ title, sub, badge }) {
   )
 }
 
-export function LoadingState({ text }) {
-  return (
-    <div className="cvo-card cvo-state" role="status">
-      <span className="cvo-spinner" aria-hidden="true" />
-      <p className="cvo-muted">{text}</p>
-    </div>
-  )
-}
-
 export function ErrorState({ title, error, onRetry }) {
   return (
     <div className="cvo-card cvo-state cvo-state--error" role="alert">

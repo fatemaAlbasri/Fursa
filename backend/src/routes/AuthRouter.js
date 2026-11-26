@@ -1,6 +1,7 @@
 const express = require('express')
 const { requireAuth } = require('../middleware/auth')
 const { upload } = require('../middleware/upload')
+const { rateLimit } = require('../middleware/rateLimit')
 const AuthController = require('../controllers/AuthController')
 
 const router = express.Router()
@@ -14,6 +15,9 @@ router.post(
   ]),
   AuthController.signup
 )
+
+// POST /api/auth/signup/check  { email, companyName? }  → { fields } with the ones already used
+router.post('/signup/check', rateLimit(60, 60), AuthController.checkSignup)
 
 // POST /api/auth/signin
 router.post('/signin', AuthController.signin)

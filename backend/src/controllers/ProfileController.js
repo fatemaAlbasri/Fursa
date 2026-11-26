@@ -261,7 +261,27 @@ const updateCompanyLogo = async (req, res, next) => {
   }
 }
 
-// PUT /api/profile/company/contact { firstName, lastName, email } 
+// DELETE /api/profile/company/logo → no logo (the company's first letter shows instead)
+const removeCompanyLogo = async (req, res, next) => {
+  try {
+    const { rows } = await db.query(
+      'UPDATE companies c SET logo_url = NULL FROM companies old WHERE c.user_id = $1 AND old.id = c.id RETURNING old.logo_url',
+      [req.user.id]
+    )
+    if (!rows[0]) return res.status(404).json({ error: 'Company not found' })
+
+    // delete the old logo file
+    const old = rows[0].logo_url
+    if (old && old.startsWith('/uploads/logos/')) {
+      removeFiles([{ path: path.join(UPLOADS_DIR, 'logos', path.basename(old)) }])
+    }
+    res.json({ logo_url: null })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// PUT /api/profile/company/contact { firstName, lastName, email }
 const updateCompanyContact = async (req, res, next) => {
   const errors = {}
   const account = checkAccount(req.body || {}, errors)
@@ -283,5 +303,6 @@ module.exports = {
   updateSeekerPreferences,
   updateCompanyDetails,
   updateCompanyLogo,
+  removeCompanyLogo,
   updateCompanyContact
 }

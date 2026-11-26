@@ -18,6 +18,7 @@ router.put('/seeker/preferences', seeker, ProfileController.updateSeekerPreferen
 // Company
 router.put('/company/details', employer, ProfileController.updateCompanyDetails)
 router.put('/company/logo', employer, upload.single('logo'), ProfileController.updateCompanyLogo)
+router.delete('/company/logo', employer, ProfileController.removeCompanyLogo)
 router.put('/company/contact', employer, ProfileController.updateCompanyContact)
 
 module.exports = router

@@ -1,4 +1,4 @@
-/* ---------- Page ---------- */
+/* Page */
 .jv {
   width: 100%;
   max-width: 1000px;
@@ -44,7 +44,7 @@
   color: #5b7186;
 }
 
-/* ---------- Buttons ---------- */
+/* Buttons */
 .jv-btn {
   display: inline-flex;
   align-items: center;
@@ -101,7 +101,7 @@
   color: #ffffff;
 }
 
-/* ---------- Header card ---------- */
+/* Header card */
 .jv-hero {
   gap: 20px;
 }
@@ -214,7 +214,7 @@
   color: #b54708;
 }
 
-/* ---------- Two columns ---------- */
+/* Two columns */
 .jv-cols {
   display: grid;
   grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
@@ -370,7 +370,7 @@
   text-align: right;
 }
 
-/* ---------- Notes ---------- */
+/* Notes */
 .jv-warn {
   display: flex;
   align-items: center;
@@ -388,7 +388,7 @@
   flex-shrink: 0;
 }
 
-/* ---------- Edit form: same look as the view cards ---------- */
+/* Edit form  */
 .jv .jf-grid--edit {
   gap: 20px;
 }
@@ -407,7 +407,7 @@
   background: #ffffff;
 }
 
-/* ---------- "Job not found" pop-up ---------- */
+/* "Job not found" pop-up */
 .jv-overlay {
   position: fixed;
   inset: 0;
@@ -458,7 +458,39 @@
   margin-top: 8px;
 }
 
-/* ---------- Small screens ---------- */
+/* Small screens */
+/* loading: grey shapes of the page (the .sk shapes are in JobsForYou.css) */
+.jv-loading .jv-card {
+  animation: none;
+}
+.jv-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.jv-loading__block + .jv-loading__block {
+  padding-top: 18px;
+  border-top: 1px solid #e8eef2;
+}
+.jv-loading .jv-main {
+  gap: 18px;
+}
+/* the logo square keeps the grey shine, not its navy colour */
+.jv-loading .sk.jv-hero__logo {
+  background: linear-gradient(90deg, #eef2f5 0%, #f7f9fb 40%, #eef2f5 80%);
+  background-size: 800px 100%;
+}
+.sk.jv-sk-btn {
+  height: 44px;
+  border-radius: 999px;
+}
+.jv-loading__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eef2f5;
+}
+
 @media (max-width: 900px) {
   .jv-cols {
     grid-template-columns: 1fr;

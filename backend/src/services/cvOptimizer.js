@@ -292,8 +292,15 @@ async function afterAllChanges(rawText, suggestions) {
   }
 }
 
-// The score the CV can reach: every rewrite, plus everything only the job seeker can add
-const reachableScore = (potential, missingAfter) =>
-  Math.min(100, potential + missingAfter.reduce((sum, m) => sum + (m.points || 0), 0))
+// The score the CV can reach: every rewrite, plus what only the job seeker can add.
+// Each tip's points are its best case ("up to +20"), and people rarely get every tip in full,
+// so only part of them counts, and no CV is shown as reaching more than REACH_MAX.
+// Never lower than the score after the rewrites.
+const REACH_SHARE = 0.8
+const REACH_MAX = 98
+const reachableScore = (potential, missingAfter) => {
+  const tips = missingAfter.reduce((sum, m) => sum + (m.points || 0), 0)
+  return Math.max(potential, Math.min(REACH_MAX, potential + Math.round(tips * REACH_SHARE)))
+}
 
 module.exports = { reviewCv, applySuggestions, missingContent, afterAllChanges, reachableScore, cleanCvText, COMPARISON_LABELS, scoreAcceptedSuggestions }
