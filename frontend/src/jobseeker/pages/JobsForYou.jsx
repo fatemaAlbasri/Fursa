@@ -10,14 +10,14 @@ import HomeSidebar from '../components/HomeSidebar.jsx'
 
 import '../styles/JobsForYou.css'
 
-// Job seeker home (wireframe 6): Top 10 matches on the left, preferences + CV strength on the right.
+// Top 10 matches
 // Searching and filtering live on All jobs.
 export default function JobsForYou() {
   const { firstName, jobs, loading, error, reload } = useOpenJobs()
   useRestoreScroll(!loading)
 
   // The backend sends best match first. Top 10 = best scored jobs the seeker qualifies for.
-  // Before any job is scored (e.g. just signed up) there is no Top 10 yet → show the newest jobs instead.
+  // Before any job is scored (e.g. just signed up) there is no Top 10 yet, show the newest jobs instead.
   const hasScores = jobs.some((job) => job.match_score != null)
   const list = hasScores ? jobs.filter((job) => job.top) : jobs
   const showTop = loading || hasScores // while loading, keep the Top 10 heading (no flash of "Open jobs")
