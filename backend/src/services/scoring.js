@@ -5,8 +5,8 @@ const WEIGHTS = {
   preference: 5,
   experience: 5
 }
-const CV_MIN = 0.2
-const CV_MAX = 0.6
+const CV_MIN = 0.6
+const CV_MAX = 0.75
 
 function skillsValue(skills) {
   const points = (s) => (s.required ? 2 : 1)
@@ -44,7 +44,7 @@ function preferenceValue(r) {
 
 function experienceValue(r) {
   if (r.years_experience === null) return null
-  const years = Number(r.years_experience) 
+  const years = Number(r.years_experience)
   if (years < r.min_years) return 0
   if (r.max_years !== null && years > r.max_years) return 0.5
   return 1
