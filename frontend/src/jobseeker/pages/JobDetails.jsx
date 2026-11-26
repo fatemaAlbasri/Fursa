@@ -386,7 +386,6 @@ export default function JobDetails({ preview = false }) {
             </span>
             <span className="jd-tag jd-tag--deadline">
               Deadline {formatDeadline(job.deadline)}
-              {left && ` · ${left}`}
             </span>
           </div>
         </div>
