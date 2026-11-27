@@ -188,6 +188,12 @@ const SEEKERS_CTE = `
     SELECT u.id, u.first_name, u.last_name, u.email, u.created_at,
            sp.major, sp.graduation_status,
            EXISTS (SELECT 1 FROM resumes r WHERE r.seeker_id = u.id) AS has_cv,
+           -- had any of their CVs reviewed by the AI CV Optimizer (same rule as the top card)
+           EXISTS (SELECT 1 FROM cv_reviews cr JOIN resumes r ON r.id = cr.resume_id
+                    WHERE r.seeker_id = u.id) AS used_optimizer,
+           -- paid for the Advanced report (same rule as the "Bought the Advanced report" card)
+           EXISTS (SELECT 1 FROM payments p
+                    WHERE p.user_id = u.id AND p.item = 'advanced_cv_report' AND p.status = 'paid') AS bought_advanced,
            (SELECT COUNT(*) FROM applications a WHERE a.seeker_id = u.id) AS applications
       FROM users u
       JOIN seeker_profiles sp ON sp.user_id = u.id
@@ -197,9 +203,9 @@ const SEEKERS_CTE = `
   )
 `
 
-const SEEKER_TABS = ['all', 'cv', 'nocv']
+const SEEKER_TABS = ['all', 'optimizer', 'nooptimizer']
 
-// GET /api/admin/seekers?tab=all|cv|nocv&q=&page=
+// GET /api/admin/seekers?tab=all|optimizer|nooptimizer&q=&page=
 const getSeekers = async (req, res, next) => {
   try {
     const tab = SEEKER_TABS.includes(req.query.tab) ? req.query.tab : 'all'
@@ -221,8 +227,8 @@ const getSeekers = async (req, res, next) => {
       // 2) Count per tab (follows the search)
       db.query(`${SEEKERS_CTE}
         SELECT COUNT(*) AS all,
-               COUNT(*) FILTER (WHERE has_cv)     AS cv,
-               COUNT(*) FILTER (WHERE NOT has_cv) AS nocv
+               COUNT(*) FILTER (WHERE used_optimizer)     AS optimizer,
+               COUNT(*) FILTER (WHERE NOT used_optimizer) AS nooptimizer
           FROM s
       `, [search]),
 
@@ -230,8 +236,8 @@ const getSeekers = async (req, res, next) => {
       db.query(`${SEEKERS_CTE}
         SELECT * FROM s
          WHERE $2 = 'all'
-            OR ($2 = 'cv'   AND has_cv)
-            OR ($2 = 'nocv' AND NOT has_cv)
+            OR ($2 = 'optimizer'   AND used_optimizer)
+            OR ($2 = 'nooptimizer' AND NOT used_optimizer)
          ORDER BY created_at DESC
          LIMIT $3 OFFSET $4
       `, [search, tab, PAGE_SIZE, (page - 1) * PAGE_SIZE])
@@ -248,7 +254,7 @@ const getSeekers = async (req, res, next) => {
         used_optimizer: num(c.used_optimizer),
         bought_report: num(c.bought_report)
       },
-      tabs: { all: num(t.all), cv: num(t.cv), nocv: num(t.nocv) },
+      tabs: { all: num(t.all), optimizer: num(t.optimizer), nooptimizer: num(t.nooptimizer) },
       seekers: list.rows.map((s) => ({
         id: s.id,
         name: `${s.first_name} ${s.last_name}`,
@@ -256,6 +262,8 @@ const getSeekers = async (req, res, next) => {
         major: s.major,
         graduation_status: s.graduation_status,
         has_cv: s.has_cv,
+        used_optimizer: s.used_optimizer,
+        bought_advanced: s.bought_advanced,
         applications: num(s.applications),
         joined: s.created_at
       })),
@@ -428,15 +436,15 @@ const getJobs = async (req, res, next) => {
 
 const TYPE_LABELS = { full_time: 'Full-time', part_time: 'Part-time', internship: 'Internship' }
 
-// GET /api/admin/seekers/export?tab=&q=
+// GET /api/admin/seekers/export?tab=all|optimizer|nooptimizer&q=
 const exportSeekers = async (req, res, next) => {
   try {
     const tab = SEEKER_TABS.includes(req.query.tab) ? req.query.tab : 'all'
     const { rows } = await db.query(`${SEEKERS_CTE}
       SELECT * FROM s
        WHERE $2 = 'all'
-          OR ($2 = 'cv'   AND has_cv)
-          OR ($2 = 'nocv' AND NOT has_cv)
+          OR ($2 = 'optimizer'   AND used_optimizer)
+          OR ($2 = 'nooptimizer' AND NOT used_optimizer)
        ORDER BY created_at DESC
     `, [readSearch(req), tab])
 
@@ -446,6 +454,7 @@ const exportSeekers = async (req, res, next) => {
       { label: 'Major', value: (s) => s.major },
       { label: 'Graduation status', value: (s) => s.graduation_status },
       { label: 'Has CV', value: (s) => (s.has_cv ? 'Yes' : 'No') },
+      { label: 'CV Optimizer', value: (s) => (s.bought_advanced ? 'Advanced' : s.used_optimizer ? 'Free review' : 'Not used') },
       { label: 'Applications', value: (s) => num(s.applications) },
       { label: 'Joined', value: (s) => s.created_at }
     ], rows))

@@ -33,7 +33,16 @@ export default function AdminCompanies() {
         <h1>Companies</h1>
         <p>Every company hiring on Fursa.</p>
       </div>
-      {data && <ExportButton path="/admin/companies/export" query={list.exportQuery} name="companies" />}
+      {data && (
+        <ExportButton
+          path="/admin/companies/export"
+          query={list.exportQuery}
+          name="companies"
+          filter={list.tab === 'all' ? null : TABS.find((t) => t.key === list.tab)?.label}
+          searched={list.searching}
+          count={data.total}
+        />
+      )}
     </div>
   )
 

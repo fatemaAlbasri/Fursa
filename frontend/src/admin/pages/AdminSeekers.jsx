@@ -9,8 +9,8 @@ import '../styles/Admin.css'
 
 const TABS = [
   { key: 'all', label: 'All' },
-  { key: 'cv', label: 'With CV' },
-  { key: 'nocv', label: 'No CV yet' }
+  { key: 'optimizer', label: 'Used CV Optimizer' },
+  { key: 'nooptimizer', label: 'Not used' }
 ]
 
 export default function AdminSeekers() {
@@ -23,7 +23,16 @@ export default function AdminSeekers() {
         <h1>Job seekers</h1>
         <p>Everyone looking for a job on Fursa.</p>
       </div>
-      {data && <ExportButton path="/admin/seekers/export" query={list.exportQuery} name="job-seekers" />}
+      {data && (
+        <ExportButton
+          path="/admin/seekers/export"
+          query={list.exportQuery}
+          name="job-seekers"
+          filter={list.tab === 'all' ? null : TABS.find((t) => t.key === list.tab)?.label}
+          searched={list.searching}
+          count={data.total}
+        />
+      )}
     </div>
   )
 
@@ -35,7 +44,7 @@ export default function AdminSeekers() {
         {error ? (
           <Notice notice={{ type: 'error', text: error }} />
         ) : (
-          <ListLoading label="Loading job seekers" tabs={3} columns={6} />
+          <ListLoading label="Loading job seekers" tabs={3} columns={7} />
         )}
       </>
     )
@@ -83,6 +92,7 @@ export default function AdminSeekers() {
                 <th>Major</th>
                 <th>Status</th>
                 <th>CV</th>
+                <th>CV Optimizer</th>
                 <th className="admin-num">Applications</th>
                 <th>Joined</th>
               </tr>
@@ -112,6 +122,15 @@ export default function AdminSeekers() {
                       <span className="admin-yes">✓ Yes</span>
                     ) : (
                       <span className="admin-no">– No</span>
+                    )}
+                  </td>
+                  <td>
+                    {s.bought_advanced ? (
+                      <span className="admin-yes admin-yes--advanced">★ Advanced</span>
+                    ) : s.used_optimizer ? (
+                      <span className="admin-yes">✓ Free review</span>
+                    ) : (
+                      <span className="admin-no">– Not used</span>
                     )}
                   </td>
                   <td className="admin-num">{s.applications}</td>

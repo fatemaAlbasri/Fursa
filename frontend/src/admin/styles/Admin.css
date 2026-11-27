@@ -209,7 +209,7 @@
   font-size: var(--text-size);
 }
 .admin-table th {
-  padding: 12px 20px;
+  padding: 12px 14px;
   background: var(--bg);
   border-bottom: 1px solid var(--gray);
   text-align: left;
@@ -221,9 +221,18 @@
   white-space: nowrap;
 }
 .admin-table td {
-  padding: 14px 20px;
+  padding: 14px 14px;
   border-bottom: 1px solid var(--gray);
   vertical-align: middle;
+}
+/* first and last column keep the 20px edge of the panel */
+.admin-table th:first-child,
+.admin-table td:first-child {
+  padding-left: 20px;
+}
+.admin-table th:last-child,
+.admin-table td:last-child {
+  padding-right: 20px;
 }
 /* number columns (jobs, applicants, applications): centered under their heading */
 .admin-table th.admin-num,
@@ -244,9 +253,15 @@
 .admin-yes {
   color: #067647;
   font-weight: 700;
+  white-space: nowrap; /* "✓ Yes" stays on one line */
+}
+/* same look as ✓, but amber: the seeker paid for the Advanced CV report */
+.admin-yes--advanced {
+  color: #b54708;
 }
 .admin-no {
   color: var(--slate);
+  white-space: nowrap;
 }
 
 /* Name + email with a coloured circle */

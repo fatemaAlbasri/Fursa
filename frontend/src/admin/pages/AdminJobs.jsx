@@ -35,7 +35,16 @@ export default function AdminJobs() {
         <h1>Jobs</h1>
         <p>Every job posted on Fursa.</p>
       </div>
-      {data && <ExportButton path="/admin/jobs/export" query={list.exportQuery} name="jobs" />}
+      {data && (
+        <ExportButton
+          path="/admin/jobs/export"
+          query={list.exportQuery}
+          name="jobs"
+          filter={list.tab === 'all' ? null : TABS.find((t) => t.key === list.tab)?.label}
+          searched={list.searching}
+          count={data.total}
+        />
+      )}
     </div>
   )
 
