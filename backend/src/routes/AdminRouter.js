@@ -11,6 +11,9 @@ router.use(requireAuth, requireRole('admin'))
 // GET /api/admin/overview
 router.get('/overview', AdminController.getOverview)
 
+// GET /api/admin/report?period=month|3months|year → Overview numbers as a PDF download
+router.get('/report', AdminController.downloadReport)
+
 // GET /api/admin/seekers
 router.get('/seekers', AdminController.getSeekers)
 

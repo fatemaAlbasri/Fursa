@@ -170,3 +170,9 @@
   flex: 1;
   border-radius: 6px 6px 0 0;
 }
+
+/* "Download report" next to the title */
+.ov-download:disabled {
+  opacity: 0.85;
+  cursor: progress;
+}

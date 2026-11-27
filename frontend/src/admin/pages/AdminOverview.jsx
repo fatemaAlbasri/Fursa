@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import Notice from '../../shared/components/Notice.jsx'
 import { api } from '../../shared/api.js'
 import { formatJobType } from '../../shared/utils/jobFormat.js'
+import { DownloadIcon } from '../../shared/components/icons.jsx'
+import { downloadPdf } from '../../jobseeker/utils/cvOptimizerApi.js'
 import { formatBhd, formatCount } from '../utils/format.js'
 import { SkLine, StatsLoading } from '../components/AdminSkeleton.jsx'
 import '../styles/Admin.css'
@@ -117,12 +119,39 @@ export default function AdminOverview() {
     }
   }, [period])
 
+  // GET /api/admin/report: the same numbers as this page as a PDF (revenue for the chosen period)
+  const [downloading, setDownloading] = useState(false)
+  const downloadReport = async () => {
+    setDownloading(true)
+    setError('')
+    try {
+      const date = new Date().toISOString().slice(0, 10)
+      await downloadPdf(`/admin/report?period=${period}`, `fursa-admin-report-${date}.pdf`)
+    } catch (err) {
+      setError(err.error || 'Could not download the report.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const head = (
     <div className="admin-head">
       <div>
         <h1>Overview</h1>
         <p>How Fursa is doing</p>
       </div>
+      {data && (
+        <button
+          type="button"
+          className="btn btn--primary ov-download"
+          onClick={downloadReport}
+          disabled={downloading}
+          aria-busy={downloading}
+        >
+          <DownloadIcon />
+          {downloading ? 'Preparing…' : 'Download report'}
+        </button>
+      )}
     </div>
   )
 
