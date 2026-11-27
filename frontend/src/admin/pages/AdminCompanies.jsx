@@ -93,8 +93,8 @@ export default function AdminCompanies() {
                 <th>Industry</th>
                 <th>Location</th>
                 <th>Plan</th>
-                <th>Jobs</th>
-                <th>Applicants</th>
+                <th className="admin-num">Jobs</th>
+                <th className="admin-num">Applicants</th>
                 <th>Joined</th>
                 <th>
                   <span className="admin-sr-only">Actions</span>
@@ -118,8 +118,8 @@ export default function AdminCompanies() {
                   <td>
                     <span className={`admin-pill admin-pill--${co.plan.toLowerCase()}`}>{co.plan}</span>
                   </td>
-                  <td>{co.jobs}</td>
-                  <td>{formatCount(co.applicants)}</td>
+                  <td className="admin-num">{co.jobs}</td>
+                  <td className="admin-num">{formatCount(co.applicants)}</td>
                   <td className="admin-muted">{formatShortDate(co.joined)}</td>
                   <td className="admin-actions">
                     <Link to={`/admin/companies/${co.id}`} className="admin-view">

@@ -76,7 +76,7 @@ export default function AdminJobs() {
               <tr>
                 <th>Job</th>
                 <th>Type</th>
-                <th>Applicants</th>
+                <th className="admin-num">Applicants</th>
                 <th>Posted</th>
                 <th>Deadline</th>
                 <th>Status</th>
@@ -98,7 +98,7 @@ export default function AdminJobs() {
                     </div>
                   </td>
                   <td>{formatJobType(job.job_type)}</td>
-                  <td>{formatCount(job.applicants)}</td>
+                  <td className="admin-num">{formatCount(job.applicants)}</td>
                   <td className="admin-muted">{formatShortDate(job.posted)}</td>
                   <td className="admin-muted">{formatShortDate(job.deadline)}</td>
                   <td>

@@ -225,6 +225,12 @@
   border-bottom: 1px solid var(--gray);
   vertical-align: middle;
 }
+/* number columns (jobs, applicants, applications): centered under their heading */
+.admin-table th.admin-num,
+.admin-table td.admin-num {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 .admin-table tbody tr {
   transition: background-color 0.15s ease;
 }

@@ -83,7 +83,7 @@ export default function AdminSeekers() {
                 <th>Major</th>
                 <th>Status</th>
                 <th>CV</th>
-                <th>Applications</th>
+                <th className="admin-num">Applications</th>
                 <th>Joined</th>
               </tr>
             </thead>
@@ -114,7 +114,7 @@ export default function AdminSeekers() {
                       <span className="admin-no">– No</span>
                     )}
                   </td>
-                  <td>{s.applications}</td>
+                  <td className="admin-num">{s.applications}</td>
                   <td className="admin-muted">{formatShortDate(s.joined)}</td>
                 </tr>
               ))}
