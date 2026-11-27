@@ -566,6 +566,15 @@ a.apd-nav__btn:hover {
 .apd-btn--outline-red:hover {
   background: #fdecea;
 }
+/* "Position filled?" after the job is closed */
+.apd-closed {
+  font-size: 14px;
+  color: var(--gray);
+}
+.apd-closed a {
+  font-weight: 600;
+  color: #117a7c;
+}
 
 /* history */
 .apd-history {

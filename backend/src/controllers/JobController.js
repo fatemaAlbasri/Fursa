@@ -701,7 +701,7 @@ const getOneApplicant = async (req, res, next) => {
               u.first_name, u.last_name, u.email, sp.phone,
               sp.major, sp.years_experience,
               r.file_name AS cv_file_name, r.file_url AS cv_url, r.parsed_text AS cv_text,
-              j.title AS job_title, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
+              j.title AS job_title, j.status AS job_status, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
               m.score, COALESCE(m.is_qualified, true) AS is_qualified,
               -- Rank #: 1 + how many applicants of this job scored higher
               CASE WHEN m.score IS NULL THEN NULL ELSE
