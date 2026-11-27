@@ -43,5 +43,8 @@ export default function useAdminList(path, tabKey) {
     setPage(1)
   }
 
-  return { data, error, tab, pickTab, search, setSearch, page, setPage }
+  // the same tab + search the list shows, without the page (for the CSV export)
+  const exportQuery = new URLSearchParams({ [tabKey]: tab, ...(q && { q }) }).toString()
+
+  return { data, error, tab, pickTab, search, setSearch, page, setPage, exportQuery }
 }

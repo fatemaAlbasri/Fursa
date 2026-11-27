@@ -1,6 +1,7 @@
 import Notice from '../../shared/components/Notice.jsx'
 import { ListLoading } from '../components/AdminSkeleton.jsx'
 import ListToolbar from '../components/ListToolbar.jsx'
+import ExportButton from '../components/ExportButton.jsx'
 import Pager from '../components/Pager.jsx'
 import useAdminList from '../utils/useAdminList.js'
 import { avatarColor, formatCount, formatShortDate, nameInitials } from '../utils/format.js'
@@ -22,6 +23,7 @@ export default function AdminSeekers() {
         <h1>Job seekers</h1>
         <p>Everyone looking for a job on Fursa.</p>
       </div>
+      {data && <ExportButton path="/admin/seekers/export" query={list.exportQuery} name="job-seekers" />}
     </div>
   )
 

@@ -23,6 +23,14 @@ router.get('/companies', AdminController.getCompanies)
 // GET /api/admin/jobs
 router.get('/jobs', AdminController.getJobs)
 
+// CSV downloads: same tab + search as the list, every row
+// GET /api/admin/seekers/export?tab=&q=
+router.get('/seekers/export', AdminController.exportSeekers)
+// GET /api/admin/companies/export?plan=&q=
+router.get('/companies/export', AdminController.exportCompanies)
+// GET /api/admin/jobs/export?status=&q=   (before /jobs/:id so "export" isn't read as an id)
+router.get('/jobs/export', AdminController.exportJobs)
+
 // GET /api/admin/jobs/:id 
 router.get('/jobs/:id', JobController.getAdminOneJob)
 

@@ -455,3 +455,19 @@ img.admin-logo {
     display: none;
   }
 }
+
+/* "Export CSV" next to the list title */
+.admin-export {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.admin-export .btn:disabled {
+  opacity: 0.85;
+  cursor: progress;
+}
+.admin-export__error {
+  color: #b42318;
+  font-size: 13px;
+}

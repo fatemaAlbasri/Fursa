@@ -1,5 +1,6 @@
 const db = require('../config/db')
 const { renderAdminReport } = require('../services/adminReportPdf')
+const { toCsv, sendCsv } = require('../utils/csv')
 
 // pg returns COUNT/SUM as strings
 const num = (v) => Number(v) || 0
@@ -422,4 +423,93 @@ const getJobs = async (req, res, next) => {
   }
 }
 
-module.exports = { getOverview, downloadReport, getSeekers, getCompanies, getJobs }
+// ---------- CSV exports ----------
+// Same tab + search as the list page, but every row (no pages)
+
+const TYPE_LABELS = { full_time: 'Full-time', part_time: 'Part-time', internship: 'Internship' }
+
+// GET /api/admin/seekers/export?tab=&q=
+const exportSeekers = async (req, res, next) => {
+  try {
+    const tab = SEEKER_TABS.includes(req.query.tab) ? req.query.tab : 'all'
+    const { rows } = await db.query(`${SEEKERS_CTE}
+      SELECT * FROM s
+       WHERE $2 = 'all'
+          OR ($2 = 'cv'   AND has_cv)
+          OR ($2 = 'nocv' AND NOT has_cv)
+       ORDER BY created_at DESC
+    `, [readSearch(req), tab])
+
+    sendCsv(res, 'job-seekers', toCsv([
+      { label: 'Name', value: (s) => `${s.first_name} ${s.last_name}` },
+      { label: 'Email', value: (s) => s.email },
+      { label: 'Major', value: (s) => s.major },
+      { label: 'Graduation status', value: (s) => s.graduation_status },
+      { label: 'Has CV', value: (s) => (s.has_cv ? 'Yes' : 'No') },
+      { label: 'Applications', value: (s) => num(s.applications) },
+      { label: 'Joined', value: (s) => s.created_at }
+    ], rows))
+  } catch (err) {
+    next(err)
+  }
+}
+
+// GET /api/admin/companies/export?plan=&q=
+const exportCompanies = async (req, res, next) => {
+  try {
+    const plan = COMPANY_TABS.includes(req.query.plan) ? req.query.plan : 'all'
+    const { rows } = await db.query(`${COMPANIES_CTE}
+      SELECT * FROM c
+       WHERE $2 = 'all' OR plan = $2
+       ORDER BY created_at DESC
+    `, [readSearch(req), plan])
+
+    sendCsv(res, 'companies', toCsv([
+      { label: 'Company', value: (c) => c.name },
+      { label: 'Email', value: (c) => c.email },
+      { label: 'Industry', value: (c) => c.industry },
+      { label: 'Location', value: (c) => c.location },
+      { label: 'Plan', value: (c) => c.plan },
+      { label: 'Jobs posted', value: (c) => num(c.jobs) },
+      { label: 'Applicants', value: (c) => num(c.applicants) },
+      { label: 'Joined', value: (c) => c.created_at }
+    ], rows))
+  } catch (err) {
+    next(err)
+  }
+}
+
+// GET /api/admin/jobs/export?status=&q=
+const exportJobs = async (req, res, next) => {
+  try {
+    const status = JOB_TABS.includes(req.query.status) ? req.query.status : 'all'
+    const { rows } = await db.query(`${JOBS_CTE}
+      SELECT * FROM jb
+       WHERE $2 = 'all' OR status = $2
+       ORDER BY created_at DESC
+    `, [readSearch(req), status])
+
+    sendCsv(res, 'jobs', toCsv([
+      { label: 'Job title', value: (j) => j.title },
+      { label: 'Company', value: (j) => j.company_name },
+      { label: 'Type', value: (j) => TYPE_LABELS[j.job_type] || j.job_type },
+      { label: 'Status', value: (j) => (j.status === 'active' ? 'Active' : 'Closed') },
+      { label: 'Applicants', value: (j) => num(j.applicants) },
+      { label: 'Posted', value: (j) => j.created_at },
+      { label: 'Deadline', value: (j) => j.deadline }
+    ], rows))
+  } catch (err) {
+    next(err)
+  }
+}
+
+module.exports = {
+  getOverview,
+  downloadReport,
+  getSeekers,
+  getCompanies,
+  getJobs,
+  exportSeekers,
+  exportCompanies,
+  exportJobs
+}
