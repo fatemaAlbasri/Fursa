@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Notice from '../../shared/components/Notice.jsx'
 import { api } from '../../shared/api.js'
 import { formatJobType } from '../../shared/utils/jobFormat.js'
@@ -208,6 +209,21 @@ export default function AdminOverview() {
       {head}
 
       <Notice notice={error && { type: 'error', text: error }} />
+
+      {/* new companies can't publish jobs until the admin approves them */}
+      {data.companies.pending > 0 && (
+        <div className="ov-pending" role="status">
+          <span>
+            <strong>
+              {data.companies.pending} {data.companies.pending === 1 ? 'company is' : 'companies are'} waiting for review.
+            </strong>{' '}
+            They can't publish jobs until you approve them.
+          </span>
+          <Link to="/admin/companies?tab=pending" className="ov-pending__link">
+            Review now →
+          </Link>
+        </div>
+      )}
 
       {/* 4 number cards */}
       <div className="admin-stats">

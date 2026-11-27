@@ -21,4 +21,7 @@ router.put('/company/logo', employer, upload.single('logo'), ProfileController.u
 router.delete('/company/logo', employer, ProfileController.removeCompanyLogo)
 router.put('/company/contact', employer, ProfileController.updateCompanyContact)
 
+// PUT /api/profile/company/review  { crNumber, note? } → a rejected company fixes its CR number and asks again
+router.put('/company/review', employer, ProfileController.resubmitCompany)
+
 module.exports = router

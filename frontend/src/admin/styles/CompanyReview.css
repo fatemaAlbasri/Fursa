@@ -1,0 +1,176 @@
+/* Admin: "Company review" box on top of a company's page */
+.cr {
+  margin-bottom: 20px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+}
+
+.cr__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.cr__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.cr__title h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.cr__status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.cr__status--pending { background: #fffaeb; color: #b54708; }
+.cr__status--approved { background: #ecfdf3; color: #067647; }
+.cr__status--rejected { background: #fef3f2; color: #b42318; }
+.cr__text {
+  margin-top: 6px;
+  color: var(--slate);
+  font-size: 14px;
+}
+
+/* rejected: small "Approve instead" on the right */
+.cr__undo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--slate);
+}
+.btn.cr__btn-sm {
+  padding: 7px 16px;
+  font-size: 14px;
+}
+
+.cr__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.cr__facts dt {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+.cr__facts dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.cr__facts a {
+  color: var(--teal);
+}
+.cr__cr {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the reason that was sent / "sent again" details */
+.cr__box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+.cr__box--reason { background: #fef3f2; color: #7a271a; }
+.cr__box--info { background: #fffaeb; color: #7a2e0e; }
+.cr__muted {
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* pending: Approve / Reject side by side, each with one line on what it does */
+.cr__decide {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.cr__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cr__option .btn {
+  flex-shrink: 0;
+  min-width: 104px;
+}
+.cr__option p {
+  font-size: 13px;
+  color: var(--slate);
+  line-height: 1.5;
+}
+.btn.cr__reject {
+  border-color: #f04438;
+  color: #b42318;
+}
+.btn.cr__reject:hover:not(:disabled) {
+  background: #fef3f2;
+}
+.cr .notice {
+  margin-top: 14px;
+}
+
+/* reason box in the "Reject?" dialog */
+.cr__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+.cr__field textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  resize: vertical;
+}
+.cr__count {
+  align-self: flex-end;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--slate);
+}
+.cr__error {
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+@media (max-width: 760px) {
+  .cr__facts,
+  .cr__decide {
+    grid-template-columns: 1fr;
+  }
+  .cr__undo {
+    align-items: flex-start;
+  }
+}

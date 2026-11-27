@@ -24,6 +24,7 @@ import JobView from './company/pages/JobView.jsx'
 import Applicants from './company/pages/Applicants.jsx'
 import ApplicantView from './company/pages/ApplicantView.jsx'
 import CompanyProfile from './company/pages/CompanyProfile.jsx'
+import CompanyResubmit from './company/pages/CompanyResubmit.jsx'
 import Plans from './company/pages/Plans.jsx'
 import Payment from './company/pages/Payment.jsx'
 
@@ -148,6 +149,8 @@ export default function App() {
       <Route path="/company" element={<CompanyLayout />}>
         <Route index element={<Navigate to="/company/jobs" replace />} />
         <Route path="jobs" element={<CompanyJobs />} />
+        {/* not approved by the admin: fix the details and send them again */}
+        <Route path="review" element={<CompanyResubmit />} />
         <Route path="post-job" element={<PostJob />} />
         <Route path="jobs/:id" element={<JobView />} />
         <Route path="jobs/:id/edit" element={<JobView editing />} />

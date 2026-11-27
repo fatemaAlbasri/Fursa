@@ -11,6 +11,7 @@ import '../styles/Admin.css'
 
 const TABS = [
   { key: 'all', label: 'All' },
+  { key: 'pending', label: 'Waiting for review' },
   { key: 'Free', label: 'Free' },
   { key: 'Starter', label: 'Starter' },
   { key: 'Growth', label: 'Growth' }
@@ -54,7 +55,7 @@ export default function AdminCompanies() {
         {error ? (
           <Notice notice={{ type: 'error', text: error }} />
         ) : (
-          <ListLoading label="Loading companies" tabs={4} columns={8} />
+          <ListLoading label="Loading companies" tabs={5} columns={8} />
         )}
       </>
     )
@@ -119,6 +120,11 @@ export default function AdminCompanies() {
                       <div>
                         <div className="admin-who__name">{co.name}</div>
                         <div className="admin-who__sub">{co.email}</div>
+                        {co.status !== 'approved' && (
+                          <span className={`admin-review admin-review--${co.status}`}>
+                            {co.status === 'rejected' ? 'Not approved' : co.sent_again ? 'Sent again' : 'Waiting for review'}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -131,8 +137,12 @@ export default function AdminCompanies() {
                   <td className="admin-num">{formatCount(co.applicants)}</td>
                   <td className="admin-muted">{formatShortDate(co.joined)}</td>
                   <td className="admin-actions">
-                    <Link to={`/admin/companies/${co.id}`} className="admin-view">
-                      View
+                    {/* the company's page has the Approve / Reject box for the admin */}
+                    <Link
+                      to={`/admin/companies/${co.id}`}
+                      className={co.status === 'pending' ? 'admin-view admin-view--review' : 'admin-view'}
+                    >
+                      {co.status === 'pending' ? 'Review' : 'View'}
                     </Link>
                   </td>
                 </tr>

@@ -323,6 +323,17 @@ const planLimitReached = async (client, companyId) => {
   return null
 }
 
+// Only companies the admin approved can publish (pending / rejected ones can still save drafts)
+const NOT_APPROVED = {
+  pending: 'Your company is being reviewed by the Fursa team. You can save this job as a draft and publish it once your company is approved.',
+  rejected: "Your company was not approved, so you can't publish jobs. You can still save this job as a draft."
+}
+const companyStatus = async (client, companyId) => {
+  const { rows } = await client.query('SELECT status FROM companies WHERE id = $1', [companyId])
+  return rows[0]?.status
+}
+const notApprovedError = (status) => ({ error: NOT_APPROVED[status], code: 'company_not_approved', status })
+
 const planLimitError = (max) => ({
   error: `Your plan allows ${max} active job(s). Upgrade your plan or save it as a draft.`
 })
@@ -396,6 +407,11 @@ const createJob = async (req, res, next) => {
     const companyId = companyRows[0].id
 
     if (job.status === 'open') {
+      const status = await companyStatus(client, companyId)
+      if (status !== 'approved') {
+        await client.query('ROLLBACK')
+        return res.status(403).json(notApprovedError(status))
+      }
       const max = await planLimitReached(client, companyId)
       if (max !== null) {
         await client.query('ROLLBACK')
@@ -483,6 +499,11 @@ const editJob = async (req, res, next) => {
     const oldJob = found[0]
 
     if (job.status === 'open' && oldJob.status !== 'open') {
+      const status = await companyStatus(client, oldJob.company_id)
+      if (status !== 'approved') {
+        await client.query('ROLLBACK')
+        return res.status(403).json(notApprovedError(status))
+      }
       const max = await planLimitReached(client, oldJob.company_id)
       if (max !== null) {
         await client.query('ROLLBACK')

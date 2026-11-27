@@ -1,6 +1,7 @@
 const db = require('../config/db')
 const { renderAdminReport } = require('../services/adminReportPdf')
 const { toCsv, sendCsv } = require('../utils/csv')
+const { sendMail } = require('../config/mailer')
 
 // pg returns COUNT/SUM as strings
 const num = (v) => Number(v) || 0
@@ -25,6 +26,7 @@ async function loadOverview(periodQuery) {
            AND created_at >= now() - INTERVAL '7 days') AS seekers_week,
 
         (SELECT COUNT(*) FROM users WHERE role = 'employer') AS companies,
+        (SELECT COUNT(*) FROM companies WHERE status = 'pending') AS companies_pending,
         (SELECT COUNT(*) FROM users WHERE role = 'employer'
            AND created_at >= now() - INTERVAL '7 days') AS companies_week,
 
@@ -117,7 +119,7 @@ async function loadOverview(periodQuery) {
 
   return {
     seekers:     { total: num(r.seekers),     this_week: num(r.seekers_week) },
-    companies:   { total: num(r.companies),   this_week: num(r.companies_week) },
+    companies:   { total: num(r.companies),   this_week: num(r.companies_week), pending: num(r.companies_pending) },
     active_jobs: { total: num(r.active_jobs), this_week: num(r.active_jobs_week) },
     revenue:     { this_month: thisMonth, change_pct: changePct },
 
@@ -280,6 +282,8 @@ const getSeekers = async (req, res, next) => {
 const COMPANIES_CTE = `
   WITH c AS (
     SELECT co.id, co.name, co.logo_url, co.industry, co.location,
+           co.cr_number, co.status, co.rejection_reason,
+           (co.status = 'pending' AND co.resubmitted_at IS NOT NULL) AS sent_again,
            u.email, u.created_at,
            COALESCE(p.name, 'Free') AS plan,
            (SELECT COUNT(*) FROM jobs j
@@ -298,22 +302,26 @@ const COMPANIES_CTE = `
 // How many companies are on each plan
 const PLAN_COUNTS = `${COMPANIES_CTE}
   SELECT COUNT(*) AS all,
+         COUNT(*) FILTER (WHERE status = 'pending') AS pending,
          COUNT(*) FILTER (WHERE plan = 'Free')    AS "Free",
          COUNT(*) FILTER (WHERE plan = 'Starter') AS "Starter",
          COUNT(*) FILTER (WHERE plan = 'Growth')  AS "Growth"
     FROM c
 `
 
-const COMPANY_TABS = ['all', 'Free', 'Starter', 'Growth']
+// 'pending' = waiting for the admin to approve them; the others are the plans
+const COMPANY_TABS = ['all', 'pending', 'Free', 'Starter', 'Growth']
+const companyTabFilter = `($2 = 'all' OR ($2 = 'pending' AND status = 'pending') OR plan = $2)`
 
 const planCountsOut = (r) => ({
   all: num(r.all),
+  pending: num(r.pending),
   Free: num(r.Free),
   Starter: num(r.Starter),
   Growth: num(r.Growth)
 })
 
-// GET /api/admin/companies?plan=all|Free|Starter|Growth&q=&page=
+// GET /api/admin/companies?plan=all|pending|Free|Starter|Growth&q=&page=
 const getCompanies = async (req, res, next) => {
   try {
     const plan = COMPANY_TABS.includes(req.query.plan) ? req.query.plan : 'all'
@@ -328,7 +336,7 @@ const getCompanies = async (req, res, next) => {
       // 3) One page of rows for the chosen plan
       db.query(`${COMPANIES_CTE}
         SELECT * FROM c
-         WHERE $2 = 'all' OR plan = $2
+         WHERE ${companyTabFilter}
          ORDER BY created_at DESC
          LIMIT $3 OFFSET $4
       `, [search, plan, PAGE_SIZE, (page - 1) * PAGE_SIZE])
@@ -348,6 +356,10 @@ const getCompanies = async (req, res, next) => {
         industry: c.industry,
         location: c.location,
         plan: c.plan,
+        cr_number: c.cr_number,
+        status: c.status,
+        rejection_reason: c.rejection_reason,
+        sent_again: c.sent_again,
         jobs: num(c.jobs),
         applicants: num(c.applicants),
         joined: c.created_at
@@ -434,6 +446,7 @@ const getJobs = async (req, res, next) => {
 // ---------- CSV exports ----------
 // Same tab + search as the list page, but every row (no pages)
 
+const STATUS_LABELS = { pending: 'Waiting for review', approved: 'Approved', rejected: 'Not approved' }
 const TYPE_LABELS = { full_time: 'Full-time', part_time: 'Part-time', internship: 'Internship' }
 
 // GET /api/admin/seekers/export?tab=all|optimizer|nooptimizer&q=
@@ -469,13 +482,15 @@ const exportCompanies = async (req, res, next) => {
     const plan = COMPANY_TABS.includes(req.query.plan) ? req.query.plan : 'all'
     const { rows } = await db.query(`${COMPANIES_CTE}
       SELECT * FROM c
-       WHERE $2 = 'all' OR plan = $2
+       WHERE ${companyTabFilter}
        ORDER BY created_at DESC
     `, [readSearch(req), plan])
 
     sendCsv(res, 'companies', toCsv([
       { label: 'Company', value: (c) => c.name },
       { label: 'Email', value: (c) => c.email },
+      { label: 'CR number', value: (c) => c.cr_number },
+      { label: 'Status', value: (c) => STATUS_LABELS[c.status] },
       { label: 'Industry', value: (c) => c.industry },
       { label: 'Location', value: (c) => c.location },
       { label: 'Plan', value: (c) => c.plan },
@@ -512,7 +527,103 @@ const exportJobs = async (req, res, next) => {
   }
 }
 
+// ---------- Company verification ----------
+
+// The company's HR user hears about the decision in the app and by email
+async function tellCompany(client, company, title, message) {
+  await client.query(
+    `INSERT INTO notifications (user_id, type, title, message) VALUES ($1, 'account', $2, $3)`,
+    [company.user_id, title, message]
+  )
+}
+function emailCompany(company, title, message) {
+  sendMail({ to: company.email, subject: `Fursa: ${title}`, text: `Hi ${company.first_name},
+
+${message}
+
+The Fursa team` })
+    .catch((err) => console.error('Company review email failed:', err.message))
+}
+
+// Locks the company row and returns it with its HR user's email, or null
+async function loadCompanyForReview(client, req) {
+  const id = Number(req.params.id)
+  if (!Number.isInteger(id) || id <= 0) return null
+  const { rows } = await client.query(
+    `SELECT co.id, co.name, co.status, co.user_id, u.email, u.first_name, rp.name AS requested_plan
+       FROM companies co
+       JOIN users u ON u.id = co.user_id
+       LEFT JOIN plans rp ON rp.id = co.requested_plan_id
+      WHERE co.id = $1
+      FOR UPDATE OF co`,
+    [id]
+  )
+  return rows[0] || null
+}
+
+// PATCH /api/admin/companies/:id/approve → the company can publish jobs (from pending or rejected)
+// PATCH /api/admin/companies/:id/reject { reason } → it can't (only from pending; the reason is shown to the company)
+const reviewCompany = (decision) => async (req, res, next) => {
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : ''
+  if (decision === 'rejected' && !reason) {
+    return res.status(400).json({ error: 'Write the reason for the company', fields: { reason: 'Required' } })
+  }
+  if (reason.length > 500) {
+    return res.status(400).json({ error: 'Keep the reason under 500 characters', fields: { reason: 'Too long' } })
+  }
+
+  let client
+  try {
+    client = await db.connect()
+  } catch (err) {
+    return next(err)
+  }
+  try {
+    await client.query('BEGIN')
+    const company = await loadCompanyForReview(client, req)
+    if (!company) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ error: 'Company not found' })
+    }
+    const allowedFrom = decision === 'approved' ? ['pending', 'rejected'] : ['pending']
+    if (!allowedFrom.includes(company.status)) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ error: `This company is already ${company.status}.` })
+    }
+
+    await client.query(
+      `UPDATE companies SET status = $2, rejection_reason = $3, reviewed_at = now(), review_note = NULL WHERE id = $1`,
+      [company.id, decision, decision === 'rejected' ? reason : null]
+    )
+    const [title, message] =
+      decision === 'approved'
+        ? [
+            'Your company is approved',
+            `${company.name} is now verified on Fursa. You can publish your jobs.` +
+              (company.requested_plan
+                ? ` You picked the ${company.requested_plan} plan: you can pay for it now from Plans.`
+                : '')
+          ]
+        : ['Your company was not approved', `We couldn't verify ${company.name}. Reason: ${reason}`]
+    await tellCompany(client, company, title, message)
+    await client.query('COMMIT')
+
+    emailCompany(company, title, message)
+    res.json({ company: { id: company.id, status: decision, rejection_reason: decision === 'rejected' ? reason : null } })
+  } catch (err) {
+    await client.query('ROLLBACK')
+    next(err)
+  } finally {
+    client.release()
+  }
+}
+
+const approveCompany = reviewCompany('approved')
+const rejectCompany = reviewCompany('rejected')
+
 module.exports = {
+  approveCompany,
+  rejectCompany,
   getOverview,
   downloadReport,
   getSeekers,

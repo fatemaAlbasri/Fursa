@@ -492,3 +492,17 @@ img.admin-logo {
   color: #b42318;
   font-size: 13px;
 }
+
+/* Company verification: badge under the name + "Review" button for a company waiting for review */
+.admin-review {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.admin-review--pending { background: #fffaeb; color: #b54708; }
+.admin-review--rejected { background: #fef3f2; color: #b42318; }
+.admin-view--review { background: var(--teal); border-color: var(--teal); color: var(--white); }
+.admin-view--review:hover { background: var(--teal-hover); border-color: var(--teal-hover); color: var(--white); }

@@ -1,0 +1,125 @@
+/* /company/review: fix the company details and send them again.
+   Cards, grid and buttons come from the company profile (Profile.css + CompanyProfile.css). */
+.rs {
+  display: flex;
+  flex-direction: column;
+  max-width: 880px;
+}
+.rs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.rs-back {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: var(--cp-teal);
+}
+.rs-back:hover {
+  text-decoration: underline;
+}
+.rs-head .muted {
+  margin-top: 4px;
+}
+
+/* why the admin said no */
+.rs-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid #fecdca;
+  border-radius: 16px;
+  background: #fef3f2;
+  color: #7a271a;
+  font-size: 14px;
+}
+.rs-reason svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #b42318;
+}
+.rs-reason__title {
+  margin-bottom: 2px;
+  font-weight: 700;
+  color: #b42318;
+}
+
+/* logo row */
+.rs-logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+/* the profile's logo box sits on its banner (negative margin); here it sits in the card */
+.rs .cp-logo-wrap {
+  margin-top: 0;
+}
+.rs .cp-logo {
+  border-color: var(--line);
+  border-width: 1px;
+  box-shadow: none;
+}
+.rs-logo__name {
+  font-weight: 700;
+  color: var(--navy);
+}
+.rs-logo__hint {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--cp-muted);
+}
+.rs .cp-grid {
+  margin-bottom: 14px;
+}
+.rs .field .hint {
+  margin-top: 6px;
+}
+.rs-state {
+  justify-content: flex-start;
+}
+a.cp-btn {
+  text-decoration: none;
+}
+
+/* loading shapes */
+.rs-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.rs-loading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rs-loading__reason {
+  display: block;
+  height: 72px;
+  border-radius: 16px;
+}
+.rs-loading__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rs-loading__input {
+  display: block;
+  height: 46px;
+  border-radius: 10px;
+}
+
+@media (max-width: 640px) {
+  .rs-logo {
+    align-items: flex-start;
+  }
+  .rs .cp-actions .cp-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

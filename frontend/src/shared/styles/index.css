@@ -3129,3 +3129,6 @@ html:has(.landing) {
     transition: none;
   }
 }
+
+/* sign up, plan step: "· You pay after we approve your company" */
+.plan-bar__note { font-weight: 400; color: var(--slate); }

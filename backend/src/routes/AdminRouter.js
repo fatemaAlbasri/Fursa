@@ -23,6 +23,12 @@ router.get('/companies', AdminController.getCompanies)
 // GET /api/admin/jobs
 router.get('/jobs', AdminController.getJobs)
 
+// Company verification: new companies wait as 'pending' until the admin decides
+// PATCH /api/admin/companies/:id/approve
+router.patch('/companies/:id/approve', AdminController.approveCompany)
+// PATCH /api/admin/companies/:id/reject  { reason }
+router.patch('/companies/:id/reject', AdminController.rejectCompany)
+
 // CSV downloads: same tab + search as the list, every row
 // GET /api/admin/seekers/export?tab=&q=
 router.get('/seekers/export', AdminController.exportSeekers)
