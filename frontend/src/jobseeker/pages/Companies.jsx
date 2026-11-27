@@ -178,7 +178,7 @@ export default function Companies() {
   const shown = filterCompanies(inTab, filters)
   const filtering = JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS)
 
-  // ---------- What goes under the tabs: loading / error / empty / the cards ----------
+  //  What goes under the tabs: loading / error / empty / the cards 
   let results
   if (loading) {
     results = <CompaniesLoading />
@@ -239,7 +239,7 @@ export default function Companies() {
         <p className="muted">Explore employers in Bahrain and see their open jobs and internships.</p>
       </header>
 
-      {/* ---------- Search + filters ---------- */}
+      {/*  Search + filters  */}
       <section className="card co-filters" aria-label="Search and filters">
         <SearchBox
           id="co-search"
@@ -274,7 +274,7 @@ export default function Companies() {
         />
       </section>
 
-      {/* ---------- Tabs + count ---------- */}
+      {/*  Tabs + count  */}
       <div className="co-toolbar">
         <div className="co-toolbar" role="group" aria-label="Which companies">
           {TABS.map(({ id, label }) => (

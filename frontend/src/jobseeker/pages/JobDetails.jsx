@@ -30,11 +30,10 @@ import '../styles/JobDetails.css'
 // Same check the backend does: the id must be a whole number above 0
 const isValidId = (id) => Number.isInteger(Number(id)) && Number(id) > 0
 
-// "www.company.bh" → "https://www.company.bh" so the link opens the real site
+// "www.company.bh" , "https://www.company.bh" so the link opens the real site
 const websiteUrl = (site) =>
   /^https?:\/\//i.test(site) ? site : `https://${site}`
 
-// "shortlisted" → "Shortlisted"
 const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1)
 
 // A small box: label on top, value under it, with a ✓ when the seeker meets it
@@ -279,7 +278,7 @@ export default function JobDetails({ preview = false }) {
     )
   }
 
-  // ---------- Values worked out from the job ----------
+  //  Values worked out from the job 
   const salary = formatSalary(job.salary)
   const left = daysLeftText(job.days_left)
   const responsibilities = splitLines(job.responsibilities)

@@ -474,7 +474,7 @@
   color: #0e6466;
 }
 
-/* ---------- No jobs / no applicants yet ---------- */
+/*  No jobs / no applicants yet  */
 .ap-blank {
   display: flex;
   flex-direction: column;

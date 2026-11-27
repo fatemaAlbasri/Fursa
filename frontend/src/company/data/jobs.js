@@ -1,6 +1,6 @@
 import { toDateInput, daysLeft } from '../../shared/utils/jobFormat.js'
 
-// ---------- Lists shown in the job form ----------
+//  Lists shown in the job form 
 export const MAJORS = [
   'Computer Science',
   'Information Systems',

@@ -1,12 +1,11 @@
 import { userInitials } from '../../shared/utils/jobFormat.js';
 
-// =====================================================================
+
 // Applicant data for the company (employer) pages.
 // Used by: Applicants dashboard, Reject applicants, Applicant page.
-// =====================================================================
 
 
-// ---------- Applicant from the backend → row on the Applicants page ----------
+//  Applicant from the backend → row on the Applicants page 
 // Comes from GET /api/jobs/mine/:id/applicants (already ranked by match score).
 export const STATUS_LABELS = { applied: 'New', shortlisted: 'Shortlisted', interview: 'Interview', accepted: 'Accepted', rejected: 'Rejected' };
 const AVATAR_COLORS = ['#117A7C', '#6D4AFF', '#0EA5E9', '#183B56', '#0E6466', '#657D93'];

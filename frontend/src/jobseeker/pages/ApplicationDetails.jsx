@@ -34,7 +34,7 @@ const logoInfo = (application) => ({
   company_logo: application.logo_url
 })
 
-// ---------- Vertical timeline ----------
+//  Vertical timeline 
 function Timeline({ application, history }) {
   return (
     <section className="ad-card">
@@ -55,7 +55,7 @@ function Timeline({ application, history }) {
   )
 }
 
-// ---------- C · Interview ----------
+//  C · Interview 
 // The line under the buttons once the seeker can't reply any more (same wording as the backend's messages)
 const REPLY_STATE = {
   confirmed: 'You confirmed this interview.',
@@ -168,7 +168,7 @@ function InterviewPanel({ applicationId, companyName, interview }) {
   )
 }
 
-// ---------- E · Rejected ----------
+//  E · Rejected 
 // Bold the skill names the backend says are missing, wherever the company's reason mentions them
 function withBoldSkills(text, skills) {
   const names = skills.filter(Boolean).sort((a, b) => b.length - a.length)
@@ -215,7 +215,7 @@ function RejectedPanel({ feedback }) {
   )
 }
 
-// ---------- The panel for the application's status ----------
+//  The panel for the application's status 
 function StatusPanel({ data }) {
   const { application, interview, contact, feedback } = data
   const company = application.company_name
@@ -267,7 +267,7 @@ function StatusPanel({ data }) {
   }
 }
 
-// ---------- What you sent ----------
+//  What you sent 
 function SentCard({ application }) {
   return (
     <section className="ad-card">
@@ -419,7 +419,7 @@ export default function ApplicationDetails() {
     </Link>
   )
 
-  // ---------- Loading / not found / error ----------
+  //  Loading / not found / error 
   if (status === 'loading') {
     return (
       <main className="container ad">
@@ -472,7 +472,7 @@ export default function ApplicationDetails() {
     <main className="container ad">
       {backLink}
 
-      {/* ---------- Header ---------- */}
+      {/*  Header  */}
       <section className="ad-card ad-header">
         <CompanyLogo job={logoInfo(application)} className="ad-logo" />
         <div className="ad-header__text">
