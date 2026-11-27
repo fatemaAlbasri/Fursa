@@ -30,4 +30,12 @@ function toPhone(value) {
   return { phone: '+973' + digits }
 }
 
-module.exports = { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone }
+// Bahrain Commercial Registration (CR) number: "123456" or "123456-1"
+const toCrNumber = (value) => {
+  const cr = clean(value).replace(/\s/g, '')
+  if (!cr) return { error: 'Required' }
+  if (!/^\d{3,8}(-\d{1,3})?$/.test(cr)) return { error: 'Enter a CR number like 123456-1' }
+  return { cr }
+}
+
+module.exports = { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone, toCrNumber }

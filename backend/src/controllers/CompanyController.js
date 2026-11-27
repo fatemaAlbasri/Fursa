@@ -5,6 +5,7 @@ const OPEN_JOB = `j.status = 'open' AND j.deadline >= CURRENT_DATE`
 
 // GET /api/companies → all companies + how many open jobs each has (jobseeker)
 // Companies with no open jobs are included (open_jobs = 0) for the "All companies" tab.
+// Only companies the admin approved are shown (new ones wait in 'pending').
 const getCompanies = async (req, res, next) => {
   try {
     const { rows } = await db.query(
@@ -12,6 +13,7 @@ const getCompanies = async (req, res, next) => {
               COUNT(j.id)::int AS open_jobs
          FROM companies c
          LEFT JOIN jobs j ON j.company_id = c.id AND ${OPEN_JOB}
+        WHERE c.status = 'approved'
         GROUP BY c.id
         ORDER BY open_jobs DESC, c.name`
     )
@@ -42,6 +44,9 @@ const getOneCompany = async (req, res, next) => {
     const { rows } = await db.query(
       `SELECT c.id, c.name, c.logo_url, c.website, c.industry, c.location, c.about,
               u.created_at AS member_since,
+              -- for the admin's review only (removed below for seekers)
+              c.status, c.cr_number, c.rejection_reason, c.reviewed_at, c.phone, c.review_note, c.resubmitted_at,
+              u.first_name AS hr_first_name, u.last_name AS hr_last_name, u.email AS hr_email,
               (SELECT COUNT(*)::int FROM jobs j
                 WHERE j.company_id = c.id AND ${OPEN_JOB}) AS open_jobs,
               (SELECT COUNT(*)::int FROM jobs j
@@ -49,13 +54,30 @@ const getOneCompany = async (req, res, next) => {
                   AND (j.status = 'closed' OR (j.status = 'open' AND j.deadline < CURRENT_DATE))) AS closed_jobs
          FROM companies c
          JOIN users u ON u.id = c.user_id
-        WHERE c.id = $1`,
-      [companyId]
+        WHERE c.id = $1 AND (c.status = 'approved' OR $2)`,
+      [companyId, req.user.role === 'admin']
     )
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Company not found' })
     }
-    const company = rows[0]
+    const {
+      status, cr_number, rejection_reason, reviewed_at, phone, review_note, resubmitted_at,
+      hr_first_name, hr_last_name, hr_email, ...company
+    } = rows[0]
+    // The admin also gets what it needs to approve / reject the company
+    if (req.user.role === 'admin') {
+      company.review = {
+        status,
+        cr_number,
+        rejection_reason,
+        reviewed_at,
+        phone,
+        // sent again after a rejection: when, and what the company wrote
+        resubmitted_at: status === 'pending' ? resubmitted_at : null,
+        review_note: status === 'pending' ? review_note : null,
+        hr: { name: `${hr_first_name} ${hr_last_name}`, email: hr_email }
+      }
+    }
 
     // Open jobs, best match for this seeker first (match_score is null when not scored yet → last)
     const { rows: jobs } = await db.query(

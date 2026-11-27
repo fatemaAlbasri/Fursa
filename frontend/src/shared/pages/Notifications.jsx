@@ -13,7 +13,8 @@ import {
   PeopleIcon,
   ClockIcon,
   LockIcon,
-  CardIcon
+  CardIcon,
+  BuildingIcon
 } from '../components/icons.jsx'
 import {
   getNotifications,
@@ -45,7 +46,8 @@ const TYPE_ICONS = {
     interview_reply: <CalendarIcon />,
     deadline: <ClockIcon />,
     job_closed: <LockIcon />,
-    plan: <CardIcon />
+    plan: <CardIcon />,
+    account: <BuildingIcon /> // the admin approved / didn't approve the company
   }
 }
 

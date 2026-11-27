@@ -70,7 +70,7 @@ const subscribe = async (req, res, next) => {
   try {
     const result = await inTransaction(async (client) => {
       const { rows: comp } = await client.query(
-        'SELECT id, name FROM companies WHERE user_id = $1 FOR UPDATE',
+        'SELECT id, name, status FROM companies WHERE user_id = $1 FOR UPDATE',
         [req.user.id]
       )
       const company = comp[0]
@@ -81,6 +81,16 @@ const subscribe = async (req, res, next) => {
       if (!plan) return { code: 404, error: 'Plan not found' }
 
       const isPaid = Number(plan.price_bhd_month) > 0
+      // nothing is paid before the admin approves the company (it can't publish jobs yet anyway)
+      if (isPaid && company.status !== 'approved') {
+        return {
+          code: 403,
+          error:
+            company.status === 'pending'
+              ? 'You can start a paid plan once your company is approved. We will let you know.'
+              : 'Your company was not approved, so you cannot start a paid plan.'
+        }
+      }
       if (isPaid && !PAYMENT_METHODS.includes(method)) {
         return { code: 400, error: 'Please choose how to pay', fields: { method: 'Card' } }
       }
@@ -118,6 +128,8 @@ const subscribe = async (req, res, next) => {
         plan,
         method
       })
+      // the plan picked at sign up is now chosen (or replaced by another one)
+      await client.query('UPDATE companies SET requested_plan_id = NULL WHERE id = $1', [company.id])
       return { plan, subscription, payment }
     })
 

@@ -87,9 +87,6 @@ function PreReview({ cv, onNotice }) {
   const noCv = phase === 'no-cv'
   return (
     <section className="cvo-card cvo-start">
-      <span className="cvo-start__icon" aria-hidden="true">
-        {noCv ? <UploadIcon /> : <SparkleIcon />}
-      </span>
       <h2 className="cvo-start__title">{noCv ? 'Upload your CV to get started' : "Your CV hasn't been reviewed yet"}</h2>
       <p className="cvo-start__text">
         {noCv ? (

@@ -323,6 +323,17 @@ const planLimitReached = async (client, companyId) => {
   return null
 }
 
+// Only companies the admin approved can publish (pending / rejected ones can still save drafts)
+const NOT_APPROVED = {
+  pending: 'Your company is being reviewed by the Fursa team. You can save this job as a draft and publish it once your company is approved.',
+  rejected: "Your company was not approved, so you can't publish jobs. You can still save this job as a draft."
+}
+const companyStatus = async (client, companyId) => {
+  const { rows } = await client.query('SELECT status FROM companies WHERE id = $1', [companyId])
+  return rows[0]?.status
+}
+const notApprovedError = (status) => ({ error: NOT_APPROVED[status], code: 'company_not_approved', status })
+
 const planLimitError = (max) => ({
   error: `Your plan allows ${max} active job(s). Upgrade your plan or save it as a draft.`
 })
@@ -396,6 +407,11 @@ const createJob = async (req, res, next) => {
     const companyId = companyRows[0].id
 
     if (job.status === 'open') {
+      const status = await companyStatus(client, companyId)
+      if (status !== 'approved') {
+        await client.query('ROLLBACK')
+        return res.status(403).json(notApprovedError(status))
+      }
       const max = await planLimitReached(client, companyId)
       if (max !== null) {
         await client.query('ROLLBACK')
@@ -483,6 +499,11 @@ const editJob = async (req, res, next) => {
     const oldJob = found[0]
 
     if (job.status === 'open' && oldJob.status !== 'open') {
+      const status = await companyStatus(client, oldJob.company_id)
+      if (status !== 'approved') {
+        await client.query('ROLLBACK')
+        return res.status(403).json(notApprovedError(status))
+      }
       const max = await planLimitReached(client, oldJob.company_id)
       if (max !== null) {
         await client.query('ROLLBACK')
@@ -701,7 +722,7 @@ const getOneApplicant = async (req, res, next) => {
               u.first_name, u.last_name, u.email, sp.phone,
               sp.major, sp.years_experience,
               r.file_name AS cv_file_name, r.file_url AS cv_url, r.parsed_text AS cv_text,
-              j.title AS job_title, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
+              j.title AS job_title, j.status AS job_status, j.field, j.major_must_have, j.min_years, j.max_years, j.language,
               m.score, COALESCE(m.is_qualified, true) AS is_qualified,
               -- Rank #: 1 + how many applicants of this job scored higher
               CASE WHEN m.score IS NULL THEN NULL ELSE

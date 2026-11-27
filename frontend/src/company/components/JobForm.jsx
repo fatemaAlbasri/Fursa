@@ -46,12 +46,12 @@ function ChooseOne({ id, label, options, value, onChange, hint = true , error}) 
 
 
 export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, secondary, stacked = false, edit = false , saving=false}) {
-  // ---------- Form state ----------
+  //  Form state 
   const [form, setForm] = useState({ ...EMPTY_JOB, ...initial }); 
   const [errors, setErrors] = useState({}); 
   const skills = form.skills;
 
-  // ---------- Auto-scroll the skills list ----------
+  //  Auto-scroll the skills list 
   const skillList = useRef(null);
   const skillCount = useRef(skills.length);
   useEffect(() => {
@@ -61,17 +61,17 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     skillCount.current = skills.length;
   }, [skills.length]);
 
-  // ---------- Update a field ----------
+  //  Update a field 
   const set = (key, value) => setForm({ ...form, [key]: value });
   const change = (e) => set(e.target.name, e.target.value); 
 
-  // ---------- Skills ----------
+  //  Skills 
   const setSkillNames = (names) =>
     set('skills', names.map((name) => skills.find((s) => s.name === name) || { name, must: false }));
   const toggleMust = (name) => set('skills', skills.map((s) => (s.name === name ? { ...s, must: !s.must } : s)));
   const removeSkill = (name) => set('skills', skills.filter((s) => s.name !== name));
 
-  // ---------- Check the form ----------
+  //  Check the form 
   // titleOnly = true → only the title is needed (used by "Save draft").
   // Returns true when there are no errors.
 
@@ -125,7 +125,7 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     return Object.keys(errs).length === 0;
   };
 
-  // ---------- Buttons ----------
+  //  Buttons 
   // Main button ("Publish job" / "Save changes"): check everything first
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -137,7 +137,7 @@ export default function JobForm({ initial = EMPTY_JOB, submitLabel, onSubmit, se
     secondary.onClick(form);
   };
 
-  // ---------- Fields ----------
+  //  Fields 
   // Each field is built once here, then placed in the layout below
   // (Post and Edit put some of them in different places).
   const deadline = (

@@ -170,3 +170,31 @@
   flex: 1;
   border-radius: 6px 6px 0 0;
 }
+
+/* "Download report" next to the title */
+.ov-download:disabled {
+  opacity: 0.85;
+  cursor: progress;
+}
+
+/* "2 companies are waiting for review" */
+.ov-pending {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid #fedf89;
+  border-radius: 14px;
+  background: #fffaeb;
+  color: #93370d;
+  font-size: 14px;
+}
+.ov-pending__link {
+  font-weight: 700;
+  color: #93370d;
+  white-space: nowrap;
+}
+.ov-pending__link:hover { text-decoration: underline; }

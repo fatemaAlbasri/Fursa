@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import { formatJobType, formatWorkMode, formatDeadline, matchTier } from '../../shared/utils/jobFormat.js'
 import CompanyLogo from '../components/CompanyLogo.jsx'
+import CompanyReview from '../../admin/components/CompanyReview.jsx'
 import '../styles/Companies.css'
 
 // ---------- Small icon used on this page ----------
@@ -295,6 +296,16 @@ export default function CompanyDetails({ admin = false }) {
   return (
     <main className="container co">
       {backLink}
+
+      {/* admin only: approve / reject a new company (the backend sends `review` only to the admin) */}
+      {admin && company.review && (
+        <CompanyReview
+          companyId={company.id}
+          companyName={company.name}
+          review={company.review}
+          onChange={(review) => setCompany({ ...company, review })}
+        />
+      )}
 
       {/* ---------- Header ---------- */}
       <section className="co-hero">

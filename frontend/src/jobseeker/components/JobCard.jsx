@@ -172,6 +172,11 @@ export function JobMatchRow({ job, index }) {
       <div className="jfy-match__info">
         <div className="jfy-match__head">
           <Title job={job} />
+            {job.applied && (
+            <span className="jfy-badges">
+              <span className="jfy-badge jfy-badge--applied">✓ Applied</span>
+            </span>
+          )}
         </div>
         <div className="jfy-match__details">
           <Meta job={job} />

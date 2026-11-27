@@ -18,6 +18,7 @@ export function notificationLink(notification, role) {
     if (type === 'interview_reply') return `/company/jobs/${job_id}/applicants/${application_id}`
     if (job_id) return `/company/jobs/${job_id}`
     if (type === 'plan') return '/company/profile'
+    if (type === 'account') return '/company/review' // approved / not approved: the page shows what to do next
     return null
     }
   if (type === 'new_matches') return '/jobseeker/jobs'

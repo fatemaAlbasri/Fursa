@@ -62,11 +62,12 @@ INSERT INTO resumes (id, seeker_id, file_name, file_url, parsed_text, parsed_exp
  (7, 11, 'hamad_cv.pdf',      '/uploads/cv/7.pdf', 'Business student ...', 'Part-time retail', 'English, Arabic', true, '2026-10-05');
 
 -- ---------- Companies + subscriptions ----------
-INSERT INTO companies (id, user_id, name, website, industry, location, phone, about) VALUES
- (1, 2, 'Nakhla Tech',  'www.nakhlatech.bh', 'Technology', 'Manama',   '+97317000001', 'Builds web and mobile apps for local businesses.'),
- (2, 3, 'PearlSoft',    'www.pearlsoft.bh',  'Software',   'Seef',     '+97317000002', 'Software house focused on fintech products.'),
- (3, 4, 'Dilmun IT',    NULL,                'IT Services','Muharraq', '+97317000003', 'IT support and networking services.'),
- (4, 5, 'Seef Data',    'www.seefdata.bh',   'Analytics',  'Manama',   '+97317000004', 'Data analytics consultancy.');
+-- the sample companies are already checked by the admin (status 'approved')
+INSERT INTO companies (id, user_id, name, website, industry, location, phone, about, cr_number, status, reviewed_at) VALUES
+ (1, 2, 'Nakhla Tech',  'www.nakhlatech.bh', 'Technology', 'Manama',   '+97317000001', 'Builds web and mobile apps for local businesses.', '101234-1', 'approved', '2026-09-01'),
+ (2, 3, 'PearlSoft',    'www.pearlsoft.bh',  'Software',   'Seef',     '+97317000002', 'Software house focused on fintech products.',      '102345-1', 'approved', '2026-09-01'),
+ (3, 4, 'Dilmun IT',    NULL,                'IT Services','Muharraq', '+97317000003', 'IT support and networking services.',              '103456-2', 'approved', '2026-09-01'),
+ (4, 5, 'Seef Data',    'www.seefdata.bh',   'Analytics',  'Manama',   '+97317000004', 'Data analytics consultancy.',                      '104567-1', 'approved', '2026-09-01');
 
 INSERT INTO subscriptions (id, company_id, plan_id, status, started_at, renews_at) VALUES
  (1, 1, 2, 'active', '2026-10-12', '2026-11-12'),

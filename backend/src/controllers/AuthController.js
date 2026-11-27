@@ -7,8 +7,8 @@ const { fileUrl, removeFiles } = require('../middleware/upload')
 const { saveParsedCv } = require('../services/cvParser')
 const { rescoreSeeker } = require('../services/matching')
 const { skillIds } = require('../services/skills')
-const { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone } = require('../utils/fields')
-const { PAYMENT_METHODS, PLAN_COLUMNS, paymentOut, startSubscription, emailReceipt } = require('../services/planPayment')
+const { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone, toCrNumber } = require('../utils/fields')
+const { PLAN_COLUMNS } = require('../services/planPayment')
 
 // The frontend says 'jobseeker' / 'company', the database says 'seeker' / 'employer'
 const ROLES = {
@@ -21,16 +21,34 @@ const ROLES = {
 // Public user info returned to the frontend (never the password hash)
 async function loadUser(id) {
   const { rows } = await db.query(
-    `SELECT u.id, u.first_name, u.last_name, u.email, u.role, c.id AS company_id, c.name AS company_name
+    `SELECT u.id, u.first_name, u.last_name, u.email, u.role, c.id AS company_id, c.name AS company_name,
+            c.status AS company_status, c.rejection_reason AS company_rejection_reason, c.cr_number AS company_cr_number,
+            rp.id AS requested_plan_id, rp.name AS requested_plan_name
        FROM users u
        LEFT JOIN companies c ON c.user_id = u.id
+       LEFT JOIN plans rp ON rp.id = c.requested_plan_id
       WHERE u.id = $1`,
     [id]
   )
   if (!rows[0]) return null
-  const { company_id, company_name, ...user } = rows[0]
+  const {
+    company_id, company_name, company_status, company_rejection_reason, company_cr_number,
+    requested_plan_id, requested_plan_name, ...user
+  } = rows[0]
+  // status: 'pending' (waiting for the admin) | 'approved' | 'rejected' → only approved companies can publish jobs
   return user.role === 'employer'
-    ? { ...user, company: { id: company_id, name: company_name } }
+    ? {
+        ...user,
+        company: {
+          id: company_id,
+          name: company_name,
+          status: company_status,
+          rejection_reason: company_rejection_reason,
+          cr_number: company_cr_number,
+          // the paid plan picked at sign up, to pay for once approved (null = none)
+          requested_plan: requested_plan_id ? { id: requested_plan_id, name: requested_plan_name } : null
+        }
+      }
     : user
 }
 
@@ -107,10 +125,14 @@ async function createSeeker(client, userId, body, phone, skills, cv) {
 }
 
 // The company starts on the plan it chose: a paid plan is paid for here, in the same step (simulated card)
-async function createCompany(client, userId, phone, body, logo, plan) {
+// The company starts as 'pending': it can sign in and save drafts, and publishes once the admin approves it.
+// Nothing is paid before that: every company starts on Free, and a paid plan picked here is kept in
+// requested_plan_id so the company can pay for it after it's approved.
+async function createCompany(client, userId, phone, crNumber, body, logo, plan) {
+  const isPaid = Number(plan.price_bhd_month) > 0
   const { rows } = await client.query(
-    `INSERT INTO companies (user_id, name, logo_url, website, phone, industry, location, about)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+    `INSERT INTO companies (user_id, name, logo_url, website, phone, industry, location, about, cr_number, status, requested_plan_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10) RETURNING id`,
     [
       userId,
       clean(body.companyName),
@@ -119,16 +141,16 @@ async function createCompany(client, userId, phone, body, logo, plan) {
       phone,
       clean(body.industry),
       clean(body.location),
-      clean(body.about) || null
+      clean(body.about) || null,
+      crNumber,
+      isPaid ? plan.id : null
     ]
   )
-  const companyId = rows[0].id
-  if (Number(plan.price_bhd_month) > 0) {
-    const { payment } = await startSubscription(client, { userId, companyId, plan, method: body.method })
-    return payment
-  }
-  await client.query(`INSERT INTO subscriptions (company_id, plan_id) VALUES ($1, $2)`, [companyId, plan.id])
-  return null
+  await client.query(
+    `INSERT INTO subscriptions (company_id, plan_id)
+     SELECT $1, id FROM plans WHERE price_bhd_month = 0 ORDER BY id LIMIT 1`,
+    [rows[0].id]
+  )
 }
 
 async function signup(req, res, next) {
@@ -139,6 +161,7 @@ async function signup(req, res, next) {
   let phone = null
   let skills = []
   let plan = null
+  let crNumber = null
 
   if (!role) errors.role = 'Role must be jobseeker or company'
   validateAccount(body, errors)
@@ -158,6 +181,9 @@ async function signup(req, res, next) {
 
   if (role === 'employer') {
     if (!clean(body.companyName)) errors.companyName = 'Required'
+    const cr = toCrNumber(body.crNumber)
+    if (cr.error) errors.crNumber = cr.error
+    else crNumber = cr.cr
     if (body.website && !/^https?:\/\/\S+\.\S+/.test(clean(body.website)))
       errors.website = 'Start with https://'
     if (!clean(body.industry)) errors.industry = 'Required'
@@ -173,8 +199,6 @@ async function signup(req, res, next) {
       return next(err)
     }
     if (!plan) errors.plan = 'Unknown plan'
-    else if (Number(plan.price_bhd_month) > 0 && !PAYMENT_METHODS.includes(body.method))
-      errors.method = 'Pay to start a paid plan'
   }
 
   // same email / company name → shown under that field, together with the other errors
@@ -204,7 +228,6 @@ async function signup(req, res, next) {
     await client.query('BEGIN')
     const userId = await createUser(client, body, role)
     let resumeId = null
-    let payment = null
     if (role === 'seeker') {
       resumeId = await createSeeker(
         client,
@@ -215,18 +238,12 @@ async function signup(req, res, next) {
         req.files?.cv?.[0]
       )
     } else {
-      payment = await createCompany(client, userId, phone, body, req.files?.logo?.[0], plan)
+      await createCompany(client, userId, phone, crNumber, body, req.files?.logo?.[0], plan)
     }
     await client.query('COMMIT')
 
     const user = await loadUser(userId)
-    const result = { token: signToken(user), user }
-
-    if (payment) result.payment = paymentOut(payment)
-    res.status(201).json(result)
-
-    // form data sends text, so the unticked box arrives as 'false'
-    if (payment && body.emailReceipt !== 'false') emailReceipt(userId, payment)
+    res.status(201).json({ token: signToken(user), user })
 
     // Read the CV and score the seeker after answering, so sign up doesn't wait for it
     if (role === 'seeker') {

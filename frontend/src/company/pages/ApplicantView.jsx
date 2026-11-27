@@ -8,6 +8,7 @@ import { ButtonSpinner } from '../../shared/components/Loading.jsx'
 import StatusPill from '../../shared/components/StatusPill'
 import { LockIcon } from '../../shared/components/icons.jsx'
 import ScoreRing from '../components/ScoreRing.jsx'
+import ConfirmDialog from '../../shared/components/ConfirmDialog.jsx'
 import '../styles/ApplicantView.css'
 
 // Applicant details page for the company.
@@ -296,6 +297,8 @@ function ApplicantPage() {
   const [notes, setNotes] = useState('')
   const [notesSaved, setNotesSaved] = useState(false)
   const [cvTab, setCvTab] = useState('text')
+  const [confirmClose, setConfirmClose] = useState(false)
+  const [closing, setClosing] = useState(false)
 
   const load = () =>
     api(`/jobs/mine/${id}/applicants/${appId}`)
@@ -428,6 +431,21 @@ function ApplicantPage() {
         body: { status: to, ...extra }
       })
     )
+
+  // "Position filled?" → close the job right here (same request as the job page)
+  const closeJob = async () => {
+    setClosing(true)
+    setError('')
+    try {
+      await api(`/jobs/mine/${id}/close`, { method: 'PATCH' })
+      setData((d) => ({ ...d, applicant: { ...d.applicant, job_status: 'closed' } }))
+    } catch (err) {
+      setError(err.error || 'Could not close the job.')
+    } finally {
+      setClosing(false)
+      setConfirmClose(false)
+    }
+  }
 
   const confirmReject = async () => {
     const text = reason === 'Other' ? reasonNote.trim() : reason
@@ -903,12 +921,20 @@ function ApplicantPage() {
                   </div>
                 )}
               </div>
-              <Link
-                to={`/company/jobs/${id}`}
-                className="apd-btn apd-btn--outline-red"
-              >
-                Position filled? Close this job
-              </Link>
+              {a.job_status === 'closed' ? (
+                <p className="apd-closed">
+                  This job is closed. Job seekers can no longer apply.{' '}
+                  <Link to={`/company/jobs/${id}`}>View job</Link>
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="apd-btn apd-btn--outline-red"
+                  onClick={() => setConfirmClose(true)}
+                >
+                  Position filled? Close this job
+                </button>
+              )}
             </section>
           )}
 
@@ -952,6 +978,17 @@ function ApplicantPage() {
           </section>
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={confirmClose}
+        title="Close this job?"
+        message="Job seekers will no longer see it or be able to apply."
+        confirmLabel="Close job"
+        danger
+        busy={closing}
+        onConfirm={closeJob}
+        onCancel={() => setConfirmClose(false)}
+      />
     </main>
   )
 }

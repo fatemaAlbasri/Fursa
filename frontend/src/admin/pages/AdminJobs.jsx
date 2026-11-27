@@ -4,6 +4,7 @@ import CompanyLogo from '../../jobseeker/components/CompanyLogo.jsx'
 import { formatJobType } from '../../shared/utils/jobFormat.js'
 import { ListLoading } from '../components/AdminSkeleton.jsx'
 import ListToolbar from '../components/ListToolbar.jsx'
+import ExportButton from '../components/ExportButton.jsx'
 import Pager from '../components/Pager.jsx'
 import useAdminList from '../utils/useAdminList.js'
 import { formatCount, formatShortDate } from '../utils/format.js'
@@ -34,6 +35,16 @@ export default function AdminJobs() {
         <h1>Jobs</h1>
         <p>Every job posted on Fursa.</p>
       </div>
+      {data && (
+        <ExportButton
+          path="/admin/jobs/export"
+          query={list.exportQuery}
+          name="jobs"
+          filter={list.tab === 'all' ? null : TABS.find((t) => t.key === list.tab)?.label}
+          searched={list.searching}
+          count={data.total}
+        />
+      )}
     </div>
   )
 
@@ -74,7 +85,7 @@ export default function AdminJobs() {
               <tr>
                 <th>Job</th>
                 <th>Type</th>
-                <th>Applicants</th>
+                <th className="admin-num">Applicants</th>
                 <th>Posted</th>
                 <th>Deadline</th>
                 <th>Status</th>
@@ -96,7 +107,7 @@ export default function AdminJobs() {
                     </div>
                   </td>
                   <td>{formatJobType(job.job_type)}</td>
-                  <td>{formatCount(job.applicants)}</td>
+                  <td className="admin-num">{formatCount(job.applicants)}</td>
                   <td className="admin-muted">{formatShortDate(job.posted)}</td>
                   <td className="admin-muted">{formatShortDate(job.deadline)}</td>
                   <td>

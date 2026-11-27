@@ -68,9 +68,6 @@ export default function AllJobs() {
             <h2 id="jfy-results-title">
               {loading ? 'Loading jobs…' : `${shown.length} ${shown.length === 1 ? 'job' : 'jobs'} found`}
             </h2>
-            <p>
-              Sorted by match score · <span className="jfy-star">★</span> = in your Top 10
-            </p>
           </div>
           <label className="jfy-switch">
             <button

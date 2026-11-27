@@ -9,7 +9,6 @@ import { INDUSTRIES, LOCATIONS } from '../utils/companyOptions.js'
 import { XIcon } from '../components/icons.jsx'
 import { ButtonSpinner } from '../components/Loading.jsx'
 import Notice from '../components/Notice.jsx'
-import PaymentForm, { PaymentDone, PaymentLoading } from '../../company/components/PaymentForm.jsx'
 import {
   MAJORS,
   STATUSES,
@@ -474,10 +473,9 @@ function JobSeekerSignup() {
 
 /* ================= COMPANY (2 steps) ================= */
 
-// paid = a paid plan is picked, so there is a 3rd step (Payment)
-function Steps({ step, paid }) {
+// Nothing is paid at sign up: a paid plan is paid for after the admin approves the company
+function Steps({ step }) {
   const names = ['Company details', 'Choose a plan']
-  if (paid) names.push('Payment')
   return (
     <div className={`steps ${step > 1 ? 'steps--center' : ''}`}>
       {names.map((name, i) => {
@@ -507,7 +505,7 @@ const fileSize = (bytes) =>
   bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 
 // serverErrors = what the backend said when the account was created (e.g. email already used)
-function CompanyDetails({ form, setForm, logo, setLogo, paid, serverErrors, onNext }) {
+function CompanyDetails({ form, setForm, logo, setLogo, serverErrors, onNext }) {
   const [errors, setErrors] = useState(serverErrors || {})
   const [checking, setChecking] = useState(false)
 
@@ -533,6 +531,9 @@ function CompanyDetails({ form, setForm, logo, setLogo, paid, serverErrors, onNe
     e.preventDefault()
     const errs = {}
     if (!form.companyName.trim()) errs.companyName = 'Required'
+    const cr = form.crNumber.replace(/\s/g, '')
+    if (!cr) errs.crNumber = 'Required'
+    else if (!/^\d{3,8}(-\d{1,3})?$/.test(cr)) errs.crNumber = 'Enter a CR number like 123456-1'
     if (form.website && !/^https?:\/\/\S+\.\S+/.test(form.website))
       errs.website = 'Start with https://'
     if (!form.firstName.trim()) errs.firstName = 'Required'
@@ -568,7 +569,7 @@ function CompanyDetails({ form, setForm, logo, setLogo, paid, serverErrors, onNe
   return (
     <main className="container">
       <div className="page-head">
-        <Steps step={1} paid={paid} />
+        <Steps step={1} />
         <h1 className="title">Create your company account</h1>
         <p className="muted">
           Post jobs and internships, and get your applicants ranked by AI.
@@ -631,6 +632,20 @@ function CompanyDetails({ form, setForm, logo, setLogo, paid, serverErrors, onNe
             name="companyName"
             placeholder="Company name"
             value={form.companyName}
+            onChange={change}
+          />
+        </Field>
+
+        <Field
+          label="Commercial Registration (CR) number"
+          error={errors.crNumber}
+          hint="We check it before your jobs go live. You can set up your profile and save drafts while we review it."
+        >
+          <input
+            name="crNumber"
+            inputMode="numeric"
+            placeholder="123456-1"
+            value={form.crNumber}
             onChange={change}
           />
         </Field>
@@ -754,11 +769,11 @@ function ChoosePlan({ plan, setPlan, onFinish, busy, notice, onCloseNotice }) {
   return (
     <main className="container container--wide">
       <div className="page-head center">
-        <Steps step={2} paid={plan !== 'free'} />
+        <Steps step={2} />
         <h1 className="title">Choose your plan</h1>
         <p className="muted">
-          Start free. Upgrade when you want AI ranking. Change or cancel any
-          time.
+          Nothing to pay now. We first check your company, then you pay for a paid plan once
+          you're approved. Change or cancel any time.
         </p>
       </div>
 
@@ -805,6 +820,7 @@ function ChoosePlan({ plan, setPlan, onFinish, busy, notice, onCloseNotice }) {
           <b>
             Selected: {selected.name} · {selected.price} / month
           </b>
+          {plan !== 'free' && <span className="plan-bar__note"> · You pay after we approve your company</span>}
         </p>
         <button type="button" className="btn btn--primary" onClick={onFinish} disabled={busy} aria-busy={busy}>
           {busy ? (
@@ -814,7 +830,7 @@ function ChoosePlan({ plan, setPlan, onFinish, busy, notice, onCloseNotice }) {
             </>
           ) : (
             <span key={plan} className="swap">
-              {plan === 'free' ? 'Start free' : 'Continue to payment'}
+              {plan === 'free' ? 'Start free' : 'Create account'}
             </span>
           )}
         </button>
@@ -827,6 +843,7 @@ function CompanySignup() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
     companyName: '',
+    crNumber: '',
     website: '',
     industry: '',
     location: '',
@@ -839,37 +856,24 @@ function CompanySignup() {
   })
   const [logo, setLogo] = useState(null)
   const [plan, setPlan] = useState('starter')
-  const [plans, setPlans] = useState([]) // prices from the backend, for the payment step
   const [busy, setBusy] = useState(false)
-  const [payment, setPayment] = useState(null)
   const [serverErrors, setServerErrors] = useState(null) // field errors from the backend → shown on step 1
-  const [notice, setNotice] = useState(null) // other errors, shown on the plan / payment step
+  const [notice, setNotice] = useState(null) // other errors, shown on the plan step
 
   const navigate = useNavigate()
-  const paid = plan !== 'free'
-  const planInfo = plans.find((p) => p.name.toLowerCase() === plan)
-
-  useEffect(() => {
-    api('/plans')
-      .then((data) => setPlans(data.plans))
-      .catch(() => {})
-  }, [])
 
   const goToStep = (n) => {
     setStep(n)
     window.scrollTo(0, 0)
   }
 
-  // the account is only created here: Free right away, a paid plan together with its payment
-  const finish = async ({ emailReceipt } = {}) => {
+  // the account is created here. Every company starts on Free while the admin checks it;
+  // a paid plan picked here is kept and paid for from Plans once the company is approved
+  const finish = async () => {
     const data = new FormData()
     data.append('role', 'company')
     Object.entries(form).forEach(([key, value]) => data.append(key, value))
     data.append('plan', plan)
-    if (paid) {
-      data.append('method', 'card')
-      data.append('emailReceipt', String(emailReceipt))
-    }
     if (logo?.file) data.append('logo', logo.file)
 
     setBusy(true)
@@ -880,11 +884,9 @@ function CompanySignup() {
         body: data
       })
       localStorage.setItem('token', res.token)
-      if (res.payment) setPayment(res.payment)
-      else navigate('/company')
+      navigate('/company')
     } catch (err) {
       const fields = { ...err.fields }
-      delete fields.method
       if (hasErrors(fields)) {
         // e.g. email or company name already used → back to step 1, under that field
         setServerErrors(fields)
@@ -911,7 +913,6 @@ function CompanySignup() {
           setForm={setForm}
           logo={logo}
           setLogo={setLogo}
-          paid={paid}
           serverErrors={serverErrors}
           onNext={() => {
             setServerErrors(null)
@@ -922,31 +923,6 @@ function CompanySignup() {
     )
   }
 
-  if (step === 3) {
-    return (
-      <div className="page">
-        <Header employer right={payment ? null : backTo(2)} />
-        <main className="container pay">
-          {payment ? (
-            <PaymentDone plan={planInfo} payment={payment} />
-          ) : (
-            <>
-              <div className="page-head center">
-                <Steps step={3} paid />
-              </div>
-              <Notice notice={notice} onClose={() => setNotice(null)} />
-              {planInfo ? (
-                <PaymentForm plan={planInfo} company={form.companyName} busy={busy} onPay={finish} />
-              ) : (
-                <PaymentLoading />
-              )}
-            </>
-          )}
-        </main>
-      </div>
-    )
-  }
-
   // Step 2 keeps the full width so the three plan cards fit side by side.
   return (
     <div className="page">
@@ -954,7 +930,7 @@ function CompanySignup() {
       <ChoosePlan
         plan={plan}
         setPlan={setPlan}
-        onFinish={() => (paid ? goToStep(3) : finish())}
+        onFinish={finish}
         busy={busy}
         notice={notice}
         onCloseNotice={() => setNotice(null)}

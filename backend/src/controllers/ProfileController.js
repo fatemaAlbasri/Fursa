@@ -4,7 +4,7 @@ const { inTransaction } = require('../config/transaction')
 const { fileUrl, removeFiles, UPLOADS_DIR } = require('../middleware/upload')
 const { rescoreSeeker } = require('../services/matching')
 const { skillIds } = require('../services/skills')
-const { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone } = require('../utils/fields')
+const { isEmail, clean, toList, JOB_TYPES, WORK_MODES, pickList, toPhone, toCrNumber } = require('../utils/fields')
 
 const fieldErrors = (res, fields) =>
   res.status(400).json({ error: 'Please fix the highlighted fields', fields })
@@ -59,7 +59,8 @@ const getProfile = async (req, res, next) => {
 
     if (user.role === 'employer') {
       const { rows } = await db.query(
-        `SELECT id, name, logo_url, website, industry, location, phone, about
+        `SELECT id, name, logo_url, website, industry, location, phone, about,
+                cr_number, status, rejection_reason
            FROM companies WHERE user_id = $1`,
         [id]
       )
@@ -192,8 +193,8 @@ const updateSeekerPreferences = async (req, res, next) => {
 
 // PUT /api/profile/company/details
 // { companyName, industry, location, website?, phone?, about? }
-const updateCompanyDetails = async (req, res, next) => {
-  const body = req.body || {}
+// Company name, industry, location, website, phone, about → { values, errors }
+function readCompanyDetails(body) {
   const errors = {}
 
   const name = clean(body.companyName)
@@ -218,6 +219,11 @@ const updateCompanyDetails = async (req, res, next) => {
   const about = clean(body.about)
   if (about.length > 2000) errors.about = 'Too long (max 2000 characters)'
 
+  return { values: { name, industry, location, website: website || null, phone: p.phone, about: about || null }, errors }
+}
+
+const updateCompanyDetails = async (req, res, next) => {
+  const { values: v, errors } = readCompanyDetails(req.body || {})
   if (Object.keys(errors).length) return fieldErrors(res, errors)
 
   try {
@@ -226,7 +232,7 @@ const updateCompanyDetails = async (req, res, next) => {
           SET name = $2, industry = $3, location = $4, website = $5, phone = $6, about = $7
         WHERE user_id = $1
         RETURNING id, name, logo_url, website, industry, location, phone, about`,
-      [req.user.id, name, industry, location, website || null, p.phone, about || null]
+      [req.user.id, v.name, v.industry, v.location, v.website, v.phone, v.about]
     )
     if (!rows[0]) return res.status(404).json({ error: 'Company not found' })
     res.json({ company: rows[0] })
@@ -296,6 +302,35 @@ const updateCompanyContact = async (req, res, next) => {
   }
 }
 
+// PUT /api/profile/company/review { companyName, crNumber, industry, location, website, phone, about, note? }
+// Only a rejected company: it fixes its details and goes back to 'pending' for the admin.
+// The admin's last reason is kept so the admin sees what was wrong before.
+async function resubmitCompany(req, res, next) {
+  const body = req.body || {}
+  const { values: v, errors } = readCompanyDetails(body)
+  const cr = toCrNumber(body.crNumber)
+  if (cr.error) errors.crNumber = cr.error
+  const note = clean(body.note)
+  if (note.length > 500) errors.note = 'Keep it under 500 characters'
+  if (Object.keys(errors).length) return fieldErrors(res, errors)
+
+  try {
+    const { rows } = await db.query(
+      `UPDATE companies
+          SET name = $2, industry = $3, location = $4, website = $5, phone = $6, about = $7,
+              cr_number = $8, review_note = $9, status = 'pending', resubmitted_at = now()
+        WHERE user_id = $1 AND status = 'rejected'
+        RETURNING status`,
+      [req.user.id, v.name, v.industry, v.location, v.website, v.phone, v.about, cr.cr, note || null]
+    )
+    if (!rows[0]) return res.status(409).json({ error: 'Only a company that was not approved can send its details again.' })
+    res.json({ status: rows[0].status })
+  } catch (err) {
+    if (duplicateError(err, res)) return
+    next(err)
+  }
+}
+
 module.exports = {
   getProfile,
   updateSeekerDetails,
@@ -304,5 +339,6 @@ module.exports = {
   updateCompanyDetails,
   updateCompanyLogo,
   removeCompanyLogo,
-  updateCompanyContact
+  updateCompanyContact,
+  resubmitCompany
 }

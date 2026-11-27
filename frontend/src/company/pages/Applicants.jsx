@@ -364,7 +364,7 @@ export default function Applicants() {
           </div>
         </div>
 
-        {/* ---------- Applicant list ---------- */}
+        {/*  Applicant list  */}
         <section className="ap-list">
           {/* toolbar: select all · shortlist · reject · sort */}
           <div className="ap-toolbar">
@@ -462,7 +462,7 @@ export default function Applicants() {
       />
 
       <div className="ap-layout">
-        {/* ---------- Left: the company's jobs ---------- */}
+        {/*  Left: the company's jobs  */}
         <aside className="ap-jobs" aria-label="Your jobs">
           <p className="ap-jobs__title">YOUR JOBS</p>
           {shownJobs.map((j) => {

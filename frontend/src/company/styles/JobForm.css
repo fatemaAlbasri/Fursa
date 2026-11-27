@@ -79,7 +79,7 @@
 .btn.jf-cancel { background: var(--white); border-color: var(--line); color: var(--navy); padding: 12px 24px; }
 .btn.jf-cancel:hover { background: var(--bg); }
 .jf-grid--edit .btn--primary { padding: 12px 28px; }
-/* ---------- Save button while saving ---------- */
+/*  Save button while saving  */
 .jf-submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .jf-submit:disabled { opacity: .85; cursor: progress; } /* stay readable, not faded like other disabled buttons */
 

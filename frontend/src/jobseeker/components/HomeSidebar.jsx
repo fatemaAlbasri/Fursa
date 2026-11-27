@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../../shared/api.js'
 import { formatJobType, formatWorkMode } from '../../shared/utils/jobFormat.js'
 import { BriefcaseIcon, PencilIcon, SparkleIcon } from '../../shared/components/icons.jsx'
-import { OPTIMIZER_PATH, scoreTone } from '../utils/cvFormat.js'
+import { OPTIMIZER_PATH } from '../utils/cvFormat.js'
 
 // Right side of Jobs for you: "Your preferences" + "Get better matches" (CV strength).
 // Each card loads on its own and shows grey placeholders until then.
@@ -96,49 +96,13 @@ function StrengthRing({ score }) {
 }
 
 function CvStrength() {
-  const [review, setReview] = useState(undefined) // undefined = loading, null = no review yet
-  useEffect(() => {
-    api('/cv/optimizer')
-      .then((data) => setReview(data.review || null))
-      .catch(() => setReview(null))
-  }, [])
-
   return (
     <SideCard icon={<SparkleIcon />} title="Get better matches" sub="A stronger CV ranks you higher">
-      {review === undefined ? (
-        <div className="jfy-side__cv" role="status" aria-label="Loading CV strength">
-          <span className="sk sk--strength" />
-          <div className="jfy-side__loading">
-            <span className="sk sk--line sk--thin" style={{ width: '70%' }} />
-            <span className="sk sk--line sk--thin" style={{ width: '90%' }} />
-          </div>
-        </div>
-      ) : review ? (
-        <div className="jfy-side__cv">
-          <StrengthRing score={review.currentScore} />
-          <p className="jfy-side__text">
-            <b>Your CV strength</b>
-            <br />
-            {review.potentialScore > review.currentScore ? (
-              <>
-                You could reach <b className="jfy-side__goal">{review.potentialScore}</b> with a few changes.
-              </>
-            ) : (
-              'Nice work, your CV is in good shape.'
-            )}
-          </p>
-        </div>
-      ) : (
-        <p className="jfy-side__text">See how strong your CV is and get AI suggestions to improve it.</p>
-      )}
-      {review === undefined ? (
-        <span className="sk sk--wide" aria-hidden="true" />
-      ) : (
-        <Link to={OPTIMIZER_PATH} className="btn btn--primary jfy-side__btn">
-          <SparkleIcon />
-          {review ? 'Improve my CV' : 'Check my CV'}
-        </Link>
-      )}
+      <p className="jfy-side__text">See how strong your CV is and get AI suggestions to improve it.</p>
+      <Link to={OPTIMIZER_PATH} className="btn btn--primary jfy-side__btn">
+        <SparkleIcon />
+        Check my CV
+      </Link>
     </SideCard>
   )
 }
